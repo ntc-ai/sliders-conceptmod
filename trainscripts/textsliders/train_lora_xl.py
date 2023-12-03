@@ -413,7 +413,7 @@ def main(args):
     device = torch.device(f"cuda:{args.device}")
     train(config, prompts, device)
 
-def train_lora(target, positive, unconditional, alpha=1.0, rank=4, device=0, name=None, attributes=None, batch_size=1, config_file='data/config-xl.yaml'):
+def train_lora(target, positive, unconditional, alpha=1.0, rank=4, device=0, name=None, attributes=None, batch_size=1, config_file='data/config-xl.yaml', resolution=512):
 
     # Create the configuration dictionary
     output_dict = {
@@ -423,7 +423,7 @@ def train_lora(target, positive, unconditional, alpha=1.0, rank=4, device=0, nam
         "neutral": target,  # Assuming neutral is the same as target
         "action": "enhance",
         "guidance_scale": 1,
-        "resolution": 512,
+        "resolution": resolution,
         "dynamic_resolution": False,
         "batch_size": batch_size
     }
