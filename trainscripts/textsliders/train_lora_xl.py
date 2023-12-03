@@ -27,6 +27,7 @@ import config_util
 from config_util import RootConfig
 
 import wandb
+import yaml
 
 NUM_IMAGES_PER_PROMPT = 1
 
@@ -368,7 +369,7 @@ def train(
                 dtype=save_weight_dtype,
             )
 
-    print("Saving...")
+    print("Saving...",save_path / f"{config.save.name}_last.pt" )
     save_path.mkdir(parents=True, exist_ok=True)
     network.save_weights(
         save_path / f"{config.save.name}_last.pt",
@@ -386,6 +387,7 @@ def train(
     flush()
 
     print("Done.")
+    return save_path / f"{config.save.name}_last.pt" 
 
 
 def main(args):
@@ -411,6 +413,43 @@ def main(args):
     device = torch.device(f"cuda:{args.device}")
     train(config, prompts, device)
 
+def train_lora(target, positive, unconditional, alpha=1.0, rank=4, device=0, name=None, attributes=None, batch_size=1, config_file='data/config-xl.yaml'):
+
+    # Create the configuration dictionary
+    output_dict = {
+        "target": target,
+        "positive": positive,
+        "unconditional": unconditional,
+        "neutral": target,  # Assuming neutral is the same as target
+        "action": "enhance",
+        "guidance_scale": 1,
+        "resolution": 512,
+        "dynamic_resolution": False,
+        "batch_size": batch_size
+    }
+
+    # Writing the dictionary to 'data/prompts-xl.yaml'
+    with open('data/prompts-xl.yaml', 'w') as file:
+        yaml.dump([output_dict], file)  # Note the list wrapping around output_dict
+
+    print("Data saved to 'data/prompts-xl.yaml'")
+    config = config_util.load_config_from_yaml(config_file)
+    if name is not None:
+        config.save.name = name
+    attr_list = []
+    if attributes is not None:
+        attr_list = [a.strip() for a in attributes.split(',')]
+
+    config.network.alpha = alpha
+    config.network.rank = rank
+    config.save.name += f'_alpha{alpha}'
+    config.save.name += f'_rank{rank}'
+    config.save.name += f'_{config.network.training_method}'
+    config.save.path += f'/{config.save.name}'
+
+    prompts = prompt_util.load_prompts_from_yaml(config.prompts_file, attr_list)
+    device = torch.device(f"cuda:{device}")
+    return train(config, prompts, device)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
