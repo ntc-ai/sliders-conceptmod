@@ -1,6 +1,6 @@
-prompts_file: "trainscripts/textsliders/data/prompts-xl.yaml"
+prompts_file: "data/prompts-xl.yaml"
 pretrained_model:
-  name_or_path: "stabilityai/stable-diffusion-xl-base-1.0" # you can also use .ckpt or .safetensors models
+  name_or_path: "../../../ComfyUI/models/checkpoints/turbo/safetensors-merge-supermario/toprated1.safetensors" # you can also use .ckpt or .safetensors models
   v2: false # true if model is v2.x
   v_pred: false # true if model uses v-prediction
 network:
@@ -10,16 +10,16 @@ network:
   training_method: "noxattn"
 train:
   precision: "bfloat16"
-  noise_scheduler: "ddim" # or "ddpm", "lms", "euler_a"
-  iterations: 1000
+  noise_scheduler: "euler_a" # or "ddpm", "lms", "euler_a"
+  iterations: 500
   lr: 0.0002
   optimizer: "AdamW"
   lr_scheduler: "constant"
-  max_denoising_steps: 50
+  max_denoising_steps: 12
 save:
   name: "temp"
   path: "./models"
-  per_steps: 500
+  per_steps: 1000
   precision: "bfloat16"
 logging:
   use_wandb: false
