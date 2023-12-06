@@ -41,6 +41,7 @@ def train(
     config: RootConfig,
     prompts: list[PromptSettings],
     device,
+    save_file=True
 ):
     metadata = {
         "prompts": ",".join([prompt.json() for prompt in prompts]),
@@ -361,6 +362,7 @@ def train(
             i % config.save.per_steps == 0
             and i != 0
             and i != config.train.iterations - 1
+            and save_file
         ):
             print("Saving...")
             save_path.mkdir(parents=True, exist_ok=True)
@@ -369,25 +371,24 @@ def train(
                 dtype=save_weight_dtype,
             )
 
-    print("Saving...",save_path / f"{config.save.name}_last.pt" )
-    save_path.mkdir(parents=True, exist_ok=True)
-    network.save_weights(
-        save_path / f"{config.save.name}_last.pt",
-        dtype=save_weight_dtype,
-    )
+    if save_file:
+        print("Saving...",save_path / f"{config.save.name}_last.pt" )
+        save_path.mkdir(parents=True, exist_ok=True)
+        network.save_weights(
+            save_path / f"{config.save.name}_last.pt",
+            dtype=save_weight_dtype,
+        )
 
-    del (
-        unet,
-        noise_scheduler,
-        loss,
-        optimizer,
-        network,
-    )
+        del (
+            unet,
+            noise_scheduler,
+            loss,
+            optimizer,
+            network,
+        )
 
-    flush()
-
-    print("Done.")
-    return save_path / f"{config.save.name}_last.pt" 
+    else:
+        return network.get_state_dict(save_weight_dtype)
 
 
 def main(args):
@@ -413,7 +414,7 @@ def main(args):
     device = torch.device(f"cuda:{args.device}")
     train(config, prompts, device)
 
-def train_lora(target, positive, unconditional, alpha=1.0, rank=4, device=0, name=None, attributes=None, batch_size=1, config_file='data/config-xl.yaml', resolution=512):
+def train_lora(target, positive, unconditional, alpha=1.0, rank=4, device=0, name=None, attributes=None, batch_size=1, config_file='data/config-xl.yaml', resolution=512, steps=None):
 
     # Create the configuration dictionary
     output_dict = {
@@ -436,6 +437,8 @@ def train_lora(target, positive, unconditional, alpha=1.0, rank=4, device=0, nam
     config = config_util.load_config_from_yaml(config_file)
     if name is not None:
         config.save.name = name
+    if steps is not None:
+        config.train.iterations = steps
     attr_list = []
     if attributes is not None:
         attr_list = [a.strip() for a in attributes.split(',')]
@@ -449,7 +452,7 @@ def train_lora(target, positive, unconditional, alpha=1.0, rank=4, device=0, nam
 
     prompts = prompt_util.load_prompts_from_yaml(config.prompts_file, attr_list)
     device = torch.device(f"cuda:{device}")
-    return train(config, prompts, device)
+    return train(config, prompts, device, save_file=False)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

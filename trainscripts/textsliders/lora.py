@@ -228,6 +228,16 @@ class LoRANetwork(nn.Module):
 
         return all_params
 
+    def get_state_dict(self, dtype=None):
+        state_dict = self.state_dict()
+
+        if dtype is not None:
+            for key in list(state_dict.keys()):
+                v = state_dict[key]
+                v = v.detach().clone().to("cpu").to(dtype)
+                state_dict[key] = v
+        return state_dict
+
     def save_weights(self, file, dtype=None, metadata: Optional[dict] = None):
         state_dict = self.state_dict()
 
