@@ -109,20 +109,23 @@ def train(
     )
     criteria = torch.nn.MSELoss()
 
-    print("Prompts")
-    for settings in prompts:
-        print(settings)
+    if config.logging.verbose:
+        print("Prompts")
+        for settings in prompts:
+            print(settings)
 
     # debug
-    debug_util.check_requires_grad(network)
-    debug_util.check_training_mode(network)
+    if config.logging.verbose:
+        debug_util.check_requires_grad(network)
+        debug_util.check_training_mode(network)
 
     cache = PromptEmbedsCache()
     prompt_pairs: list[PromptEmbedsPair] = []
 
     with torch.no_grad():
         for settings in prompts:
-            print(settings)
+            if config.logging.verbose:
+                print(settings)
             for prompt in [
                 settings.target,
                 settings.positive,
@@ -410,7 +413,8 @@ def main(args):
     config.save.path += f'/{config.save.name}'
     
     prompts = prompt_util.load_prompts_from_yaml(config.prompts_file, attributes)
-    print(prompts)
+    if config.logging.verbose:
+        print(prompts)
     device = torch.device(f"cuda:{args.device}")
     train(config, prompts, device)
 
@@ -433,7 +437,7 @@ def train_lora(target, positive, unconditional, alpha=1.0, rank=4, device=0, nam
     with open('data/prompts-xl.yaml', 'w') as file:
         yaml.dump([output_dict], file)  # Note the list wrapping around output_dict
 
-    print("Data saved to 'data/prompts-xl.yaml'")
+    #print("Data saved to 'data/prompts-xl.yaml'")
     config = config_util.load_config_from_yaml(config_file)
     if name is not None:
         config.save.name = name

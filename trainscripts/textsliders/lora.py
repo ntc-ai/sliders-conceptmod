@@ -139,7 +139,7 @@ class LoRANetwork(nn.Module):
             self.multiplier,
             train_method=train_method,
         )
-        print(f"create LoRA for U-Net: {len(self.unet_loras)} modules.")
+        #print(f"create LoRA for U-Net: {len(self.unet_loras)} modules.")
 
         # assertion 名前の被りがないか確認しているようだ
         lora_names = set()

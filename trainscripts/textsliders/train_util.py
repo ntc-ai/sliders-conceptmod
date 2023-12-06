@@ -184,7 +184,7 @@ def diffusion(
 ):
     # latents_steps = []
 
-    for timestep in tqdm(scheduler.timesteps[start_timesteps:total_timesteps]):
+    for timestep in scheduler.timesteps[start_timesteps:total_timesteps]:
         noise_pred = predict_noise(
             unet, scheduler, timestep, latents, text_embeddings, **kwargs
         )
@@ -274,7 +274,7 @@ def diffusion_xl(
 ):
     # latents_steps = []
 
-    for timestep in tqdm(scheduler.timesteps[start_timesteps:total_timesteps]):
+    for timestep in scheduler.timesteps[start_timesteps:total_timesteps]:
         noise_pred = predict_noise_xl(
             unet,
             scheduler,
