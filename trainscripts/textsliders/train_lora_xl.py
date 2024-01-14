@@ -131,6 +131,7 @@ def train(
                 settings.positive,
                 settings.neutral,
                 settings.unconditional,
+                settings.negative
             ]:
                 if cache[prompt] == None:
                     tex_embs, pool_embs = train_util.encode_prompts_xl(
@@ -151,6 +152,7 @@ def train(
                     cache[settings.positive],
                     cache[settings.unconditional],
                     cache[settings.neutral],
+                    cache[settings.negative],
                     settings,
                 )
             )
@@ -229,8 +231,8 @@ def train(
                     ),
                     start_timesteps=0,
                     total_timesteps=timesteps_to,
-                    guidance_scale=3,
-                )
+                    guidance_scale=3, # TODO
+                ) #TODO: How does the gradient work?
 
             noise_scheduler.set_timesteps(1000)
 
@@ -257,7 +259,7 @@ def train(
                 add_time_ids=train_util.concat_embeddings(
                     add_time_ids, add_time_ids, prompt_pair.batch_size
                 ),
-                guidance_scale=1,
+                guidance_scale=1, #TODO
             ).to(device, dtype=weight_dtype)
             neutral_latents = train_util.predict_noise_xl(
                 unet,
@@ -277,33 +279,32 @@ def train(
                 add_time_ids=train_util.concat_embeddings(
                     add_time_ids, add_time_ids, prompt_pair.batch_size
                 ),
-                guidance_scale=1,
+                guidance_scale=1, #TODO
             ).to(device, dtype=weight_dtype)
-            unconditional_latents = train_util.predict_noise_xl(
+            negative_latents = train_util.predict_noise_xl(
                 unet,
                 noise_scheduler,
                 current_timestep,
                 denoised_latents,
                 text_embeddings=train_util.concat_embeddings(
                     prompt_pair.unconditional.text_embeds,
-                    prompt_pair.unconditional.text_embeds,
+                    prompt_pair.negative.text_embeds,
                     prompt_pair.batch_size,
                 ),
                 add_text_embeddings=train_util.concat_embeddings(
                     prompt_pair.unconditional.pooled_embeds,
-                    prompt_pair.unconditional.pooled_embeds,
+                    prompt_pair.negative.pooled_embeds,
                     prompt_pair.batch_size,
                 ),
                 add_time_ids=train_util.concat_embeddings(
                     add_time_ids, add_time_ids, prompt_pair.batch_size
                 ),
-                guidance_scale=1,
+                guidance_scale=1, #TODO
             ).to(device, dtype=weight_dtype)
 
             if config.logging.verbose:
                 print("positive_latents:", positive_latents[0, 0, :5, :5])
                 print("neutral_latents:", neutral_latents[0, 0, :5, :5])
-                print("unconditional_latents:", unconditional_latents[0, 0, :5, :5])
 
         with network:
             target_latents = train_util.predict_noise_xl(
@@ -324,21 +325,21 @@ def train(
                 add_time_ids=train_util.concat_embeddings(
                     add_time_ids, add_time_ids, prompt_pair.batch_size
                 ),
-                guidance_scale=1,
+                guidance_scale=1, #TODO
             ).to(device, dtype=weight_dtype)
 
             if config.logging.verbose:
                 print("target_latents:", target_latents[0, 0, :5, :5])
 
         positive_latents.requires_grad = False
+        negative_latents.requires_grad = False
         neutral_latents.requires_grad = False
-        unconditional_latents.requires_grad = False
 
         loss = prompt_pair.loss(
             target_latents=target_latents,
             positive_latents=positive_latents,
             neutral_latents=neutral_latents,
-            unconditional_latents=unconditional_latents,
+            negative_latents=negative_latents,
         )
 
         # 1000倍しないとずっと0.000...になってしまって見た目的に面白くない
@@ -354,8 +355,8 @@ def train(
 
         del (
             positive_latents,
+            negative_latents,
             neutral_latents,
-            unconditional_latents,
             target_latents,
             latents,
         )
@@ -418,12 +419,13 @@ def main(args):
     device = torch.device(f"cuda:{args.device}")
     train(config, prompts, device)
 
-def train_lora(target, positive, unconditional, alpha=1.0, rank=4, device=0, name=None, attributes=None, batch_size=1, config_file='data/config-xl.yaml', resolution=512, steps=None):
+def train_lora(target, positive, negative, unconditional, alpha=1.0, rank=4, device=0, name=None, attributes=None, batch_size=1, config_file='data/config-xl.yaml', resolution=512, steps=None):
 
     # Create the configuration dictionary
     output_dict = {
         "target": target,
         "positive": positive,
+        "negative": negative,
         "unconditional": unconditional,
         "neutral": target,  # Assuming neutral is the same as target
         "action": "enhance",

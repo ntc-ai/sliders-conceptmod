@@ -284,7 +284,7 @@ def diffusion_xl(
             add_text_embeddings,
             add_time_ids,
             guidance_scale=guidance_scale,
-            guidance_rescale=0.7,
+            guidance_rescale=0.7, #TODO
         )
 
         # compute the previous noisy sample x_t -> x_t-1

@@ -44,6 +44,7 @@ class PromptEmbedsCache:  # 使いまわしたいので
 class PromptSettings(BaseModel):  # yaml のやつ
     target: str
     positive: str = None   # if None, target will be used
+    negative: str = None
     unconditional: str = ""  # default is ""
     neutral: str = None  # if None, unconditional will be used
     action: ACTION_TYPES = "erase"  # default is "erase"
@@ -71,6 +72,7 @@ class PromptSettings(BaseModel):  # yaml のやつ
 class PromptEmbedsPair:
     target: PROMPT_EMBEDDING  # not want to generate the concept
     positive: PROMPT_EMBEDDING  # generate the concept
+    negative: PROMPT_EMBEDDING  # negative condition
     unconditional: PROMPT_EMBEDDING  # uncondition (default should be empty)
     neutral: PROMPT_EMBEDDING  # base condition (default should be empty)
 
@@ -90,11 +92,13 @@ class PromptEmbedsPair:
         positive: PROMPT_EMBEDDING,
         unconditional: PROMPT_EMBEDDING,
         neutral: PROMPT_EMBEDDING,
+        negative: PROMPT_EMBEDDING,
         settings: PromptSettings,
     ) -> None:
         self.loss_fn = loss_fn
         self.target = target
         self.positive = positive
+        self.negative = negative
         self.unconditional = unconditional
         self.neutral = neutral
         
@@ -109,14 +113,14 @@ class PromptEmbedsPair:
         self,
         target_latents: torch.FloatTensor,  # "van gogh"
         positive_latents: torch.FloatTensor,  # "van gogh"
-        unconditional_latents: torch.FloatTensor,  # ""
         neutral_latents: torch.FloatTensor,  # ""
+        negative_latents: torch.FloatTensor,  # ""
     ) -> torch.FloatTensor:
         """Target latents are going not to have the positive concept."""
         return self.loss_fn(
             target_latents,
             neutral_latents
-            - self.guidance_scale * (positive_latents - unconditional_latents)
+            - self.guidance_scale * (positive_latents - negative_latents)
         )
     
 
@@ -124,14 +128,14 @@ class PromptEmbedsPair:
         self,
         target_latents: torch.FloatTensor,  # "van gogh"
         positive_latents: torch.FloatTensor,  # "van gogh"
-        unconditional_latents: torch.FloatTensor,  # ""
         neutral_latents: torch.FloatTensor,  # ""
+        negative_latents: torch.FloatTensor,  # ""
     ):
         """Target latents are going to have the positive concept."""
         return self.loss_fn(
             target_latents,
             neutral_latents
-            + self.guidance_scale * (positive_latents - unconditional_latents)
+            + self.guidance_scale * (positive_latents - negative_latents)
         )
 
     def loss(
@@ -162,6 +166,7 @@ def load_prompts_from_yaml(path, attributes = []):
                 copy_['target'] = att + ' ' + copy_['target']
                 copy_['positive'] = att + ' ' + copy_['positive']
                 copy_['neutral'] = att + ' ' + copy_['neutral']
+                copy_['negative'] = att + ' ' + copy_['negative']
                 copy_['unconditional'] = att + ' ' + copy_['unconditional']
                 newprompts.append(copy_)
     else:
