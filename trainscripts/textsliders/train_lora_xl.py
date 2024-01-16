@@ -41,6 +41,7 @@ def train(
     config: RootConfig,
     prompts: list[PromptSettings],
     device,
+    on_step_complete,
     save_file=True
 ):
     metadata = {
@@ -374,6 +375,8 @@ def train(
                 save_path / f"{config.save.name}_{i}steps.pt",
                 dtype=save_weight_dtype,
             )
+        if on_step_complete is not None:
+            on_step_complete(i)
 
     if save_file:
         print("Saving...",save_path / f"{config.save.name}_last.pt" )
@@ -419,8 +422,7 @@ def main(args):
     device = torch.device(f"cuda:{args.device}")
     train(config, prompts, device)
 
-def train_lora(target, positive, negative, unconditional, alpha=1.0, rank=4, device=0, name=None, attributes=None, batch_size=1, config_file='data/config-xl.yaml', resolution=512, steps=None):
-
+def train_lora(target, positive, negative, unconditional, alpha=1.0, rank=4, device=0, name=None, attributes=None, batch_size=1, config_file='data/config-xl.yaml', resolution=512, steps=None, on_step_complete=None):
     # Create the configuration dictionary
     output_dict = {
         "target": target,
@@ -458,7 +460,7 @@ def train_lora(target, positive, negative, unconditional, alpha=1.0, rank=4, dev
 
     prompts = prompt_util.load_prompts_from_yaml(config.prompts_file, attr_list)
     device = torch.device(f"cuda:{device}")
-    return train(config, prompts, device, save_file=False)
+    return train(config, prompts, device, on_step_complete, save_file=False)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
