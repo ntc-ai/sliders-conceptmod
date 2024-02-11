@@ -179,6 +179,7 @@ def load_diffusers_model_xl(
 def load_checkpoint_model_xl(
     checkpoint_path: str,
     lora:str,
+    lora_weight:float,
     weight_dtype: torch.dtype = torch.float32,
 ) -> tuple[list[CLIPTokenizer], list[SDXL_TEXT_ENCODER_TYPE], UNet2DConditionModel,]:
 
@@ -189,10 +190,11 @@ def load_checkpoint_model_xl(
     )
 
     if lora != "":
-        print(lora)
-        pipe.load_lora_weights(lora, weight_name='Chiaroscuro.safetensors', adapter_name="Chiaroscuro")
+        name = lora.split("/")[-1].split(".")[0]
+        print(lora, name)
+        pipe.load_lora_weights(lora, weight_name=lora, adapter_name=name)
 
-        pipe.set_adapters(["Chiaroscuro"], adapter_weights=[3.0])
+        pipe.set_adapters([name], adapter_weights=[lora_weight])
         print(lora+"LOAD")
 
     unet = pipe.unet
@@ -210,6 +212,7 @@ def load_models_xl(
     pretrained_model_name_or_path: str,
     scheduler_name: AVAILABLE_SCHEDULERS,
     lora:str,
+    lora_weight:float,
     weight_dtype: torch.dtype = torch.float32
 ) -> tuple[
     list[CLIPTokenizer],
@@ -224,13 +227,13 @@ def load_models_xl(
             tokenizers,
             text_encoders,
             unet,
-        ) = load_checkpoint_model_xl(pretrained_model_name_or_path, lora, weight_dtype)
+        ) = load_checkpoint_model_xl(pretrained_model_name_or_path, lora, lora_weight, weight_dtype)
     else:  # diffusers
         (
             tokenizers,
             text_encoders,
             unet,
-        ) = load_diffusers_model_xl(pretrained_model_name_or_path, lora, weight_dtype)
+        ) = load_diffusers_model_xl(pretrained_model_name_or_path, lora, lora_weight, weight_dtype)
 
     scheduler = create_noise_scheduler(scheduler_name)
 

@@ -161,11 +161,8 @@ def load_prompts_from_yaml(path, attributes = []):
     if len(attributes)!=0:
         newprompts = []
         for i in range(len(prompts)):
-            for att in attributes:
-                copy_ = copy.deepcopy(prompts[i])
-                copy_['target'] = att + ' ' + copy_['target']
-                copy_['positive'] = att + ' ' + copy_['positive']
-                newprompts.append(copy_)
+            copy_ = copy.deepcopy(prompts[i])
+            newprompts.append(copy_)
     else:
         newprompts = copy.deepcopy(prompts)
     
