@@ -117,14 +117,12 @@
 #   batch_size: 1
 ####################################################################################################### IMAGE SLIDER
 - target: "" # what word for erasing the positive concept from
-  positive: "Chiaroscuro" # concept to erase
-  unconditional: "" # word to take the difference from the positive concept
   neutral: "" # starting point for conditioning the target
   action: "enhance" # erase or enhance
-  guidance_scale: 4
+  guidance_scale: 1
   resolution: 512
   dynamic_resolution: false
-  batch_size: 1
+  batch_size: 2
 ####################################################################################################### IMAGE SLIDER
 # - target: "food" # what word for erasing the positive concept from
 #   positive: "food, expensive and fine dining" # concept to erase

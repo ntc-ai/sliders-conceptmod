@@ -7,6 +7,7 @@ import argparse
 import ast
 from pathlib import Path
 import gc
+import numpy as np
 
 import torch
 from tqdm import tqdm
@@ -89,18 +90,27 @@ def train(
         lora=lora_file,
         lora_weight=3.
     )
+    if negative is not None:
+        (
+            tokenizers_neg,
+            text_encoders_neg,
+            unet_neg,
+            noise_scheduler_neg,
+        ) = model_util.load_models_xl(
+            config.pretrained_model.name_or_path,
+            scheduler_name=config.train.noise_scheduler,
+            lora=lora_file,
+            lora_weight=-3.
+        )
+        for text_encoder in text_encoders_neg:
+            text_encoder.to(device, dtype=weight_dtype)
+            text_encoder.requires_grad_(False)
+            text_encoder.eval()
+        unet_neg.requires_grad_(False)
+        unet_neg.to(device, dtype=weight_dtype)
+        unet_neg.eval()
+        unet_neg.enable_xformers_memory_efficient_attention()
 
-    (
-        tokenizers_neg,
-        text_encoders_neg,
-        unet_neg,
-        noise_scheduler_neg,
-    ) = model_util.load_models_xl(
-        config.pretrained_model.name_or_path,
-        scheduler_name=config.train.noise_scheduler,
-        lora=lora_file,
-        lora_weight=-3.
-    )
     for text_encoder in text_encoders:
         text_encoder.to(device, dtype=weight_dtype)
         text_encoder.requires_grad_(False)
@@ -109,24 +119,16 @@ def train(
         text_encoder.to(device, dtype=weight_dtype)
         text_encoder.requires_grad_(False)
         text_encoder.eval()
-    for text_encoder in text_encoders_neg:
-        text_encoder.to(device, dtype=weight_dtype)
-        text_encoder.requires_grad_(False)
-        text_encoder.eval()
 
     unet.to(device, dtype=weight_dtype)
     unet2.to(device, dtype=weight_dtype)
-    unet_neg.to(device, dtype=weight_dtype)
     if config.other.use_xformers:
         unet.enable_xformers_memory_efficient_attention()
         unet2.enable_xformers_memory_efficient_attention()
-        unet_neg.enable_xformers_memory_efficient_attention()
     unet.requires_grad_(False)
     unet2.requires_grad_(False)
-    unet_neg.requires_grad_(False)
     unet.eval()
     unet2.eval()
-    unet_neg.eval()
 
     network = LoRANetwork(
         unet,
@@ -165,7 +167,7 @@ def train(
         debug_util.check_training_mode(network)
 
     cache = PromptEmbedsCache()
-    prompt_pairs: list[PromptEmbedsPair] = []
+    cache2 = PromptEmbedsCache()
 
     print("PROMPTS", prompts, "POS", positive, "NEG", negative)
     with torch.no_grad():
@@ -192,6 +194,17 @@ def train(
                         tex_embs,
                         pool_embs
                     )
+                    tex_embs2, pool_embs2 = train_util.encode_prompts_xl(
+                            tokenizers,
+                            text_encoders2,
+                            [prompt],
+                            num_images_per_prompt=NUM_IMAGES_PER_PROMPT,
+                        )
+                    cache2[prompt] = PromptEmbedsXL(
+                        tex_embs2,
+                        pool_embs2
+                    )
+
 
 
     for tokenizer, text_encoder in zip(tokenizers, text_encoders):
@@ -204,6 +217,7 @@ def train(
     loss = None
 
     for i in pbar:
+        seed = np.random.randint(0, 2**32 - 1)
         with torch.no_grad():
             noise_scheduler.set_timesteps(
                 config.train.max_denoising_steps, device=device
@@ -211,9 +225,10 @@ def train(
             noise_scheduler2.set_timesteps(
                 config.train.max_denoising_steps, device=device
             )
-            noise_scheduler_neg.set_timesteps(
-                config.train.max_denoising_steps, device=device
-            )
+            if negative is not None:
+                noise_scheduler_neg.set_timesteps(
+                    config.train.max_denoising_steps, device=device
+                )
 
 
             optimizer.zero_grad()
@@ -229,7 +244,7 @@ def train(
                 print("gudance_scale:", settings.guidance_scale)
                 print("resolution:", settings.resolution)
                 print("dynamic_resolution:", settings.dynamic_resolution)
-                if prompt_pair.dynamic_resolution:
+                if settings.dynamic_resolution:
                     print("bucketed resolution:", (height, width))
                 print("batch_size:", settings.batch_size)
                 print("dynamic_crops:", settings.dynamic_crops)
@@ -245,9 +260,11 @@ def train(
                 dtype=weight_dtype,
             ).to(device, dtype=weight_dtype)
 
+            for l in network.unet_loras:
+                l.multiplier = 1.0
             with network:
-                for l in network.unet_loras:
-                    l.multiplier = 1.0
+                torch.manual_seed(seed)
+                torch.cuda.manual_seed_all(seed)
                 # ちょっとデノイズされれたものが返る
                 denoised_latents = train_util.diffusion_xl(
                     unet,
@@ -268,51 +285,91 @@ def train(
                     ),
                     start_timesteps=0,
                     total_timesteps=timesteps_to,
-                    guidance_scale=3, # TODO
+                    guidance_scale=1, # TODO
                 ) #TODO: How does the gradient work?
-                #denoised_latents2 = train_util.diffusion_xl(
-                #    unet2,
-                #    noise_scheduler2,
-                #    latents.detach().clone(),  # 単純なノイズのlatentsを渡す
-                #    text_embeddings=train_util.concat_embeddings(
-                #        settings.unconditional.text_embeds,
-                #        settings.target.text_embeds,
-                #        settings.batch_size,
-                #    ),
-                #    add_text_embeddings=train_util.concat_embeddings(
-                #        settings.unconditional.pooled_embeds,
-                #        settings.target.pooled_embeds,
-                #        settings.batch_size,
-                #    ),
-                #    add_time_ids=train_util.concat_embeddings(
-                #        add_time_ids, add_time_ids, settings.batch_size
-                #    ),
-                #    start_timesteps=0,
-                #    total_timesteps=timesteps_to,
-                #    guidance_scale=3, # TODO
-                #) #TODO: How does the gradient work?
 
+            torch.manual_seed(seed)
+            torch.cuda.manual_seed_all(seed)
+            # ちょっとデノイズされれたものが返る
+            #positive_denoised_latents = train_util.diffusion_xl(
+            #    unet2,
+            #    noise_scheduler2,
+            #    latents.detach().clone(),  # 単純なノイズのlatentsを渡す
+            #    text_embeddings=train_util.concat_embeddings(
+            #        cache2[settings.unconditional].text_embeds,
+            #        cache2[positive].text_embeds,
+            #        settings.batch_size,
+            #    ),
+            #    add_text_embeddings=train_util.concat_embeddings(
+            #        cache2[settings.unconditional].pooled_embeds,
+            #        cache2[positive].pooled_embeds,
+            #        settings.batch_size,
+            #    ),
+            #    add_time_ids=train_util.concat_embeddings(
+            #        add_time_ids, add_time_ids, settings.batch_size
+            #    ),
+            #    start_timesteps=0,
+            #    total_timesteps=timesteps_to,
+            #    guidance_scale=1, # TODO
+            #) #TODO: How does the gradient work?
+
+            with network:
+                if negative is not None:
+                    for l in network.unet_loras:
+                        l.multiplier = -1.0
+                    # ちょっとデノイズされれたものが返る
+                    torch.manual_seed(seed)
+                    torch.cuda.manual_seed_all(seed)
+                    denoised_latents_neg = train_util.diffusion_xl(
+                        unet,
+                        noise_scheduler2,
+                        latents.detach().clone(),  # 単純なノイズのlatentsを渡す
+                        text_embeddings=train_util.concat_embeddings(
+                            cache[settings.unconditional].text_embeds,
+                            cache[settings.target].text_embeds,
+                            settings.batch_size,
+                        ),
+                        add_text_embeddings=train_util.concat_embeddings(
+                            cache[settings.unconditional].pooled_embeds,
+                            cache[settings.target].pooled_embeds,
+                            settings.batch_size,
+                        ),
+                        add_time_ids=train_util.concat_embeddings(
+                            add_time_ids, add_time_ids, settings.batch_size
+                        ),
+                        start_timesteps=0,
+                        total_timesteps=timesteps_to,
+                        guidance_scale=1, # TODO
+                    ) #TODO: How does the gradient work?
+
+            noise_scheduler2.set_timesteps(1000)
+
+            current_timestep2 = noise_scheduler2.timesteps[
+                int(timesteps_to * 1000 / config.train.max_denoising_steps)
+            ]
 
             noise_scheduler.set_timesteps(1000)
 
             current_timestep = noise_scheduler.timesteps[
                 int(timesteps_to * 1000 / config.train.max_denoising_steps)
             ]
-
+            torch.manual_seed(seed)
+            torch.cuda.manual_seed_all(seed)
+            print("POS", positive, cache)
             # with network: の外では空のLoRAのみが有効になる
             positive_latents = train_util.predict_noise_xl(
                 unet2,
                 noise_scheduler,
-                current_timestep,
+                current_timestep2,
                 denoised_latents,
                 text_embeddings=train_util.concat_embeddings(
-                    cache[settings.unconditional].text_embeds,
-                    cache[positive].text_embeds,
+                    cache2[settings.unconditional].text_embeds,
+                    cache2[positive].text_embeds,
                     settings.batch_size,
                 ),
                 add_text_embeddings=train_util.concat_embeddings(
-                    cache[settings.unconditional].pooled_embeds,
-                    cache[positive].pooled_embeds,
+                    cache2[settings.unconditional].pooled_embeds,
+                    cache2[positive].pooled_embeds,
                     settings.batch_size,
                 ),
                 add_time_ids=train_util.concat_embeddings(
@@ -321,30 +378,35 @@ def train(
                 guidance_scale=1, #TODO
             ).to(device, dtype=weight_dtype)
 
-            # with network: の外では空のLoRAのみが有効になる
-            negative_latents = train_util.predict_noise_xl(
-                unet_neg,
-                noise_scheduler,
-                current_timestep,
-                denoised_latents,
-                text_embeddings=train_util.concat_embeddings(
-                    cache[settings.unconditional].text_embeds,
-                    cache[negative].text_embeds,
-                    settings.batch_size,
-                ),
-                add_text_embeddings=train_util.concat_embeddings(
-                    cache[settings.unconditional].pooled_embeds,
-                    cache[negative].pooled_embeds,
-                    settings.batch_size,
-                ),
-                add_time_ids=train_util.concat_embeddings(
-                    add_time_ids, add_time_ids, settings.batch_size
-                ),
-                guidance_scale=1, #TODO
-            ).to(device, dtype=weight_dtype)
+            if negative is not None:
+                torch.manual_seed(seed)
+                torch.cuda.manual_seed_all(seed)
+                # with network: の外では空のLoRAのみが有効になる
+                negative_latents = train_util.predict_noise_xl(
+                    unet_neg,
+                    noise_scheduler2,
+                    current_timestep,
+                    denoised_latents_neg,
+                    text_embeddings=train_util.concat_embeddings(
+                        cache[settings.unconditional].text_embeds,
+                        cache[negative].text_embeds,
+                        settings.batch_size,
+                    ),
+                    add_text_embeddings=train_util.concat_embeddings(
+                        cache[settings.unconditional].pooled_embeds,
+                        cache[negative].pooled_embeds,
+                        settings.batch_size,
+                    ),
+                    add_time_ids=train_util.concat_embeddings(
+                        add_time_ids, add_time_ids, settings.batch_size
+                    ),
+                    guidance_scale=1, #TODO
+                ).to(device, dtype=weight_dtype)
 
 
         with network:
+            torch.manual_seed(seed)
+            torch.cuda.manual_seed_all(seed)
             for l in network.unet_loras:
                 l.multiplier = 1.0
             target_latents = train_util.predict_noise_xl(
@@ -368,39 +430,44 @@ def train(
                 guidance_scale=1, #TODO
             ).to(device, dtype=weight_dtype)
 
-            for l in network.unet_loras:
-                l.multiplier = -1.0
+            if negative is not None:
+                torch.manual_seed(seed)
+                torch.cuda.manual_seed_all(seed)
+                for l in network.unet_loras:
+                    l.multiplier = -1.0
 
-            target_neg_latents = train_util.predict_noise_xl(
-                unet,
-                noise_scheduler,
-                current_timestep,
-                denoised_latents,
-                text_embeddings=train_util.concat_embeddings(
-                    cache[settings.unconditional].text_embeds,
-                    cache[settings.target].text_embeds,
-                    settings.batch_size,
-                ),
-                add_text_embeddings=train_util.concat_embeddings(
-                    cache[settings.unconditional].pooled_embeds,
-                    cache[settings.target].pooled_embeds,
-                    settings.batch_size,
-                ),
-                add_time_ids=train_util.concat_embeddings(
-                    add_time_ids, add_time_ids, settings.batch_size
-                ),
-                guidance_scale=1, #TODO
-            ).to(device, dtype=weight_dtype)
+                target_neg_latents = train_util.predict_noise_xl(
+                    unet,
+                    noise_scheduler2,
+                    current_timestep,
+                    denoised_latents_neg,
+                    text_embeddings=train_util.concat_embeddings(
+                        cache[settings.unconditional].text_embeds,
+                        cache[settings.target].text_embeds,
+                        settings.batch_size,
+                    ),
+                    add_text_embeddings=train_util.concat_embeddings(
+                        cache[settings.unconditional].pooled_embeds,
+                        cache[settings.target].pooled_embeds,
+                        settings.batch_size,
+                    ),
+                    add_time_ids=train_util.concat_embeddings(
+                        add_time_ids, add_time_ids, settings.batch_size
+                    ),
+                    guidance_scale=1, #TODO
+                ).to(device, dtype=weight_dtype)
 
             if config.logging.verbose:
                 print("target_latents:", target_latents[0, 0, :5, :5])
 
         positive_latents.requires_grad = False
-        negative_latents.requires_grad = False
+        if negative is not None:
+            negative_latents.requires_grad = False
 
         loss = ((positive_latents -target_latents) ** 2).mean()
         #loss += ((reg_latents -target_reg_latents) ** 2).mean()
-        loss += ((negative_latents -target_neg_latents) ** 2).mean()
+        if negative is not None:
+            loss += ((negative_latents -target_neg_latents) ** 2).mean()
 
         # 1000倍しないとずっと0.000...になってしまって見た目的に面白くない
         pbar.set_description(f"Loss*1k: {loss.item()*1000:.4f}")

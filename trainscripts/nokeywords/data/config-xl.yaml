@@ -12,7 +12,7 @@ train:
   precision: "bfloat16"
   noise_scheduler: "euler_a" # or "ddpm", "lms", "euler_a"
   iterations: 500
-  lr: 0.0002
+  lr: 0.0004
   optimizer: "AdamW"
   lr_scheduler: "constant"
   max_denoising_steps: 12
