@@ -14,7 +14,8 @@ from safetensors.torch import save_file
 
 UNET_TARGET_REPLACE_MODULE_TRANSFORMER = [
 #     "Transformer2DModel",  # どうやらこっちの方らしい？ # attn1, 2
-    "Attention"
+    "CLIPAttention",
+    #    "Linear"
 ]
 UNET_TARGET_REPLACE_MODULE_CONV = [
     "ResnetBlock2D",
@@ -25,7 +26,8 @@ UNET_TARGET_REPLACE_MODULE_CONV = [
     
 ]  # locon, 3clier
 
-LORA_PREFIX_UNET = "lora_unet"
+LORA_PREFIX_UNET = "lora_te2"
+#LORA_PREFIX_UNET = "lora_te1"
 
 DEFAULT_TARGET_REPLACE = UNET_TARGET_REPLACE_MODULE_TRANSFORMER
 
@@ -119,6 +121,7 @@ class LoRANetwork(nn.Module):
         rank: int = 4,
         multiplier: float = 1.0,
         alpha: float = 1.0,
+        prefix: str = "",
         train_method: TRAINING_METHODS = "full",
     ) -> None:
         super().__init__()
@@ -132,7 +135,7 @@ class LoRANetwork(nn.Module):
 
         # unetのloraを作る
         self.unet_loras = self.create_modules(
-            LORA_PREFIX_UNET,
+            prefix,
             unet,
             DEFAULT_TARGET_REPLACE,
             self.lora_dim,
@@ -203,9 +206,9 @@ class LoRANetwork(nn.Module):
                         if train_method == 'noxattn-hspace-last':
                             if 'mid_block' not in name or '.1' not in name or 'conv2' not in child_name:
                                 continue
-                        lora_name = prefix + "." + name + "." + child_name
-                        lora_name = lora_name.replace(".", "_")
-                        print(f"{lora_name}")
+                        lora_name = prefix+ "." + name + "." + child_name
+                        lora_name = lora_name.replace(".", "_").strip("_")
+                        #print(f"{lora_name}")
                         lora = self.module(
                             lora_name, child_module, multiplier, rank, self.alpha
                         )
