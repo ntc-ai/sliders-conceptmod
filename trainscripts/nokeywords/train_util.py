@@ -82,8 +82,6 @@ def encode_prompts(
 
     text_tokens = text_tokenize(tokenizer, prompts)
     text_embeddings = text_encode(text_encoder, text_tokens)
-    
-    
 
     return text_embeddings
 
@@ -119,7 +117,7 @@ def encode_prompts_xl(
 
     for tokenizer, text_encoder in zip(tokenizers, text_encoders):
         text_tokens_input_ids = text_tokenize(tokenizer, prompts)
-        text_embeds, pooled_text_embeds = text_encode_xl(
+        text_embeds,opooled_text_embeds = text_encode_xl(
             text_encoder, text_tokens_input_ids, num_images_per_prompt
         )
 
