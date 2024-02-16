@@ -2,8 +2,11 @@ from typing import Optional, Union
 
 import torch
 
+from math import ceil
 from transformers import CLIPTextModel, CLIPTokenizer
 from diffusers import UNet2DConditionModel, SchedulerMixin
+from diffusers.schedulers import DDPMWuerstchenScheduler
+from diffusers.utils.torch_utils import randn_tensor
 
 from model_util import SDXL_TEXT_ENCODER_TYPE
 
@@ -105,6 +108,20 @@ def text_encode_xl(
     prompt_embeds = prompt_embeds.view(bs_embed * num_images_per_prompt, seq_len, -1)
 
     return prompt_embeds, pooled_prompt_embeds
+
+def encode_prompts_cascade(
+    tokenizer: CLIPTokenizer,
+    text_encoder: CLIPTokenizer,
+    prompts: list[str],
+):
+
+    text_tokens = text_tokenize(tokenizer, prompts)
+    text_embeddings = text_encode(text_encoder, text_tokens)
+    
+    
+
+    return text_embeddings
+
 
 
 def encode_prompts_xl(
@@ -260,6 +277,93 @@ def predict_noise_xl(
     return guided_target
 
 
+def predict_noise_cascade(
+    unet: UNet2DConditionModel,
+    scheduler: SchedulerMixin,
+    timestep: int,  # 現在のタイムステップ
+    latents: torch.FloatTensor,
+    prompt: str,
+    batch_size=1,
+    text_encoder=None,
+    tokenizer=None,
+    negative_prompt='',
+    guidance_scale=7.5,
+    guidance_rescale=0.7,
+) -> torch.FloatTensor:
+    latents = scheduler.scale_model_input(latents, timestep)
+    dtype = next(unet.parameters()).dtype
+    device = unet.device
+    do_classifier_free_guidance=True
+    num_images_per_prompt=1
+    if hasattr(scheduler, "betas"):
+        alphas = 1.0 - scheduler.betas
+        alphas_cumprod = torch.cumprod(alphas, dim=0)
+    else:
+        alphas_cumprod = []
+    if not isinstance(scheduler, DDPMWuerstchenScheduler):
+        if len(alphas_cumprod) > 0:
+            ratio = get_t_condioning(timestep.long().cpu(), alphas_cumprod)
+            ratio = ratio.expand(latents.size(0)).to(dtype).to(device)
+        else:
+            ratio = t.float().div(scheduler.timesteps[-1]).expand(latents.size(0)).to(dtype)
+    else:
+        ratio = t.expand(latents.size(0)).to(dtype)
+    (
+            prompt_embeds,
+            prompt_embeds_pooled,
+            negative_prompt_embeds,
+            negative_prompt_embeds_pooled,
+    ) = encode_prompt_cascade(
+            prompt=prompt,
+            device=device,
+            batch_size=batch_size,#batch_size,
+            num_images_per_prompt=num_images_per_prompt,
+            do_classifier_free_guidance=do_classifier_free_guidance,
+            negative_prompt=negative_prompt,
+            tokenizer=tokenizer,
+            text_encoder=text_encoder
+    )
+
+    text_encoder_hidden_states = (
+        torch.cat([prompt_embeds, negative_prompt_embeds]) if negative_prompt_embeds is not None else prompt_embeds
+    )
+    text_encoder_pooled = (
+        torch.cat([prompt_embeds_pooled, negative_prompt_embeds_pooled])
+        if negative_prompt_embeds is not None
+        else prompt_embeds_pooled
+    )
+
+    image_embeds_pooled = torch.zeros(
+        batch_size * num_images_per_prompt, 1, unet.config.c_clip_img, device=device, dtype=dtype
+    )
+    uncond_image_embeds_pooled = torch.zeros(
+        batch_size * num_images_per_prompt, 1, unet.config.c_clip_img, device=device, dtype=dtype
+    )
+    if do_classifier_free_guidance:
+        image_embeds = torch.cat([image_embeds_pooled, uncond_image_embeds_pooled], dim=0)
+    else:
+        image_embeds = image_embeds_pooled
+
+
+    #print("LATENTS 1", latents.shape)
+    # 7. Denoise image embeddings
+    predicted_image_embedding = unet(
+        x=torch.cat([latents] * 2) if do_classifier_free_guidance else latents,
+        r=torch.cat([ratio] * 2) if do_classifier_free_guidance else ratio,
+        clip_text_pooled=text_encoder_pooled,
+        clip_text=text_encoder_hidden_states,
+        clip_img=image_embeds
+    )
+
+    # 8. Check for classifier free guidance and apply it
+    if do_classifier_free_guidance:
+        predicted_image_embedding_text, predicted_image_embedding_uncond = predicted_image_embedding.chunk(2)
+        predicted_image_embedding = torch.lerp(
+            predicted_image_embedding_uncond, predicted_image_embedding_text, guidance_scale
+        )
+    return predicted_image_embedding
+
+
 @torch.no_grad()
 def diffusion_xl(
     unet: UNet2DConditionModel,
@@ -289,6 +393,270 @@ def diffusion_xl(
 
         # compute the previous noisy sample x_t -> x_t-1
         latents = scheduler.step(noise_pred, timestep, latents).prev_sample
+
+    # return latents_steps
+    return latents
+
+def get_t_condioning(t, alphas_cumprod):
+    s = torch.tensor([0.003])
+    clamp_range = [0, 1]
+    min_var = torch.cos(s / (1 + s) * torch.pi * 0.5) ** 2
+    var = alphas_cumprod[t]
+    var = var.clamp(*clamp_range)
+    s, min_var = s.to(var.device), min_var.to(var.device)
+    ratio = (((var * min_var) ** 0.5).acos() / (torch.pi * 0.5)) * (1 + s) - s
+    return ratio
+
+
+def encode_prompt_cascade(
+    device,
+    batch_size,
+    num_images_per_prompt,
+    do_classifier_free_guidance,
+    prompt=None,
+    negative_prompt="",
+    prompt_embeds: Optional[torch.FloatTensor] = None,
+    prompt_embeds_pooled: Optional[torch.FloatTensor] = None,
+    negative_prompt_embeds: Optional[torch.FloatTensor] = None,
+    negative_prompt_embeds_pooled: Optional[torch.FloatTensor] = None,
+    text_encoder=None,
+    tokenizer=None
+):
+    if prompt_embeds is None:
+        # get prompt text embeddings
+        text_inputs = tokenizer(
+            prompt,
+            padding="max_length",
+            max_length=tokenizer.model_max_length,
+            truncation=True,
+            return_tensors="pt",
+        )
+        text_input_ids = text_inputs.input_ids
+        attention_mask = text_inputs.attention_mask
+
+        untruncated_ids = tokenizer(prompt, padding="longest", return_tensors="pt").input_ids
+
+        if untruncated_ids.shape[-1] >= text_input_ids.shape[-1] and not torch.equal(
+            text_input_ids, untruncated_ids
+        ):
+            removed_text = tokenizer.batch_decode(
+                untruncated_ids[:, tokenizer.model_max_length - 1 : -1]
+            )
+            logger.warning(
+                "The following part of your input was truncated because CLIP can only handle sequences up to"
+                f" {tokenizer.model_max_length} tokens: {removed_text}"
+            )
+            text_input_ids = text_input_ids[:, : tokenizer.model_max_length]
+            attention_mask = attention_mask[:, : tokenizer.model_max_length]
+
+        text_encoder_output = text_encoder(
+            text_input_ids.to(device), attention_mask=attention_mask.to(device), output_hidden_states=True
+        )
+        prompt_embeds = text_encoder_output.hidden_states[-1]
+        if prompt_embeds_pooled is None:
+            prompt_embeds_pooled = text_encoder_output.text_embeds.unsqueeze(1)
+
+    prompt_embeds = prompt_embeds.to(dtype=text_encoder.dtype, device=device)
+    prompt_embeds_pooled = prompt_embeds_pooled.to(dtype=text_encoder.dtype, device=device)
+    prompt_embeds = prompt_embeds.repeat_interleave(num_images_per_prompt, dim=0)
+    prompt_embeds_pooled = prompt_embeds_pooled.repeat_interleave(num_images_per_prompt, dim=0)
+    seq_len = prompt_embeds_pooled.shape[1]
+    prompt_embeds_pooled = prompt_embeds_pooled.view(batch_size * num_images_per_prompt, seq_len, -1)
+
+    if negative_prompt_embeds is None and do_classifier_free_guidance:
+        uncond_tokens: List[str]
+        if negative_prompt is None:
+            uncond_tokens = [""] * batch_size
+        elif type(prompt) is not type(negative_prompt):
+            raise TypeError(
+                f"`negative_prompt` should be the same type to `prompt`, but got {type(negative_prompt)} !="
+                f" {type(prompt)}."
+            )
+        elif isinstance(negative_prompt, str):
+            uncond_tokens = [negative_prompt]
+        elif batch_size != len(negative_prompt):
+            raise ValueError(
+                f"`negative_prompt`: {negative_prompt} has batch size {len(negative_prompt)}, but `prompt`:"
+                f" {prompt} has batch size {batch_size}. Please make sure that passed `negative_prompt` matches"
+                " the batch size of `prompt`."
+            )
+        else:
+            uncond_tokens = negative_prompt
+
+        uncond_input = tokenizer(
+            uncond_tokens,
+            padding="max_length",
+            max_length=tokenizer.model_max_length,
+            truncation=True,
+            return_tensors="pt",
+        )
+        negative_prompt_embeds_text_encoder_output = text_encoder(
+            uncond_input.input_ids.to(device),
+            attention_mask=uncond_input.attention_mask.to(device),
+            output_hidden_states=True,
+        )
+
+        negative_prompt_embeds = negative_prompt_embeds_text_encoder_output.hidden_states[-1]
+        negative_prompt_embeds_pooled = negative_prompt_embeds_text_encoder_output.text_embeds.unsqueeze(1)
+
+    if do_classifier_free_guidance:
+        # duplicate unconditional embeddings for each generation per prompt, using mps friendly method
+        seq_len = negative_prompt_embeds.shape[1]
+        negative_prompt_embeds = negative_prompt_embeds.to(dtype=text_encoder.dtype, device=device)
+        negative_prompt_embeds = negative_prompt_embeds.repeat(1, num_images_per_prompt, 1)
+        negative_prompt_embeds = negative_prompt_embeds.view(batch_size * num_images_per_prompt, seq_len, -1)
+
+        seq_len = negative_prompt_embeds_pooled.shape[1]
+        negative_prompt_embeds_pooled = negative_prompt_embeds_pooled.to(
+            dtype=text_encoder.dtype, device=device
+        )
+        negative_prompt_embeds_pooled = negative_prompt_embeds_pooled.repeat(1, num_images_per_prompt, 1)
+        negative_prompt_embeds_pooled = negative_prompt_embeds_pooled.view(
+            batch_size * num_images_per_prompt, seq_len, -1
+        )
+        # done duplicates
+
+    #print("___ABC", negative_prompt_embeds_pooled.shape, prompt_embeds_pooled.shape)
+
+    return prompt_embeds, prompt_embeds_pooled, negative_prompt_embeds, negative_prompt_embeds_pooled
+
+def prepare_latents_cascade(shape, dtype, device, generator, latents, scheduler):
+    if latents is None:
+        latents = randn_tensor(shape, generator=generator, device=device, dtype=dtype)
+    else:
+        if latents.shape != shape:
+            raise ValueError(f"Unexpected latents shape, got {latents.shape}, expected {shape}")
+        latents = latents.to(device)
+
+    latents = latents * scheduler.init_noise_sigma
+    return latents
+
+@torch.no_grad()
+def diffusion_cascade(
+    unet: UNet2DConditionModel,
+    scheduler: SchedulerMixin,
+    latents: torch.FloatTensor,  # ただのノイズだけのlatents
+    prompt,
+    tokenizer,
+    text_encoder,
+    batch_size,
+    width=1024,
+    height=1024,
+    negative_prompt='',
+    guidance_scale: float = 1.0,
+    total_timesteps: int = 1000,
+    start_timesteps=0,
+):
+    # latents_steps = []
+    device = unet.device
+    dtype = next(unet.parameters()).dtype
+    do_classifier_free_guidance=True
+    num_images_per_prompt=1
+
+    image_embeds_pooled = torch.zeros(
+        num_images_per_prompt, 1, unet.config.c_clip_img, device=device, dtype=dtype
+    )
+    uncond_image_embeds_pooled = torch.zeros(
+        num_images_per_prompt, 1, unet.config.c_clip_img, device=device, dtype=dtype
+    )
+    if do_classifier_free_guidance:
+        image_embeds = torch.cat([image_embeds_pooled, uncond_image_embeds_pooled], dim=0)
+    else:
+        image_embeds = image_embeds_pooled
+
+
+    (
+            prompt_embeds,
+            prompt_embeds_pooled,
+            negative_prompt_embeds,
+            negative_prompt_embeds_pooled,
+    ) = encode_prompt_cascade(
+            prompt=prompt,
+            device=device,
+            batch_size=batch_size,#batch_size,
+            num_images_per_prompt=num_images_per_prompt,
+            do_classifier_free_guidance=do_classifier_free_guidance,
+            negative_prompt=negative_prompt,
+            tokenizer=tokenizer,
+            text_encoder=text_encoder
+    )
+    resolution_multiple = 42.67
+    latent_height = ceil(height / resolution_multiple)
+    latent_width = ceil(width / resolution_multiple)
+
+    effnet_features_shape = (
+            num_images_per_prompt * batch_size,
+            unet.config.c_in,
+            latent_height,
+            latent_width,
+    )
+    generator = None
+    latents = None
+    latents = prepare_latents_cascade(effnet_features_shape, dtype, device, generator, latents, scheduler)
+    for t in scheduler.timesteps[start_timesteps:total_timesteps]:
+        latent_model_input = scheduler.scale_model_input(latents, t)
+        if hasattr(scheduler, "betas"):
+            alphas = 1.0 - scheduler.betas
+            alphas_cumprod = torch.cumprod(alphas, dim=0)
+        else:
+            alphas_cumprod = []
+        if not isinstance(scheduler, DDPMWuerstchenScheduler):
+            if len(alphas_cumprod) > 0:
+                ratio = get_t_condioning(t.long().cpu(), alphas_cumprod)
+                ratio = ratio.expand(latent_model_input.size(0)).to(dtype).to(device)
+            else:
+                ratio = t.float().div(scheduler.timesteps[-1]).expand(latents.size(0)).to(dtype)
+        else:
+            ratio = t.expand(latents.size(0)).to(dtype)
+        s = [1, 77, -1]
+
+        #negative_prompt_embeds = negative_prompt_embeds.view(*s)
+        #negative_prompt_embeds_pooled = negative_prompt_embeds_pooled.view([s[0], 1, s[2]])
+        #prompt_embeds = prompt_embeds.view(*s)
+        #prompt_embeds_pooled = prompt_embeds_pooled.view([s[0], 1, s[2]])
+        #print(prompt_embeds.shape, negative_prompt_embeds.shape)
+        text_encoder_hidden_states = (
+            torch.cat([prompt_embeds, negative_prompt_embeds]) if negative_prompt_embeds is not None else prompt_embeds
+        )
+        #print("__",prompt_embeds_pooled.shape, negative_prompt_embeds_pooled.shape)
+        text_encoder_pooled = (
+            torch.cat([prompt_embeds_pooled, negative_prompt_embeds_pooled])
+            if negative_prompt_embeds is not None
+            else prompt_embeds_pooled
+        )
+
+        #print(text_encoder_pooled.shape, text_encoder_hidden_states.shape, image_embeds.shape)
+
+        #image_embeds = image_embeds.repeat([batch_size,1,1])
+        #print("S", text_encoder_hidden_states.shape, text_encoder_pooled.shape, image_embeds.shape) 
+        # 7. Denoise image embeddings
+        #print("LATENTS 1", latent_model_input.shape)
+        #print("RATIO 1", latent_model_input.shape)
+        predicted_image_embedding = unet(
+            x=torch.cat([latent_model_input] * 2) if do_classifier_free_guidance else latent_model_input,
+            r=torch.cat([ratio] * 2) if do_classifier_free_guidance else ratio,
+            clip_text_pooled=text_encoder_pooled,
+            clip_text=text_encoder_hidden_states,
+            clip_img=image_embeds
+        )
+
+        # 8. Check for classifier free guidance and apply it
+        if do_classifier_free_guidance:
+            predicted_image_embedding_text, predicted_image_embedding_uncond = predicted_image_embedding.chunk(2)
+            predicted_image_embedding = torch.lerp(
+                predicted_image_embedding_uncond, predicted_image_embedding_text, guidance_scale
+            )
+
+        # 9. Renoise latents to next timestep
+        if not isinstance(scheduler, DDPMWuerstchenScheduler):
+            ratio = t
+        latents = scheduler.step(
+            model_output=predicted_image_embedding,
+            timestep=ratio,
+            sample=latents,
+            generator=generator,
+        ).prev_sample
+
 
     # return latents_steps
     return latents

@@ -2,6 +2,8 @@ from typing import Literal, Union, Optional
 
 import torch
 from transformers import CLIPTextModel, CLIPTokenizer, CLIPTextModelWithProjection
+from diffusers import StableCascadeDecoderPipeline, StableCascadePriorPipeline
+
 from diffusers import (
     UNet2DConditionModel,
     SchedulerMixin,
@@ -128,6 +130,27 @@ def load_models(
 
     return tokenizer, text_encoder, unet, scheduler
 
+def load_diffusers_model_cascade(
+    pretrained_model_name_or_path: str,
+    weight_dtype: torch.dtype = torch.float32,
+) -> tuple[list[CLIPTokenizer], list[SDXL_TEXT_ENCODER_TYPE], UNet2DConditionModel,]:
+    # returns tokenizer, tokenizer_2, text_encoder, text_encoder_2, unet
+
+    #config = CLIPConfig.from_pretrained("laion/CLIP-ViT-bigG-14-laion2B-39B-b160k")
+    #config.text_config.projection_dim = config.projection_dim
+    #text_encoder = CLIPTextModelWithProjection.from_pretrained(
+    #    "laion/CLIP-ViT-bigG-14-laion2B-39B-b160k", config=config.text_config
+    #)
+    #tokenizer = AutoTokenizer.from_pretrained("laion/CLIP-ViT-bigG-14-laion2B-39B-b160k")
+    prior_model = StableCascadePriorPipeline.from_pretrained("stabilityai/stable-cascade-prior", torch_dtype=torch.bfloat16).to("cuda:0")
+
+    print("___", sorted(dir(prior_model)))
+
+
+    return prior_model.tokenizer, prior_model.text_encoder, prior_model.prior
+
+
+
 
 def load_diffusers_model_xl(
     pretrained_model_name_or_path: str,
@@ -175,6 +198,13 @@ def load_diffusers_model_xl(
 
     return tokenizers, text_encoders, unet
 
+def load_checkpoint_model_cascade(
+    checkpoint_path: str,
+    weight_dtype: torch.dtype = torch.float32,
+) -> tuple[list[CLIPTokenizer], list[SDXL_TEXT_ENCODER_TYPE], UNet2DConditionModel,]:
+    assert False, "not implemented"
+
+
 
 def load_checkpoint_model_xl(
     checkpoint_path: str,
@@ -195,6 +225,28 @@ def load_checkpoint_model_xl(
     del pipe
 
     return tokenizers, text_encoders, unet
+
+def load_models_cascade(
+    pretrained_model_name_or_path: str,
+    scheduler_name: AVAILABLE_SCHEDULERS,
+    weight_dtype: torch.dtype = torch.float32,
+) -> tuple[
+    list[CLIPTokenizer],
+    list[SDXL_TEXT_ENCODER_TYPE],
+    UNet2DConditionModel,
+    SchedulerMixin,
+]:
+    (
+        tokenizers,
+        text_encoders,
+        unet,
+    ) = load_diffusers_model_cascade(pretrained_model_name_or_path, weight_dtype)
+
+    scheduler = create_noise_scheduler(scheduler_name)
+
+    return tokenizers, text_encoders, unet, scheduler
+
+
 
 
 def load_models_xl(
