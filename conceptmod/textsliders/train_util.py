@@ -8,7 +8,7 @@ from diffusers import UNet2DConditionModel, SchedulerMixin
 from diffusers.schedulers import DDPMWuerstchenScheduler
 from diffusers.utils.torch_utils import randn_tensor
 
-from model_util import SDXL_TEXT_ENCODER_TYPE
+from conceptmod.textsliders.model_util import SDXL_TEXT_ENCODER_TYPE
 
 from tqdm import tqdm
 

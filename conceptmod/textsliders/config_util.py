@@ -5,7 +5,7 @@ import yaml
 from pydantic import BaseModel
 import torch
 
-from lora import TRAINING_METHODS
+from conceptmod.textsliders.lora import TRAINING_METHODS
 
 PRECISION_TYPES = Literal["fp32", "fp16", "bf16", "float32", "float16", "bfloat16"]
 NETWORK_TYPES = Literal["lierla", "c3lier"]

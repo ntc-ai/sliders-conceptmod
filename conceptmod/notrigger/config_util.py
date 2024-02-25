@@ -5,7 +5,7 @@ import yaml
 from pydantic import BaseModel
 import torch
 
-from lora import TRAINING_METHODS
+from conceptmod.notrigger.lora import TRAINING_METHODS
 
 PRECISION_TYPES = Literal["fp32", "fp16", "bf16", "float32", "float16", "bfloat16"]
 NETWORK_TYPES = Literal["lierla", "c3lier"]
@@ -86,6 +86,7 @@ def parse_precision(precision: str) -> torch.dtype:
 def load_config_from_yaml(config_path: str) -> RootConfig:
     with open(config_path, "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
+    print("LOaded", config)
 
     root = RootConfig(**config)
 

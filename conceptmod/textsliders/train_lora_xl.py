@@ -12,19 +12,19 @@ import torch
 from tqdm import tqdm
 
 
-from lora import LoRANetwork, DEFAULT_TARGET_REPLACE, UNET_TARGET_REPLACE_MODULE_CONV
-import train_util
-import model_util
-import prompt_util
-from prompt_util import (
+from conceptmod.textsliders.lora import LoRANetwork, DEFAULT_TARGET_REPLACE, UNET_TARGET_REPLACE_MODULE_CONV
+from conceptmod.textsliders import train_util
+from conceptmod.textsliders import model_util
+from conceptmod.textsliders import prompt_util
+from conceptmod.textsliders.prompt_util import (
     PromptEmbedsCache,
     PromptEmbedsPair,
     PromptSettings,
     PromptEmbedsXL,
 )
-import debug_util
-import config_util
-from config_util import RootConfig
+from conceptmod.textsliders import debug_util
+from conceptmod.textsliders import config_util
+from conceptmod.textsliders.config_util import RootConfig
 
 import wandb
 import yaml

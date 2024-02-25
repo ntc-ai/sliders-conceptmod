@@ -5,7 +5,7 @@ import torch
 from transformers import CLIPTextModel, CLIPTokenizer
 from diffusers import UNet2DConditionModel, SchedulerMixin
 
-from model_util import SDXL_TEXT_ENCODER_TYPE
+from conceptmod.notrigger.model_util import SDXL_TEXT_ENCODER_TYPE
 
 from tqdm import tqdm
 

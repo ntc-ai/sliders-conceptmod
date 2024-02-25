@@ -12,20 +12,19 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-
-from lora import LoRANetwork, DEFAULT_TARGET_REPLACE, UNET_TARGET_REPLACE_MODULE_CONV
-import train_util
-import model_util
-import prompt_util
-from prompt_util import (
+from conceptmod.notrigger.lora import LoRANetwork, DEFAULT_TARGET_REPLACE, UNET_TARGET_REPLACE_MODULE_CONV
+from conceptmod.notrigger import train_util
+from conceptmod.notrigger import model_util
+from conceptmod.notrigger import prompt_util
+from conceptmod.notrigger.prompt_util import (
     PromptEmbedsCache,
     PromptEmbedsPair,
     PromptSettings,
     PromptEmbedsXL,
 )
-import debug_util
-import config_util
-from config_util import RootConfig
+from conceptmod.notrigger import debug_util
+from conceptmod.notrigger import config_util
+from conceptmod.notrigger.config_util import RootConfig
 
 import wandb
 import yaml
@@ -254,7 +253,7 @@ def main(args):
     device = torch.device(f"cuda:{args.device}")
     train(config, prompts, device, on_step_complete=None, positive = args.positive, negative=args.negative, clip_index=args.clip_index)
 
-def train_lora(target, positive, negative, unconditional, alpha=1.0, rank=4, device=0, name=None, attributes=None, batch_size=1, config_file='data/config-xl.yaml', resolution=512, steps=None, on_step_complete=None):
+def train_lora(target, positive, negative, unconditional, alpha=1.0, rank=4, device=0, name=None, attributes=None, batch_size=1, config_file='data/config-xl.yaml', resolution=512, steps=None, on_step_complete=None, clip_index=0):
     # Create the configuration dictionary
     output_dict = {
         "target": target,
@@ -275,6 +274,7 @@ def train_lora(target, positive, negative, unconditional, alpha=1.0, rank=4, dev
 
     #print("Data saved to 'data/prompts-xl.yaml'")
     config = config_util.load_config_from_yaml(config_file)
+    print("Found", config)
     if name is not None:
         config.save.name = name
     if steps is not None:
@@ -292,7 +292,7 @@ def train_lora(target, positive, negative, unconditional, alpha=1.0, rank=4, dev
 
     prompts = prompt_util.load_prompts_from_yaml(config.prompts_file, attr_list)
     device = torch.device(f"cuda:{device}")
-    return train(config, prompts, device, on_step_complete, save_file=False)
+    return train(config, prompts, device, on_step_complete, positive=[positive], negative=[negative], save_file=False, clip_index=clip_index)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

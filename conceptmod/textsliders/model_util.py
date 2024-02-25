@@ -2,7 +2,7 @@ from typing import Literal, Union, Optional
 
 import torch
 from transformers import CLIPTextModel, CLIPTokenizer, CLIPTextModelWithProjection
-from diffusers import StableCascadeDecoderPipeline, StableCascadePriorPipeline
+#from diffusers import StableCascadeDecoderPipeline, StableCascadePriorPipeline
 
 from diffusers import (
     UNet2DConditionModel,
