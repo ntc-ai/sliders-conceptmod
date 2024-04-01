@@ -85,6 +85,8 @@ class DoRAModule(nn.Module):
             kernel_size = org_module.kernel_size
             stride = org_module.stride
             padding = org_module.padding
+            self.stride = stride
+            self.padding = padding
             self.lora_down = nn.Conv2d(
                 in_dim, self.lora_dim, kernel_size, stride, padding, bias=False
             )
@@ -138,14 +140,26 @@ class DoRAModule(nn.Module):
         del self.org_module
 
     def forward(self, x):
-        weight = self.org_module_weight + (self.lora_up.weight @ self.lora_down.weight)
+        weight = self.org_module_weight
+        if weight.data.ndim == 4:  # For handling LoRAs applied to Conv2Ds.
+            lora_weight = torch.mm(self.lora_up.weight.flatten(start_dim=1), self.lora_down.weight.flatten(start_dim=1))
+            lora_weight = lora_weight.reshape(weight.shape)
+        else:
+            lora_weight = self.lora_up.weight @ self.lora_down.weight
+        weight = weight + lora_weight
         weight = self.apply_weight_decompose(weight) - self.org_module_weight
         weight = weight.to(dtype=x.dtype)
 
-        return (
-            self.org_forward(x) +
-                self.ops(x, weight=weight) * self.scale * self.multiplier
-        )
+        if weight.data.ndim == 4:  # For handling LoRAs applied to Conv2Ds.
+            return (
+                self.org_forward(x) +
+                    self.ops(x, weight=weight, padding=self.padding, stride=self.stride) * self.scale * self.multiplier
+            )
+        else:
+            return (
+                self.org_forward(x) +
+                    self.ops(x, weight=weight) * self.scale * self.multiplier
+            )
 
 
 class DoRANetwork(nn.Module):
@@ -229,7 +243,7 @@ class DoRANetwork(nn.Module):
                 )
             if module.__class__.__name__ in target_replace_modules:
                 for child_name, child_module in module.named_modules():
-                    if child_module.__class__.__name__ in ["Linear", "LoRACompatibleLinear"]:
+                    if child_module.__class__.__name__ in ["Linear", "Conv2d", "LoRACompatibleLinear", "LoRACompatibleConv"]:
                         if train_method == 'xattn-strict':
                             if 'out' in child_name:
                                 continue
