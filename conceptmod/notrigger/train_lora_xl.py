@@ -152,6 +152,7 @@ def train(
 
     print("INDEX", index)
     chosenlayer = -2
+    last_loss = None
 
     for i in pbar:
         with network:
@@ -187,7 +188,14 @@ def train(
                 ).hidden_states[chosenlayer]
 
 
-                loss = ((pos_tex_embs - neu_tex_embs2) ** 2).mean()
+                loss += ((pos_tex_embs - neu_tex_embs2) ** 2).mean()
+            if i % 200 == 0:
+                if last_loss is not None and last_loss == loss.item():
+                    print("loss stopped moving. exitting early.")
+                    break
+                last_loss = loss.item()
+                print("LAST ", last_loss)
+
 
 
         # 1000倍しないとずっと0.000...になってしまって見た目的に面白くない
