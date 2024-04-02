@@ -60,6 +60,7 @@ class DoRAModule(nn.Module):
         org_module: nn.Module,
         multiplier=1.0,
         lora_dim=4,
+        prefix: str = LORA_PREFIX_UNET,
         alpha=1,
     ):
         """if alpha == 0 or None, alpha is rank (no scaling)."""
@@ -169,6 +170,8 @@ class DoRANetwork(nn.Module):
         rank: int = 4,
         multiplier: float = 1.0,
         alpha: float = 1.0,
+        prefix: str = LORA_PREFIX_UNET,
+        target_replace: str = DEFAULT_TARGET_REPLACE,
         train_method: TRAINING_METHODS = "full",
     ) -> None:
         super().__init__()
@@ -182,9 +185,9 @@ class DoRANetwork(nn.Module):
 
         # unetのloraを作る
         self.unet_loras = self.create_modules(
-            LORA_PREFIX_UNET,
+            prefix,
             unet,
-            DEFAULT_TARGET_REPLACE,
+            target_replace,
             self.lora_dim,
             self.multiplier,
             train_method=train_method,
@@ -254,7 +257,7 @@ class DoRANetwork(nn.Module):
                             if 'mid_block' not in name or '.1' not in name or 'conv2' not in child_name:
                                 continue
                         lora_name = prefix + "." + name + "." + child_name
-                        lora_name = lora_name.replace(".", "_")
+                        lora_name = lora_name.replace(".", "_").strip("_")
 #                         print(f"{lora_name}")
                         lora = self.module(
                             lora_name, child_module, multiplier, rank, self.alpha

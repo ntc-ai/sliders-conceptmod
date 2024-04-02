@@ -155,9 +155,8 @@ class PromptEmbedsPair:
 def load_prompts_from_yaml(path, attributes = []):
     with open(path, "r") as f:
         prompts = yaml.safe_load(f)
-    print(prompts)    
-    if len(prompts) == 0:
-        raise ValueError("prompts file is empty")
+    if prompts is None:
+        prompts = []
     if len(attributes)!=0:
         newprompts = []
         for i in range(len(prompts)):
@@ -167,7 +166,6 @@ def load_prompts_from_yaml(path, attributes = []):
         newprompts = copy.deepcopy(prompts)
     
     print(newprompts)
-    print(len(prompts), len(newprompts))
     prompt_settings = [PromptSettings(**prompt) for prompt in newprompts]
 
     return prompt_settings

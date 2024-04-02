@@ -13,6 +13,7 @@ import torch
 from tqdm import tqdm
 
 from conceptmod.notrigger.lora import LoRANetwork, DEFAULT_TARGET_REPLACE, UNET_TARGET_REPLACE_MODULE_CONV
+from conceptmod.textsliders.dora import DoRANetwork, DEFAULT_TARGET_REPLACE, UNET_TARGET_REPLACE_MODULE_CONV
 from conceptmod.notrigger import train_util
 from conceptmod.notrigger import model_util
 from conceptmod.notrigger import prompt_util
@@ -44,11 +45,11 @@ def train(
     on_step_complete,
     save_file=True,
     clip_index=0,
+    lora_type='dora',
     positive=None,
     negative=None
 ):
     metadata = {
-        "prompts": ",".join([prompt.json() for prompt in prompts]),
         "config": config.json(),
     }
     save_path = Path(config.save.path)
@@ -103,14 +104,25 @@ def train(
     prefix = ["lora_te1","lora_te2"][index]
 
     text_encoder = text_encoders[index]
-    network = LoRANetwork(
-        text_encoder,
-        rank=config.network.rank,
-        multiplier=1.0,
-        alpha=config.network.alpha,
-        prefix=prefix,
-        train_method=config.network.training_method,
-    ).to(device, dtype=weight_dtype)
+    if lora_type == 'dora':
+        network = DoRANetwork(
+            text_encoder,
+            rank=config.network.rank,
+            multiplier=1.0,
+            alpha=config.network.alpha,
+            target_replace=["CLIPAttention"],
+            prefix=prefix,
+            train_method=config.network.training_method,
+        ).to(device, dtype=weight_dtype)
+    else:
+        network = LoRANetwork(
+            text_encoder,
+            rank=config.network.rank,
+            multiplier=1.0,
+            alpha=config.network.alpha,
+            prefix=prefix,
+            train_method=config.network.training_method,
+        ).to(device, dtype=weight_dtype)
     network.requires_grad_(True)
 
     optimizer_module = train_util.get_optimizer(config.train.optimizer)
@@ -131,12 +143,6 @@ def train(
     )
     criteria = torch.nn.MSELoss()
 
-    if config.logging.verbose:
-        print("Prompts")
-        for settings in prompts:
-            print(settings)
-
-    settings = prompts[0]
     # debug
     if config.logging.verbose:
         debug_util.check_requires_grad(network)
@@ -247,11 +253,8 @@ def main(args):
     config.save.name += f'_{config.network.training_method}'
     config.save.path += f'/{config.save.name}'
     
-    prompts = prompt_util.load_prompts_from_yaml(config.prompts_file, attributes)
-    if config.logging.verbose:
-        print(prompts)
     device = torch.device(f"cuda:{args.device}")
-    train(config, prompts, device, on_step_complete=None, positive = args.positive, negative=args.negative, clip_index=args.clip_index)
+    train(config, [], device, on_step_complete=None, positive = args.positive, negative=args.negative, clip_index=args.clip_index, lora_type=args.lora_type)
 
 def train_lora(target, positive, negative, unconditional, alpha=1.0, rank=4, device=0, name=None, attributes=None, batch_size=1, config_file='data/config-xl.yaml', resolution=512, steps=None, on_step_complete=None, clip_index=0):
     # Create the configuration dictionary
@@ -290,9 +293,8 @@ def train_lora(target, positive, negative, unconditional, alpha=1.0, rank=4, dev
     config.save.name += f'_{config.network.training_method}'
     config.save.path += f'/{config.save.name}'
 
-    prompts = prompt_util.load_prompts_from_yaml(config.prompts_file, attr_list)
     device = torch.device(f"cuda:{device}")
-    return train(config, prompts, device, on_step_complete, positive=[positive], negative=[negative], save_file=False, clip_index=clip_index)
+    return train(config, [], device, on_step_complete, positive=[positive], negative=[negative], save_file=False, clip_index=clip_index)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -339,6 +341,14 @@ if __name__ == "__main__":
         required=False,
         default=None,
         help="attritbutes to disentangle (comma seperated string)",
+    )
+    # --name 'eyesize_slider'
+    parser.add_argument(
+        "--lora_type",
+        type=str,
+        required=False,
+        default="dora",
+        help="dora (default) or lora",
     )
     # --name 'eyesize_slider'
     parser.add_argument(

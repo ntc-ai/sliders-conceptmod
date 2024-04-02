@@ -5,7 +5,7 @@ import torch
 from math import ceil
 from transformers import CLIPTextModel, CLIPTokenizer
 from diffusers import UNet2DConditionModel, SchedulerMixin
-from diffusers.schedulers import DDPMWuerstchenScheduler
+#from diffusers.schedulers import DDPMWuerstchenScheduler
 from diffusers.utils.torch_utils import randn_tensor
 
 from conceptmod.textsliders.model_util import SDXL_TEXT_ENCODER_TYPE
