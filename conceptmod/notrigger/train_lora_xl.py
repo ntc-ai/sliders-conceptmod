@@ -45,7 +45,8 @@ def train(
     on_step_complete,
     save_file=True,
     clip_index=0,
-    lora_type='dora',
+    peft_type='lora',
+    rank=4,
     positive=None,
     negative=None
 ):
@@ -104,10 +105,10 @@ def train(
     prefix = ["lora_te1","lora_te2"][index]
 
     text_encoder = text_encoders[index]
-    if lora_type == 'dora':
+    if peft_type == 'dora':
         network = DoRANetwork(
             text_encoder,
-            rank=config.network.rank,
+            rank=rank,
             multiplier=1.0,
             alpha=config.network.alpha,
             target_replace=["CLIPAttention"],
@@ -117,7 +118,7 @@ def train(
     else:
         network = LoRANetwork(
             text_encoder,
-            rank=config.network.rank,
+            rank=rank,
             multiplier=1.0,
             alpha=config.network.alpha,
             prefix=prefix,
@@ -262,9 +263,9 @@ def main(args):
     config.save.path += f'/{config.save.name}'
     
     device = torch.device(f"cuda:{args.device}")
-    train(config, [], device, on_step_complete=None, positive = args.positive, negative=args.negative, clip_index=args.clip_index, lora_type=args.lora_type)
+    train(config, [], device, on_step_complete=None, positive = args.positive, negative=args.negative, clip_index=args.clip_index, peft_type=args.peft_type, rank=args.rank)
 
-def train_lora(target, positive, negative, unconditional, alpha=1.0, rank=4, device=0, name=None, attributes=None, batch_size=1, config_file='data/config-xl.yaml', resolution=512, steps=None, on_step_complete=None, clip_index=0):
+def train_lora(target, positive, negative, unconditional, alpha=1.0, rank=4, device=0, name=None, attributes=None, batch_size=1, config_file='data/config-xl.yaml', resolution=512, steps=None, on_step_complete=None, clip_index=0, peft_type='lora'):
     # Create the configuration dictionary
     output_dict = {
         "target": target,
@@ -302,7 +303,7 @@ def train_lora(target, positive, negative, unconditional, alpha=1.0, rank=4, dev
     config.save.path += f'/{config.save.name}'
 
     device = torch.device(f"cuda:{device}")
-    return train(config, [], device, on_step_complete, positive=[positive], negative=[negative], save_file=False, clip_index=clip_index)
+    return train(config, [], device, on_step_complete, positive=[positive], negative=[negative], save_file=False, clip_index=clip_index, peft_type=peft_type, rank=rank)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -352,7 +353,7 @@ if __name__ == "__main__":
     )
     # --name 'eyesize_slider'
     parser.add_argument(
-        "--lora_type",
+        "--peft_type",
         type=str,
         required=False,
         default="dora",

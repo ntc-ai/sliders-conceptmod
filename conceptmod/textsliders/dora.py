@@ -96,7 +96,7 @@ class DoRAModule(nn.Module):
 
         org_weight = org_module.weight
         self.dora_norm_dims = org_weight.dim() - 1
-        self.lora_scale = nn.Parameter(
+        self.dora_scale = nn.Parameter(
             torch.norm(
                 org_weight.transpose(1, 0).reshape(org_weight.shape[1], -1),
                 dim=1,
@@ -130,7 +130,7 @@ class DoRAModule(nn.Module):
             .transpose(0, 1)
         )
         weight_norm = weight_norm.detach()
-        dora_merged = weight * (self.lora_scale / weight_norm)
+        dora_merged = weight * (self.dora_scale / weight_norm)
         return dora_merged
 
 
@@ -175,7 +175,6 @@ class DoRANetwork(nn.Module):
         train_method: TRAINING_METHODS = "full",
     ) -> None:
         super().__init__()
-        self.lora_scale = 1
         self.multiplier = multiplier
         self.lora_dim = rank
         self.alpha = alpha
@@ -309,12 +308,10 @@ class DoRANetwork(nn.Module):
             save_file(state_dict, file, metadata)
         else:
             torch.save(state_dict, file)
-    def set_lora_slider(self, scale):
-        self.lora_scale = scale
 
     def __enter__(self):
         for lora in self.unet_loras:
-            lora.multiplier = 1.0 * self.lora_scale
+            lora.multiplier = 1.0
 
     def __exit__(self, exc_type, exc_value, tb):
         for lora in self.unet_loras:

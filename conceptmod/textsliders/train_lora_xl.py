@@ -13,6 +13,7 @@ from tqdm import tqdm
 
 
 from conceptmod.textsliders.lora import LoRANetwork, DEFAULT_TARGET_REPLACE, UNET_TARGET_REPLACE_MODULE_CONV
+from conceptmod.textsliders.dora import DoRANetwork
 from conceptmod.textsliders import train_util
 from conceptmod.textsliders import model_util
 from conceptmod.textsliders import prompt_util
@@ -42,6 +43,8 @@ def train(
     prompts: list[PromptSettings],
     device,
     on_step_complete,
+    peft_type='dora',
+    rank=4,
     save_file=True
 ):
     metadata = {
@@ -83,14 +86,23 @@ def train(
         unet.enable_xformers_memory_efficient_attention()
     unet.requires_grad_(False)
     unet.eval()
+    if peft_type == 'dora':
+        network = DoRANetwork(
+            unet,
+            rank=rank,
+            multiplier=1.0,
+            alpha=config.network.alpha,
+            train_method=config.network.training_method,
+        ).to(device, dtype=weight_dtype)
 
-    network = LoRANetwork(
-        unet,
-        rank=config.network.rank,
-        multiplier=1.0,
-        alpha=config.network.alpha,
-        train_method=config.network.training_method,
-    ).to(device, dtype=weight_dtype)
+    else:
+        network = LoRANetwork(
+            unet,
+            rank=rank,
+            multiplier=1.0,
+            alpha=config.network.alpha,
+            train_method=config.network.training_method,
+        ).to(device, dtype=weight_dtype)
 
     optimizer_module = train_util.get_optimizer(config.train.optimizer)
     #optimizer_args
@@ -372,17 +384,17 @@ def train(
             print("Saving...")
             save_path.mkdir(parents=True, exist_ok=True)
             network.save_weights(
-                save_path / f"{config.save.name}_{i}steps.pt",
+                save_path / f"{config.save.name}_{i}steps.safetensors",
                 dtype=save_weight_dtype,
             )
         if on_step_complete is not None:
             on_step_complete(i)
 
     if save_file:
-        print("Saving...",save_path / f"{config.save.name}_last.pt" )
+        print("Saving...",save_path / f"{config.save.name}_last.safetensors" )
         save_path.mkdir(parents=True, exist_ok=True)
         network.save_weights(
-            save_path / f"{config.save.name}_last.pt",
+            save_path / f"{config.save.name}_last.safetensors",
             dtype=save_weight_dtype,
         )
 
@@ -420,9 +432,9 @@ def main(args):
     if config.logging.verbose:
         print(prompts)
     device = torch.device(f"cuda:{args.device}")
-    train(config, prompts, device)
+    train(config, prompts, device, on_step_complete=None, rank=args.rank)
 
-def train_lora(target, positive, negative, unconditional, alpha=1.0, rank=4, device=0, name=None, attributes=None, batch_size=1, config_file='data/config-xl.yaml', resolution=512, steps=None, on_step_complete=None):
+def train_lora(target, positive, negative, unconditional, alpha=1.0, device=0, name=None, attributes=None, batch_size=1, config_file='data/config-xl.yaml', resolution=512, steps=None, on_step_complete=None, peft_type='lora', rank=4):
     # Create the configuration dictionary
     output_dict = {
         "target": target,
@@ -460,7 +472,7 @@ def train_lora(target, positive, negative, unconditional, alpha=1.0, rank=4, dev
 
     prompts = prompt_util.load_prompts_from_yaml(config.prompts_file, attr_list)
     device = torch.device(f"cuda:{device}")
-    return train(config, prompts, device, on_step_complete, save_file=False)
+    return train(config, prompts, device, on_step_complete, save_file=False, rank=rank)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -508,7 +520,14 @@ if __name__ == "__main__":
         default=None,
         help="attritbutes to disentangle (comma seperated string)",
     )
-    
+    parser.add_argument(
+        "--peft_type",
+        type=str,
+        required=False,
+        default="dora",
+        help="dora (default) or lora",
+    )
+ 
     args = parser.parse_args()
 
     main(args)
