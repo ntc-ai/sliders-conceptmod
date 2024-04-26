@@ -65,7 +65,9 @@ def train(
 
     weight_dtype = config_util.parse_precision(config.train.precision)
     save_weight_dtype = config_util.parse_precision(config.train.precision)
+    print("Loading", config.pretrained_model.name_or_path)
 
+    guidance_scale = config.train.cfg
     (
         tokenizers,
         text_encoders,
@@ -244,7 +246,7 @@ def train(
                     ),
                     start_timesteps=0,
                     total_timesteps=timesteps_to,
-                    guidance_scale=3, # TODO
+                    guidance_scale=guidance_scale
                 ) #TODO: How does the gradient work?
 
             noise_scheduler.set_timesteps(1000)
@@ -272,7 +274,7 @@ def train(
                 add_time_ids=train_util.concat_embeddings(
                     add_time_ids, add_time_ids, prompt_pair.batch_size
                 ),
-                guidance_scale=1, #TODO
+                guidance_scale=guidance_scale, #TODO
             ).to(device, dtype=weight_dtype)
             neutral_latents = train_util.predict_noise_xl(
                 unet,
@@ -292,7 +294,7 @@ def train(
                 add_time_ids=train_util.concat_embeddings(
                     add_time_ids, add_time_ids, prompt_pair.batch_size
                 ),
-                guidance_scale=1, #TODO
+                guidance_scale=guidance_scale, #TODO
             ).to(device, dtype=weight_dtype)
             negative_latents = train_util.predict_noise_xl(
                 unet,
@@ -312,7 +314,7 @@ def train(
                 add_time_ids=train_util.concat_embeddings(
                     add_time_ids, add_time_ids, prompt_pair.batch_size
                 ),
-                guidance_scale=1, #TODO
+                guidance_scale=guidance_scale, #TODO
             ).to(device, dtype=weight_dtype)
 
             if config.logging.verbose:
@@ -338,7 +340,7 @@ def train(
                 add_time_ids=train_util.concat_embeddings(
                     add_time_ids, add_time_ids, prompt_pair.batch_size
                 ),
-                guidance_scale=1, #TODO
+                guidance_scale=guidance_scale, #TODO
             ).to(device, dtype=weight_dtype)
 
             if config.logging.verbose:
@@ -443,7 +445,6 @@ def train_lora(target, positive, negative, unconditional, alpha=1.0, device=0, n
         "unconditional": unconditional,
         "neutral": target,  # Assuming neutral is the same as target
         "action": "enhance",
-        "guidance_scale": 1,
         "resolution": resolution,
         "dynamic_resolution": False,
         "batch_size": batch_size

@@ -36,6 +36,7 @@ class TrainConfig(BaseModel):
     optimizer: str = "adamw"
     optimizer_args: str = ""
     lr_scheduler: str = "constant"
+    cfg: float = 1.0
 
     max_denoising_steps: int = 50
 
