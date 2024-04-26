@@ -152,7 +152,7 @@ def train(
     pbar = tqdm(range(config.train.iterations))
 
     print("INDEX", index)
-    chosenlayer = -2
+    chosenlayer = -1
     last_loss = None
 
     for i in pbar:
