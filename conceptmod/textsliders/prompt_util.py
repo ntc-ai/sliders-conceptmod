@@ -24,6 +24,16 @@ class PromptEmbedsXL:
         self.pooled_embeds = args[1]
 
 
+# XL は二種類必要なので
+class PromptEmbedsSD3:
+    text_embeds: torch.FloatTensor
+    pooled_embeds: torch.FloatTensor
+
+    def __init__(self, *args) -> None:
+        self.text_embeds = args[0]
+        self.pooled_embeds = args[1]
+
+
 # SDv1.x, SDv2.x は FloatTensor、XL は PromptEmbedsXL
 PROMPT_EMBEDDING = Union[torch.FloatTensor, PromptEmbedsXL]
 

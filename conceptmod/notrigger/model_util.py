@@ -22,6 +22,7 @@ TOKENIZER_V2_MODEL_NAME = "stabilityai/stable-diffusion-2-1"
 AVAILABLE_SCHEDULERS = Literal["ddim", "ddpm", "lms", "euler_a"]
 
 SDXL_TEXT_ENCODER_TYPE = Union[CLIPTextModel, CLIPTextModelWithProjection]
+SD3_TEXT_ENCODER_TYPE = Union[CLIPTextModel, CLIPTextModelWithProjection]
 
 DIFFUSERS_CACHE_DIR = None  # if you want to change the cache dir, change this
 

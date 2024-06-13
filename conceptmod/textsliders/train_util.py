@@ -5,6 +5,7 @@ import torch
 from math import ceil
 from transformers import CLIPTextModel, CLIPTokenizer
 from diffusers import UNet2DConditionModel, SchedulerMixin
+from diffusers.models.transformers import SD3Transformer2DModel
 #from diffusers.schedulers import DDPMWuerstchenScheduler
 from diffusers.utils.torch_utils import randn_tensor
 
@@ -41,6 +42,27 @@ def apply_noise_offset(latents: torch.FloatTensor, noise_offset: float):
         (latents.shape[0], latents.shape[1], 1, 1), device=latents.device
     )
     return latents
+
+
+def get_initial_latents_sd3(
+    scheduler: SchedulerMixin,
+    n_imgs: int,
+    height: int,
+    width: int,
+    n_prompts: int,
+    generator=None,
+) -> torch.Tensor:
+    return torch.randn(
+        (
+            n_imgs,
+            16,
+            height // VAE_SCALE_FACTOR,  # 縦と横これであってるのかわからないけど、どっちにしろ大きな問題は発生しないのでこれでいいや
+            width // VAE_SCALE_FACTOR,
+        ),
+        device="cuda",
+    )
+
+
 
 
 def get_initial_latents(
@@ -110,17 +132,51 @@ def text_encode_xl(
     return prompt_embeds, pooled_prompt_embeds
 
 def encode_prompts_cascade(
-    tokenizer: CLIPTokenizer,
-    text_encoder: CLIPTokenizer,
-    prompts: list[str],
-):
+        tokenizer: CLIPTokenizer,
+        text_encoder: CLIPTokenizer,
+        prompts: list[str],
+        ):
 
     text_tokens = text_tokenize(tokenizer, prompts)
     text_embeddings = text_encode(text_encoder, text_tokens)
-    
-    
+
+
 
     return text_embeddings
+
+
+def encode_prompts_sd3(
+    pipeline,
+    tokenizers: list[CLIPTokenizer],
+    text_encoders: list[SDXL_TEXT_ENCODER_TYPE],
+    prompt: str,
+    num_images_per_prompt: int = 1,
+) -> tuple[torch.FloatTensor, torch.FloatTensor]:
+    np = None
+    (
+            prompt_embeds,
+            negative_prompt_embeds,
+            pooled_prompt_embeds,
+            negative_pooled_prompt_embeds,
+    ) = pipeline.encode_prompt(
+            prompt=prompt,
+            prompt_2=prompt,
+            prompt_3=prompt,
+            negative_prompt=np,
+            negative_prompt_2=np,
+            negative_prompt_3=np,
+            device="cuda",
+            num_images_per_prompt=num_images_per_prompt,
+        )
+    print("EMBEDS SIZE", prompt_embeds.shape)
+
+    return prompt_embeds, pooled_prompt_embeds
+
+
+def print_object_data(obj):
+    data = {key: value for key, value in obj.__dict__.items() if not key.startswith('__')}
+    for key, value in data.items():
+        print(f"{key}")
 
 
 
@@ -148,6 +204,14 @@ def encode_prompts_xl(
     )
 
     return torch.concat(text_embeds_list, dim=-1), pooled_text_embeds
+
+def concat_embeddings_sd3(
+    unconditional: torch.FloatTensor,
+    conditional: torch.FloatTensor,
+    n_imgs: int,
+):
+    return torch.cat([unconditional, conditional]).repeat_interleave(n_imgs, dim=0)
+
 
 
 def concat_embeddings(
@@ -233,6 +297,41 @@ def rescale_noise_cfg(
 
     return noise_cfg
 
+def predict_noise_sd3(
+    transformer: SD3Transformer2DModel,
+    scheduler: SchedulerMixin,
+    timestep: int,  # 現在のタイムステップ
+    latents: torch.FloatTensor,
+    text_embeddings: torch.FloatTensor,  # uncond な text embed と cond な text embed を結合したもの
+    add_text_embeddings: torch.FloatTensor,  # pooled なやつ
+    guidance_scale=7.5
+) -> torch.FloatTensor:
+    with torch.cuda.amp.autocast():
+
+        # expand the latents if we are doing classifier-free guidance to avoid doing two forward passes.
+        latent_model_input = torch.cat([latents] * 2)
+        timestep_cat = torch.tensor([timestep]*2*len(latents), device="cuda")
+        #latent_model_input = scheduler.scale_model_input(latent_model_input, timestep)
+
+        # TODO timestep wrong 
+        noise_pred = transformer(
+            hidden_states=latent_model_input,
+            timestep=timestep_cat,
+            encoder_hidden_states=text_embeddings,
+            pooled_projections=add_text_embeddings,
+            return_dict=False,
+        )[0]
+
+        # perform guidance
+        noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
+        guided_target = noise_pred_uncond + guidance_scale * (
+            noise_pred_text - noise_pred_uncond
+        )
+
+        latents = scheduler.step(guided_target, timestep, latents, return_dict=False)[0]
+
+        return latents
+
 
 def predict_noise_xl(
     unet: UNet2DConditionModel,
@@ -246,9 +345,10 @@ def predict_noise_xl(
     guidance_rescale=0.7,
 ) -> torch.FloatTensor:
     # expand the latents if we are doing classifier-free guidance to avoid doing two forward passes.
-    latent_model_input = torch.cat([latents] * 2)
+    latent_model_input = torch.cat([latents] * 2).to(torch.float16)
 
     latent_model_input = scheduler.scale_model_input(latent_model_input, timestep)
+    latent_model_input.half()
 
     added_cond_kwargs = {
         "text_embeds": add_text_embeddings,
@@ -362,6 +462,35 @@ def predict_noise_cascade(
             predicted_image_embedding_uncond, predicted_image_embedding_text, guidance_scale
         )
     return predicted_image_embedding
+
+@torch.no_grad()
+def diffusion_sd3(
+    unet: UNet2DConditionModel,
+    scheduler: SchedulerMixin,
+    latents: torch.FloatTensor,  # ただのノイズだけのlatents
+    text_embeddings: tuple[torch.FloatTensor, torch.FloatTensor],
+    add_text_embeddings: torch.FloatTensor,  # pooled なやつ
+    guidance_scale: float = 1.0,
+    total_timesteps: int = 1000,
+    start_timesteps=0,
+):
+    # latents_steps = []
+
+    for timestep in scheduler.timesteps[start_timesteps:total_timesteps]:
+        latents = predict_noise_sd3(
+            unet,
+            scheduler,
+            timestep,
+            latents,
+            text_embeddings,
+            add_text_embeddings,
+            guidance_scale=guidance_scale
+        )
+
+
+    # return latents_steps
+    return latents
+
 
 
 @torch.no_grad()

@@ -21,7 +21,7 @@ from conceptmod.textsliders.prompt_util import (
     PromptEmbedsCache,
     PromptEmbedsPair,
     PromptSettings,
-    PromptEmbedsXL,
+    PromptEmbedsSD3,
 )
 from conceptmod.textsliders import debug_util
 from conceptmod.textsliders import config_util
@@ -31,6 +31,15 @@ import wandb
 import yaml
 
 NUM_IMAGES_PER_PROMPT = 1
+
+def render_debug(fname, latents, pipeline):
+    with torch.cuda.amp.autocast(), torch.no_grad():
+        latents = (latents / pipeline.vae.config.scaling_factor) + pipeline.vae.config.shift_factor
+
+        image = pipeline.vae.decode(latents[:1,:,:,:], return_dict=False)[0]
+        image = pipeline.image_processor.postprocess(image, output_type="pil")
+        image[0].save(fname)
+
 
 
 def flush():
@@ -71,26 +80,24 @@ def train(
     (
         tokenizers,
         text_encoders,
-        unet,
+        transformer,
         noise_scheduler,
-    ) = model_util.load_models_xl(
+        pipeline
+    ) = model_util.load_models_sd3(
         config.pretrained_model.name_or_path,
         scheduler_name=config.train.noise_scheduler,
     )
 
     for text_encoder in text_encoders:
-        text_encoder.to(device, dtype=weight_dtype)
         text_encoder.requires_grad_(False)
         text_encoder.eval()
 
-    unet.to(device, dtype=weight_dtype)
-    if config.other.use_xformers:
-        unet.enable_xformers_memory_efficient_attention()
-    unet.requires_grad_(False)
-    unet.eval()
+    transformer.requires_grad_(False)
+    transformer.eval()
     if peft_type == 'dora':
+        print("DORA")
         network = DoRANetwork(
-            unet,
+            transformer,
             rank=rank,
             multiplier=1.0,
             alpha=config.network.alpha,
@@ -98,11 +105,12 @@ def train(
         ).to(device, dtype=weight_dtype)
 
     else:
+        print("LORA")
         network = LoRANetwork(
-            unet,
+            transformer,
             rank=rank,
             multiplier=1.0,
-            delimiter="_",
+            delimiter="-",
             alpha=config.network.alpha,
             train_method=config.network.training_method,
         ).to(device, dtype=weight_dtype)
@@ -150,13 +158,14 @@ def train(
                 settings.negative
             ]:
                 if cache[prompt] == None:
-                    tex_embs, pool_embs = train_util.encode_prompts_xl(
+                    tex_embs, pool_embs = train_util.encode_prompts_sd3(
+                            pipeline,
                             tokenizers,
                             text_encoders,
-                            [prompt],
+                            prompt,
                             num_images_per_prompt=NUM_IMAGES_PER_PROMPT,
                         )
-                    cache[prompt] = PromptEmbedsXL(
+                    cache[prompt] = PromptEmbedsSD3(
                         tex_embs,
                         pool_embs
                     )
@@ -195,10 +204,10 @@ def train(
             ]
 
             # 1 ~ 49 からランダム
-            #timesteps_to = torch.randint(
-            #    1, config.train.max_denoising_steps, (1,)
-            #).item()
-            timesteps_to = config.train.max_denoising_steps-1
+            timesteps_to = torch.randint(
+                1, config.train.max_denoising_steps, (1,)
+            ).item()
+            #timesteps_to = config.train.max_denoising_steps-1
 
             height, width = prompt_pair.resolution, prompt_pair.resolution
             if prompt_pair.dynamic_resolution:
@@ -215,134 +224,115 @@ def train(
                 print("batch_size:", prompt_pair.batch_size)
                 print("dynamic_crops:", prompt_pair.dynamic_crops)
 
-            latents = train_util.get_initial_latents(
+            latents = train_util.get_initial_latents_sd3(
                 noise_scheduler, prompt_pair.batch_size, height, width, 1
             ).to(device, dtype=weight_dtype)
-
-            add_time_ids = train_util.get_add_time_ids(
-                height,
-                width,
-                dynamic_crops=prompt_pair.dynamic_crops,
-                dtype=weight_dtype,
-            ).to(device, dtype=weight_dtype)
+            latents = latents.half()
 
             with network:
                 # ちょっとデノイズされれたものが返る
-                denoised_latents = train_util.diffusion_xl(
-                    unet,
-                    noise_scheduler,
-                    latents,  # 単純なノイズのlatentsを渡す
-                    text_embeddings=train_util.concat_embeddings(
-                        prompt_pair.unconditional.text_embeds,
-                        prompt_pair.target.text_embeds,
-                        prompt_pair.batch_size,
-                    ),
-                    add_text_embeddings=train_util.concat_embeddings(
-                        prompt_pair.unconditional.pooled_embeds,
-                        prompt_pair.target.pooled_embeds,
-                        prompt_pair.batch_size,
-                    ),
-                    add_time_ids=train_util.concat_embeddings(
-                        add_time_ids, add_time_ids, prompt_pair.batch_size
-                    ),
-                    start_timesteps=0,
-                    total_timesteps=timesteps_to,
-                    guidance_scale=guidance_scale
-                ) #TODO: How does the gradient work?
+                denoised_latents = train_util.diffusion_sd3(
+                        transformer,
+                        noise_scheduler,
+                        latents,  # 単純なノイズのlatentsを渡す
+                        text_embeddings=train_util.concat_embeddings_sd3(
+                            prompt_pair.unconditional.text_embeds,
+                            prompt_pair.target.text_embeds,
+                            prompt_pair.batch_size,
+                            ),
+                        add_text_embeddings=train_util.concat_embeddings_sd3(
+                            prompt_pair.unconditional.pooled_embeds,
+                            prompt_pair.target.pooled_embeds,
+                            prompt_pair.batch_size,
+                            ),
+                        start_timesteps=0,
+                        total_timesteps=timesteps_to,
+                        guidance_scale=guidance_scale
+                        ) #TODO: How does the gradient work?
 
-            noise_scheduler.set_timesteps(1000)
 
             current_timestep = noise_scheduler.timesteps[
-                int(timesteps_to * 1000 / config.train.max_denoising_steps)
-            ]
+                    timesteps_to
+                    ]
 
             # with network: の外では空のLoRAのみが有効になる
-            positive_latents = train_util.predict_noise_xl(
-                unet,
-                noise_scheduler,
-                current_timestep,
-                denoised_latents,
-                text_embeddings=train_util.concat_embeddings(
-                    prompt_pair.unconditional.text_embeds,
-                    prompt_pair.positive.text_embeds,
-                    prompt_pair.batch_size,
-                ),
-                add_text_embeddings=train_util.concat_embeddings(
-                    prompt_pair.unconditional.pooled_embeds,
-                    prompt_pair.positive.pooled_embeds,
-                    prompt_pair.batch_size,
-                ),
-                add_time_ids=train_util.concat_embeddings(
-                    add_time_ids, add_time_ids, prompt_pair.batch_size
-                ),
-                guidance_scale=guidance_scale, #TODO
-            ).to(device, dtype=weight_dtype)
-            neutral_latents = train_util.predict_noise_xl(
-                unet,
-                noise_scheduler,
-                current_timestep,
-                denoised_latents,
-                text_embeddings=train_util.concat_embeddings(
-                    prompt_pair.unconditional.text_embeds,
-                    prompt_pair.neutral.text_embeds,
-                    prompt_pair.batch_size,
-                ),
-                add_text_embeddings=train_util.concat_embeddings(
-                    prompt_pair.unconditional.pooled_embeds,
-                    prompt_pair.neutral.pooled_embeds,
-                    prompt_pair.batch_size,
-                ),
-                add_time_ids=train_util.concat_embeddings(
-                    add_time_ids, add_time_ids, prompt_pair.batch_size
-                ),
-                guidance_scale=guidance_scale, #TODO
-            ).to(device, dtype=weight_dtype)
-            negative_latents = train_util.predict_noise_xl(
-                unet,
-                noise_scheduler,
-                current_timestep,
-                denoised_latents,
-                text_embeddings=train_util.concat_embeddings(
-                    prompt_pair.unconditional.text_embeds,
-                    prompt_pair.negative.text_embeds,
-                    prompt_pair.batch_size,
-                ),
-                add_text_embeddings=train_util.concat_embeddings(
-                    prompt_pair.unconditional.pooled_embeds,
-                    prompt_pair.negative.pooled_embeds,
-                    prompt_pair.batch_size,
-                ),
-                add_time_ids=train_util.concat_embeddings(
-                    add_time_ids, add_time_ids, prompt_pair.batch_size
-                ),
-                guidance_scale=guidance_scale, #TODO
-            ).to(device, dtype=weight_dtype)
+            positive_latents = train_util.predict_noise_sd3(
+                    transformer,
+                    noise_scheduler,
+                    current_timestep,
+                    denoised_latents,
+                    text_embeddings=train_util.concat_embeddings_sd3(
+                        prompt_pair.unconditional.text_embeds,
+                        prompt_pair.positive.text_embeds,
+                        prompt_pair.batch_size,
+                        ),
+                    add_text_embeddings=train_util.concat_embeddings_sd3(
+                        prompt_pair.unconditional.pooled_embeds,
+                        prompt_pair.positive.pooled_embeds,
+                        prompt_pair.batch_size,
+                        ),
+                    guidance_scale=guidance_scale, #TODO
+                    ).to(device, dtype=weight_dtype)
+            noise_scheduler._step_index-=1
+            neutral_latents = train_util.predict_noise_sd3(
+                    transformer,
+                    noise_scheduler,
+                    current_timestep,
+                    denoised_latents,
+                    text_embeddings=train_util.concat_embeddings_sd3(
+                        prompt_pair.unconditional.text_embeds,
+                        prompt_pair.neutral.text_embeds,
+                        prompt_pair.batch_size,
+                        ),
+                    add_text_embeddings=train_util.concat_embeddings_sd3(
+                        prompt_pair.unconditional.pooled_embeds,
+                        prompt_pair.neutral.pooled_embeds,
+                        prompt_pair.batch_size,
+                        ),
+                    guidance_scale=guidance_scale, #TODO
+                    ).to(device, dtype=weight_dtype)
+            noise_scheduler._step_index-=1
+            negative_latents = train_util.predict_noise_sd3(
+                    transformer,
+                    noise_scheduler,
+                    current_timestep,
+                    denoised_latents,
+                    text_embeddings=train_util.concat_embeddings_sd3(
+                        prompt_pair.unconditional.text_embeds,
+                        prompt_pair.negative.text_embeds,
+                        prompt_pair.batch_size,
+                        ),
+                    add_text_embeddings=train_util.concat_embeddings_sd3(
+                        prompt_pair.unconditional.pooled_embeds,
+                        prompt_pair.negative.pooled_embeds,
+                        prompt_pair.batch_size,
+                        ),
+                    guidance_scale=guidance_scale, #TODO
+                    ).to(device, dtype=weight_dtype)
+            noise_scheduler._step_index-=1
 
             if config.logging.verbose:
                 print("positive_latents:", positive_latents[0, 0, :5, :5])
                 print("neutral_latents:", neutral_latents[0, 0, :5, :5])
 
         with network:
-            target_latents = train_util.predict_noise_xl(
-                unet,
-                noise_scheduler,
-                current_timestep,
-                denoised_latents,
-                text_embeddings=train_util.concat_embeddings(
-                    prompt_pair.unconditional.text_embeds,
-                    prompt_pair.target.text_embeds,
-                    prompt_pair.batch_size,
-                ),
-                add_text_embeddings=train_util.concat_embeddings(
-                    prompt_pair.unconditional.pooled_embeds,
-                    prompt_pair.target.pooled_embeds,
-                    prompt_pair.batch_size,
-                ),
-                add_time_ids=train_util.concat_embeddings(
-                    add_time_ids, add_time_ids, prompt_pair.batch_size
-                ),
-                guidance_scale=guidance_scale, #TODO
-            ).to(device, dtype=weight_dtype)
+            target_latents = train_util.predict_noise_sd3(
+                    transformer,
+                    noise_scheduler,
+                    current_timestep,
+                    denoised_latents,
+                    text_embeddings=train_util.concat_embeddings_sd3(
+                        prompt_pair.unconditional.text_embeds,
+                        prompt_pair.target.text_embeds,
+                        prompt_pair.batch_size,
+                        ),
+                    add_text_embeddings=train_util.concat_embeddings_sd3(
+                        prompt_pair.unconditional.pooled_embeds,
+                        prompt_pair.target.pooled_embeds,
+                        prompt_pair.batch_size,
+                        ),
+                    guidance_scale=guidance_scale, #TODO
+                    ).to(device, dtype=weight_dtype)
 
             if config.logging.verbose:
                 print("target_latents:", target_latents[0, 0, :5, :5])
@@ -352,30 +342,35 @@ def train(
         neutral_latents.requires_grad = False
 
         loss = prompt_pair.loss(
-            target_latents=target_latents,
-            positive_latents=positive_latents,
-            neutral_latents=neutral_latents,
-            negative_latents=negative_latents,
-        )
+                target_latents=target_latents,
+                positive_latents=positive_latents,
+                neutral_latents=neutral_latents,
+                negative_latents=negative_latents,
+                )
 
         # 1000倍しないとずっと0.000...になってしまって見た目的に面白くない
         pbar.set_description(f"Loss*1k: {loss.item()*1000:.4f}")
         if config.logging.use_wandb:
             wandb.log(
-                {"loss": loss, "iteration": i, "lr": lr_scheduler.get_last_lr()[0]}
-            )
+                    {"loss": loss, "iteration": i, "lr": lr_scheduler.get_last_lr()[0]}
+                    )
 
         loss.backward()
         optimizer.step()
         lr_scheduler.step()
 
+        print("PROMPT", settings.unconditional)
+        #render_debug(f"train{i}.png", target_latents, pipeline)
+        #render_debug(f"train{i}p.png", positive_latents, pipeline)
+        #render_debug(f"train{i}n.png", negative_latents, pipeline)
         del (
-            positive_latents,
-            negative_latents,
-            neutral_latents,
-            target_latents,
-            latents,
-        )
+                positive_latents,
+                negative_latents,
+                neutral_latents,
+                target_latents,
+                denoised_latents,
+                latents,
+                )
         flush()
         
         if (
@@ -402,7 +397,7 @@ def train(
         )
 
         del (
-            unet,
+            transformer,
             noise_scheduler,
             loss,
             optimizer,
@@ -423,6 +418,7 @@ def main(args):
     if args.attributes is not None:
         attributes = args.attributes.split(',')
         attributes = [a.strip() for a in attributes]
+    print("ATTRIBUTES", attributes)
     
     config.network.alpha = args.alpha
     config.network.rank = args.rank
@@ -435,9 +431,9 @@ def main(args):
     if config.logging.verbose:
         print(prompts)
     device = torch.device(f"cuda:{args.device}")
-    train(config, prompts, device, on_step_complete=None, rank=args.rank)
+    train(config, prompts, device, on_step_complete=None, rank=args.rank, peft_type=args.peft_type)
 
-def train_lora(target, positive, negative, unconditional, alpha=1.0, device=0, name=None, attributes=None, batch_size=1, config_file='data/config-xl.yaml', resolution=512, steps=None, on_step_complete=None, peft_type='lora', rank=4):
+def train_lora(target, positive, negative, unconditional, alpha=1.0, device=0, name=None, attributes=None, batch_size=1, config_file='data/config-sd3.yaml', resolution=512, steps=None, on_step_complete=None, peft_type='lora', rank=4):
     # Create the configuration dictionary
     output_dict = {
         "target": target,
@@ -451,11 +447,10 @@ def train_lora(target, positive, negative, unconditional, alpha=1.0, device=0, n
         "batch_size": batch_size
     }
 
-    # Writing the dictionary to 'data/prompts-xl.yaml'
-    with open('data/prompts-xl.yaml', 'w') as file:
+    # Writing the dictionary to 'data/prompts-sd3.yaml'
+    with open('data/prompts-sd3.yaml', 'w') as file:
         yaml.dump([output_dict], file)  # Note the list wrapping around output_dict
 
-    #print("Data saved to 'data/prompts-xl.yaml'")
     config = config_util.load_config_from_yaml(config_file)
     if name is not None:
         config.save.name = name

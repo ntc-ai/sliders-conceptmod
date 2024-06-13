@@ -8,6 +8,7 @@ from diffusers import (
     UNet2DConditionModel,
     SchedulerMixin,
     StableDiffusionPipeline,
+    StableDiffusion3Pipeline,
     StableDiffusionXLPipeline,
 )
 from diffusers.schedulers import (
@@ -150,7 +151,10 @@ def load_diffusers_model_cascade(
     return prior_model.tokenizer, prior_model.text_encoder, prior_model.prior
 
 
-
+def print_object_data(obj):
+    data = {key: value for key, value in obj.__dict__.items() if not key.startswith('__')}
+    for key, value in data.items():
+        print(f"{key}")
 
 def load_diffusers_model_xl(
     pretrained_model_name_or_path: str,
@@ -205,6 +209,22 @@ def load_checkpoint_model_cascade(
     assert False, "not implemented"
 
 
+def load_checkpoint_model_sd3 (
+    checkpoint_path: str,
+    weight_dtype: torch.dtype = torch.float32,
+) -> tuple[list[CLIPTokenizer], list[SDXL_TEXT_ENCODER_TYPE], UNet2DConditionModel,]:
+    #pipe = StableDiffusion3Pipeline.from_single_file(checkpoint_path, text_encoder_3=None, tokenizer_3=None, torch_dtype=torch.float16, use_safetensors=True, local_files_only=True, device="cuda")
+    pipe = StableDiffusion3Pipeline.from_pretrained("stabilityai/stable-diffusion-3-medium-diffusers", text_encoder_3=None, tokenizer_3=None, torch_dtype=torch.float16, use_safetensors=True, local_files_only=True, device="cuda")
+    pipe = pipe.to(torch.float16).to("cuda")
+
+    print_object_data(pipe)
+    transformer = pipe.transformer
+    tokenizers = [pipe.tokenizer, pipe.tokenizer_2]
+    text_encoders = [pipe.text_encoder, pipe.text_encoder_2]
+
+    return tokenizers, text_encoders, transformer, pipe
+
+
 
 def load_checkpoint_model_xl(
     checkpoint_path: str,
@@ -246,6 +266,28 @@ def load_models_cascade(
 
     return tokenizers, text_encoders, unet, scheduler
 
+
+
+def load_models_sd3(
+    pretrained_model_name_or_path: str,
+    scheduler_name: AVAILABLE_SCHEDULERS,
+    weight_dtype: torch.dtype = torch.float32,
+) -> tuple[
+    list[CLIPTokenizer],
+    list[SDXL_TEXT_ENCODER_TYPE],
+    UNet2DConditionModel,
+    SchedulerMixin,
+]:
+    (
+        tokenizers,
+        text_encoders,
+        unet,
+        pipe
+    ) = load_checkpoint_model_sd3(pretrained_model_name_or_path, weight_dtype)
+
+    scheduler = pipe.scheduler#create_noise_scheduler(scheduler_name)
+
+    return tokenizers, text_encoders, unet, scheduler, pipe
 
 
 
