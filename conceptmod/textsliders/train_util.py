@@ -306,31 +306,30 @@ def predict_noise_sd3(
     add_text_embeddings: torch.FloatTensor,  # pooled なやつ
     guidance_scale=7.5
 ) -> torch.FloatTensor:
-    with torch.cuda.amp.autocast():
 
-        # expand the latents if we are doing classifier-free guidance to avoid doing two forward passes.
-        latent_model_input = torch.cat([latents] * 2)
-        timestep_cat = torch.tensor([timestep]*2*len(latents), device="cuda")
-        #latent_model_input = scheduler.scale_model_input(latent_model_input, timestep)
+    # expand the latents if we are doing classifier-free guidance to avoid doing two forward passes.
+    latent_model_input = torch.cat([latents] * 2)
+    timestep_cat = torch.tensor([timestep]*2*len(latents), device="cuda")
+    #latent_model_input = scheduler.scale_model_input(latent_model_input, timestep)
 
-        # TODO timestep wrong 
-        noise_pred = transformer(
-            hidden_states=latent_model_input,
-            timestep=timestep_cat,
-            encoder_hidden_states=text_embeddings,
-            pooled_projections=add_text_embeddings,
-            return_dict=False,
-        )[0]
+    # TODO timestep wrong 
+    noise_pred = transformer(
+        hidden_states=latent_model_input,
+        timestep=timestep_cat,
+        encoder_hidden_states=text_embeddings,
+        pooled_projections=add_text_embeddings,
+        return_dict=False,
+    )[0]
 
-        # perform guidance
-        noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
-        guided_target = noise_pred_uncond + guidance_scale * (
-            noise_pred_text - noise_pred_uncond
-        )
+    # perform guidance
+    noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
+    guided_target = noise_pred_uncond + guidance_scale * (
+        noise_pred_text - noise_pred_uncond
+    )
 
-        latents = scheduler.step(guided_target, timestep, latents, return_dict=False)[0]
+    latents = scheduler.step(guided_target, timestep, latents, return_dict=False)[0]
 
-        return latents
+    return latents
 
 
 def predict_noise_xl(
@@ -465,7 +464,7 @@ def predict_noise_cascade(
 
 @torch.no_grad()
 def diffusion_sd3(
-    unet: UNet2DConditionModel,
+    transformer,
     scheduler: SchedulerMixin,
     latents: torch.FloatTensor,  # ただのノイズだけのlatents
     text_embeddings: tuple[torch.FloatTensor, torch.FloatTensor],
@@ -478,7 +477,7 @@ def diffusion_sd3(
 
     for timestep in scheduler.timesteps[start_timesteps:total_timesteps]:
         latents = predict_noise_sd3(
-            unet,
+            transformer,
             scheduler,
             timestep,
             latents,

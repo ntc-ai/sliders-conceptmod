@@ -8,6 +8,7 @@ import ast
 from pathlib import Path
 import gc
 
+import copy
 import torch
 from tqdm import tqdm
 
@@ -86,6 +87,7 @@ def train(
     ) = model_util.load_models_sd3(
         config.pretrained_model.name_or_path,
         scheduler_name=config.train.noise_scheduler,
+        weight_dtype = weight_dtype
     )
 
     for text_encoder in text_encoders:
@@ -227,7 +229,6 @@ def train(
             latents = train_util.get_initial_latents_sd3(
                 noise_scheduler, prompt_pair.batch_size, height, width, 1
             ).to(device, dtype=weight_dtype)
-            latents = latents.half()
 
             with network:
                 # ちょっとデノイズされれたものが返る
@@ -258,7 +259,7 @@ def train(
             # with network: の外では空のLoRAのみが有効になる
             positive_latents = train_util.predict_noise_sd3(
                     transformer,
-                    noise_scheduler,
+                    copy.deepcopy(noise_scheduler),
                     current_timestep,
                     denoised_latents,
                     text_embeddings=train_util.concat_embeddings_sd3(
@@ -273,10 +274,9 @@ def train(
                         ),
                     guidance_scale=guidance_scale, #TODO
                     ).to(device, dtype=weight_dtype)
-            noise_scheduler._step_index-=1
             neutral_latents = train_util.predict_noise_sd3(
                     transformer,
-                    noise_scheduler,
+                    copy.deepcopy(noise_scheduler),
                     current_timestep,
                     denoised_latents,
                     text_embeddings=train_util.concat_embeddings_sd3(
@@ -291,10 +291,9 @@ def train(
                         ),
                     guidance_scale=guidance_scale, #TODO
                     ).to(device, dtype=weight_dtype)
-            noise_scheduler._step_index-=1
             negative_latents = train_util.predict_noise_sd3(
                     transformer,
-                    noise_scheduler,
+                    copy.deepcopy(noise_scheduler),
                     current_timestep,
                     denoised_latents,
                     text_embeddings=train_util.concat_embeddings_sd3(
@@ -309,7 +308,6 @@ def train(
                         ),
                     guidance_scale=guidance_scale, #TODO
                     ).to(device, dtype=weight_dtype)
-            noise_scheduler._step_index-=1
 
             if config.logging.verbose:
                 print("positive_latents:", positive_latents[0, 0, :5, :5])
@@ -318,7 +316,7 @@ def train(
         with network:
             target_latents = train_util.predict_noise_sd3(
                     transformer,
-                    noise_scheduler,
+                    copy.deepcopy(noise_scheduler),
                     current_timestep,
                     denoised_latents,
                     text_embeddings=train_util.concat_embeddings_sd3(
@@ -358,8 +356,7 @@ def train(
         loss.backward()
         optimizer.step()
         lr_scheduler.step()
-
-        print("PROMPT", settings.unconditional)
+        #print("PROMPT", settings.target)
         #render_debug(f"train{i}.png", target_latents, pipeline)
         #render_debug(f"train{i}p.png", positive_latents, pipeline)
         #render_debug(f"train{i}n.png", negative_latents, pipeline)
