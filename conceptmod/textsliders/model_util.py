@@ -3,6 +3,7 @@ from typing import Literal, Union, Optional
 import torch
 from transformers import CLIPTextModel, CLIPTokenizer, CLIPTextModelWithProjection
 #from diffusers import StableCascadeDecoderPipeline, StableCascadePriorPipeline
+from transformers import T5EncoderModel, BitsAndBytesConfig
 
 from diffusers import (
     UNet2DConditionModel,
@@ -214,12 +215,18 @@ def load_checkpoint_model_sd3 (
     weight_dtype: torch.dtype = torch.float32,
 ) -> tuple[list[CLIPTokenizer], list[SDXL_TEXT_ENCODER_TYPE], UNet2DConditionModel,]:
     #pipe = StableDiffusion3Pipeline.from_single_file(checkpoint_path, text_encoder_3=None, tokenizer_3=None, torch_dtype=torch.float16, use_safetensors=True, local_files_only=True, device="cuda")
-    pipe = StableDiffusion3Pipeline.from_pretrained("stabilityai/stable-diffusion-3-medium-diffusers", text_encoder_3=None, tokenizer_3=None, use_safetensors=True, local_files_only=True, device="cuda", torch_dtype=weight_dtype)
+    model_id = "stabilityai/stable-diffusion-3-medium-diffusers"
+    text_encoder = T5EncoderModel.from_pretrained(
+        model_id,
+        subfolder="text_encoder_3",
+        torch_dtype = weight_dtype
+    )
+    pipe = StableDiffusion3Pipeline.from_pretrained(model_id, use_safetensors=True, local_files_only=True, device="cuda", torch_dtype=weight_dtype, text_encoder_3=text_encoder)
     pipe = pipe.to("cuda")
 
     transformer = pipe.transformer
-    tokenizers = [pipe.tokenizer, pipe.tokenizer_2]
-    text_encoders = [pipe.text_encoder, pipe.text_encoder_2]
+    tokenizers = [pipe.tokenizer, pipe.tokenizer_2, pipe.tokenizer_3]
+    text_encoders = [pipe.text_encoder, pipe.text_encoder_2, pipe.text_encoder_3]
 
     return tokenizers, text_encoders, transformer, pipe
 
