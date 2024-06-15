@@ -102,8 +102,9 @@ def train(
             transformer,
             rank=rank,
             multiplier=1.0,
+            delimiter="-",
             alpha=config.network.alpha,
-            train_method=config.network.training_method,
+            train_method=config.network.training_method
         ).to(device, dtype=weight_dtype)
 
     else:
@@ -114,7 +115,7 @@ def train(
             multiplier=1.0,
             delimiter="-",
             alpha=config.network.alpha,
-            train_method=config.network.training_method,
+            train_method=config.network.training_method
         ).to(device, dtype=weight_dtype)
 
     optimizer_module = train_util.get_optimizer(config.train.optimizer)

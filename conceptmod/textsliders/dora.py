@@ -169,6 +169,7 @@ class DoRANetwork(nn.Module):
         unet: UNet2DConditionModel,
         rank: int = 4,
         multiplier: float = 1.0,
+        delimiter: str = "_",
         alpha: float = 1.0,
         prefix: str = LORA_PREFIX_UNET,
         target_replace: str = DEFAULT_TARGET_REPLACE,
@@ -189,7 +190,8 @@ class DoRANetwork(nn.Module):
             target_replace,
             self.lora_dim,
             self.multiplier,
-            train_method=train_method,
+            delimiter,
+            train_method=train_method
         )
         #print(f"create LoRA for U-Net: {len(self.unet_loras)} modules.")
 
@@ -220,6 +222,7 @@ class DoRANetwork(nn.Module):
         target_replace_modules: List[str],
         rank: int,
         multiplier: float,
+        delimiter: str,
         train_method: TRAINING_METHODS,
     ) -> list:
         loras = []
@@ -256,7 +259,7 @@ class DoRANetwork(nn.Module):
                             if 'mid_block' not in name or '.1' not in name or 'conv2' not in child_name:
                                 continue
                         lora_name = prefix + "." + name + "." + child_name
-                        lora_name = lora_name.replace(".", "_").strip("_")
+                        lora_name = lora_name.replace(".", delimiter)
 #                         print(f"{lora_name}")
                         lora = self.module(
                             lora_name, child_module, multiplier, rank, self.alpha

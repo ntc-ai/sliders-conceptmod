@@ -93,6 +93,7 @@ def train(
             unet,
             rank=rank,
             multiplier=1.0,
+            delimiter="_",
             alpha=config.network.alpha,
             train_method=config.network.training_method,
         ).to(device, dtype=weight_dtype)
