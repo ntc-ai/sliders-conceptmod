@@ -120,6 +120,8 @@ class LoRANetwork(nn.Module):
         multiplier: float = 1.0,
         delimiter: str = "_",
         alpha: float = 1.0,
+        target_replace = DEFAULT_TARGET_REPLACE,
+        prefix=LORA_PREFIX_UNET,
         train_method: TRAINING_METHODS = "full",
     ) -> None:
         super().__init__()
@@ -133,9 +135,9 @@ class LoRANetwork(nn.Module):
 
         # unetのloraを作る
         self.unet_loras = self.create_modules(
-            LORA_PREFIX_UNET,
+            prefix,
             unet,
-            DEFAULT_TARGET_REPLACE,
+            target_replace,
             delimiter,
             self.lora_dim,
             self.multiplier,

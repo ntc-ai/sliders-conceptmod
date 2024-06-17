@@ -216,12 +216,12 @@ def load_checkpoint_model_sd3 (
 ) -> tuple[list[CLIPTokenizer], list[SDXL_TEXT_ENCODER_TYPE], UNet2DConditionModel,]:
     #pipe = StableDiffusion3Pipeline.from_single_file(checkpoint_path, text_encoder_3=None, tokenizer_3=None, torch_dtype=torch.float16, use_safetensors=True, local_files_only=True, device="cuda")
     model_id = "stabilityai/stable-diffusion-3-medium-diffusers"
-    text_encoder = T5EncoderModel.from_pretrained(
-        model_id,
-        subfolder="text_encoder_3",
-        torch_dtype = weight_dtype
-    )
-    pipe = StableDiffusion3Pipeline.from_pretrained(model_id, use_safetensors=True, local_files_only=True, device="cuda", torch_dtype=weight_dtype, text_encoder_3=text_encoder)
+    #text_encoder = T5EncoderModel.from_pretrained(
+    #    model_id,
+    #    subfolder="text_encoder_3",
+    #    torch_dtype = weight_dtype
+    #)
+    pipe = StableDiffusion3Pipeline.from_pretrained(model_id, use_safetensors=True, local_files_only=True, device="cuda", torch_dtype=weight_dtype, text_encoder_3=None)
     pipe = pipe.to("cuda")
 
     transformer = pipe.transformer
