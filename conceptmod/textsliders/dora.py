@@ -240,6 +240,9 @@ class DoRANetwork(nn.Module):
             elif train_method == "xattn" or train_method == "xattn-strict":  # Cross Attention のみ学習
                 if "attn2" not in name:
                     continue
+            elif train_method == "t5attn":  # T5 self attentino
+                if "SelfAttention" not in name:
+                    continue
             elif train_method == "full":  # 全部学習
                 pass
             else:

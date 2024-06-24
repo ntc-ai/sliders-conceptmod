@@ -42,7 +42,6 @@ def delete_elements(tokenizers, index):
         del tokenizers[1:3]
     elif index == 1:
         del tokenizers[0]
-        del tokenizers[1]
     elif index == 2:
         del tokenizers[0:2]
     else:

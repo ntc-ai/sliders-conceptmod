@@ -344,10 +344,9 @@ def predict_noise_xl(
     guidance_rescale=0.7,
 ) -> torch.FloatTensor:
     # expand the latents if we are doing classifier-free guidance to avoid doing two forward passes.
-    latent_model_input = torch.cat([latents] * 2).to(torch.float16)
+    latent_model_input = torch.cat([latents] * 2)
 
     latent_model_input = scheduler.scale_model_input(latent_model_input, timestep)
-    latent_model_input.half()
 
     added_cond_kwargs = {
         "text_embeds": add_text_embeddings,

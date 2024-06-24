@@ -221,12 +221,13 @@ def load_checkpoint_model_sd3 (
     #    subfolder="text_encoder_3",
     #    torch_dtype = weight_dtype
     #)
-    pipe = StableDiffusion3Pipeline.from_pretrained(model_id, use_safetensors=True, local_files_only=True, device="cuda", torch_dtype=weight_dtype, text_encoder_3=None)
+    model_id = "stabilityai/stable-diffusion-3-medium-diffusers"
+    pipe = StableDiffusion3Pipeline.from_pretrained(model_id, use_safetensors=True, local_files_only=True, torch_device="cuda", torch_dtype=weight_dtype, text_encoder_3=None)
     pipe = pipe.to("cuda")
 
     transformer = pipe.transformer
-    tokenizers = [pipe.tokenizer, pipe.tokenizer_2, pipe.tokenizer_3]
-    text_encoders = [pipe.text_encoder, pipe.text_encoder_2, pipe.text_encoder_3]
+    tokenizers = [pipe.tokenizer, pipe.tokenizer_2]
+    text_encoders = [pipe.text_encoder, pipe.text_encoder_2]
 
     return tokenizers, text_encoders, transformer, pipe
 
