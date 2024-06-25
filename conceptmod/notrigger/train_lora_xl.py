@@ -16,8 +16,7 @@ from conceptmod.notrigger.lora import LoRANetwork, DEFAULT_TARGET_REPLACE, UNET_
 from conceptmod.textsliders.dora import DoRANetwork, DEFAULT_TARGET_REPLACE, UNET_TARGET_REPLACE_MODULE_CONV
 from conceptmod.notrigger import train_util
 from conceptmod.notrigger import model_util
-from conceptmod.notrigger import prompt_util
-from conceptmod.notrigger.prompt_util import (
+from conceptmod.textsliders.prompt_util import (
     PromptEmbedsCache,
     PromptEmbedsPair,
     PromptSettings,
