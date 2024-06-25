@@ -196,10 +196,10 @@ def train(
             ]
 
             # 1 ~ 49 からランダム
-            #timesteps_to = torch.randint(
-            #    1, config.train.max_denoising_steps, (1,)
-            #).item()
-            timesteps_to = config.train.max_denoising_steps-1
+            timesteps_to = torch.randint(
+                1, config.train.max_denoising_steps, (1,)
+            ).item()
+            #timesteps_to = config.train.max_denoising_steps-1
 
             height, width = prompt_pair.resolution, prompt_pair.resolution
             if prompt_pair.dynamic_resolution:
