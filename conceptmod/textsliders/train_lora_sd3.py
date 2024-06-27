@@ -454,7 +454,7 @@ def train_lora(target, positive, negative, unconditional, alpha=1.0, device=0, n
 
     prompts = prompt_util.load_prompts_from_yaml(config.prompts_file, attr_list)
     device = torch.device(f"cuda:{device}")
-    return train(config, prompts, device, on_step_complete, save_file=False, rank=rank, peft_type=args.peft_type)
+    return train(config, prompts, device, on_step_complete, save_file=False, rank=rank, peft_type=peft_type)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
