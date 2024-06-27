@@ -228,7 +228,7 @@ def train(
             )
 
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(network.parameters(), max_norm=0.1)
+        torch.nn.utils.clip_grad_norm_(network.parameters(), max_norm=0.2)
         optimizer.step()
         lr_scheduler.step()
 

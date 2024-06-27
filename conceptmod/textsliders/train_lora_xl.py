@@ -436,7 +436,7 @@ def main(args):
     if config.logging.verbose:
         print(prompts)
     device = torch.device(f"cuda:{args.device}")
-    train(config, prompts, device, on_step_complete=None, rank=args.rank)
+    train(config, prompts, device, on_step_complete=None, rank=args.rank, peft_type=args.peft_type)
 
 def train_lora(target, positive, negative, unconditional, alpha=1.0, device=0, name=None, attributes=None, batch_size=1, config_file='data/config-xl.yaml', resolution=512, steps=None, on_step_complete=None, peft_type='lora', rank=4):
     # Create the configuration dictionary
@@ -475,7 +475,7 @@ def train_lora(target, positive, negative, unconditional, alpha=1.0, device=0, n
 
     prompts = prompt_util.load_prompts_from_yaml(config.prompts_file, attr_list)
     device = torch.device(f"cuda:{device}")
-    return train(config, prompts, device, on_step_complete, save_file=False, rank=rank)
+    return train(config, prompts, device, on_step_complete, save_file=False, rank=rank, peft_type=peft_type)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
