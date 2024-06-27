@@ -125,15 +125,6 @@ def train(
         ).to(device, dtype=weight_dtype)
     network.requires_grad_(True)
 
-    optimizer_module = train_util.get_optimizer(config.train.optimizer)
-    #optimizer_args
-    optimizer_kwargs = {}
-    if config.train.optimizer_args is not None and len(config.train.optimizer_args) > 0:
-        for arg in config.train.optimizer_args.split(" "):
-            key, value = arg.split("=")
-            value = ast.literal_eval(value)
-            optimizer_kwargs[key] = value
-
     optimizer = torch.optim.AdamW(network.parameters(), lr=1e-4, weight_decay=1e-6)
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50, eta_min=1e-6)
     criteria = torch.nn.MSELoss()

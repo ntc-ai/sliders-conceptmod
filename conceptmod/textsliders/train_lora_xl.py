@@ -108,22 +108,8 @@ def train(
             train_method=config.network.training_method,
         ).to(device, dtype=weight_dtype)
 
-    optimizer_module = train_util.get_optimizer(config.train.optimizer)
-    #optimizer_args
-    optimizer_kwargs = {}
-    if config.train.optimizer_args is not None and len(config.train.optimizer_args) > 0:
-        for arg in config.train.optimizer_args.split(" "):
-            key, value = arg.split("=")
-            value = ast.literal_eval(value)
-            optimizer_kwargs[key] = value
-            
-    optimizer = optimizer_module(network.prepare_optimizer_params(), lr=config.train.lr, **optimizer_kwargs)
-    lr_scheduler = train_util.get_lr_scheduler(
-        config.train.lr_scheduler,
-        optimizer,
-        max_iterations=config.train.iterations,
-        lr_min=config.train.lr / 100,
-    )
+    optimizer = torch.optim.AdamW(network.parameters(), lr=1e-4, weight_decay=1e-6)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50, eta_min=1e-6)
     criteria = torch.nn.MSELoss()
 
     if config.logging.verbose:
@@ -367,6 +353,7 @@ def train(
             )
 
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(network.parameters(), max_norm=0.2)
         optimizer.step()
         lr_scheduler.step()
 
