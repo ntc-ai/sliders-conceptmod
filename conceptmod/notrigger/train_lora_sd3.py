@@ -154,14 +154,8 @@ def train(
             value = ast.literal_eval(value)
             optimizer_kwargs[key] = value
 
-    optimizer = optimizer_module(network.prepare_optimizer_params(), lr=config.train.lr, **optimizer_kwargs)
-    lr_scheduler = train_util.get_lr_scheduler(
-        config.train.lr_scheduler,
-        optimizer,
-        max_iterations=config.train.iterations,
-        lr_min=config.train.lr / 100,
-    )
-    criteria = torch.nn.MSELoss()
+    optimizer = torch.optim.AdamW(network.parameters(), lr=1e-4, weight_decay=1e-6)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50, eta_min=1e-6)
 
     # debug
     if config.logging.verbose:
@@ -170,33 +164,37 @@ def train(
 
     pbar = tqdm(range(config.train.iterations))
 
-    print("INDEX", index)
     chosenlayer = -1
     last_loss = None
+    positive_str = ", ".join(positive)
+    negative_str = ", ".join(negative)
 
     for i in pbar:
+        loss = None
+        cos_loss = None
         with network:
-            for l in network.unet_loras:
-                l.multiplier = 1.0
-            tokens = train_util.text_tokenize(tokenizers[0], [''])
+            if positive_str != "":
+                for l in network.unet_loras:
+                    l.multiplier = 1.0
+                tokens = train_util.text_tokenize(tokenizers[0], [''])
 
-            neu_tex_embs = text_encoder(
-                tokens.to(text_encoder.device), output_hidden_states=True
-            ).hidden_states[chosenlayer]
+                neu_tex_embs = text_encoder(
+                    tokens.to(text_encoder.device), output_hidden_states=True
+                ).hidden_states[chosenlayer]
 
-            tokens = train_util.text_tokenize(tokenizers2[0], [", ".join(positive)])
+                tokens = train_util.text_tokenize(tokenizers2[0], [positive_str])
 
-            pos_tex_embs = text_encoders2[0](
-                tokens.to(text_encoders2[0].device), output_hidden_states=True
-            ).hidden_states[chosenlayer]
+                pos_tex_embs = text_encoders2[0](
+                    tokens.to(text_encoders2[0].device), output_hidden_states=True
+                ).hidden_states[chosenlayer]
 
-            loss = ((pos_tex_embs - neu_tex_embs) ** 2).mean()
-            if negative is not None:
+                loss = ((pos_tex_embs - neu_tex_embs) ** 2).mean()
+                cos_loss = cosine_similarity_loss(pos_tex_embs, neu_tex_embs).mean()
+            if negative is not None and negative != "":
                 for l in network.unet_loras:
                     l.multiplier = -1.0
 
-
-                tokens = train_util.text_tokenize(tokenizers2[0], [", ".join(negative)])
+                tokens = train_util.text_tokenize(tokenizers2[0], [negative_str])
                 pos_tex_embs = text_encoders2[0](
                     tokens.to(text_encoders2[0].device), output_hidden_states=True
                 ).hidden_states[chosenlayer]
@@ -207,8 +205,12 @@ def train(
                     tokens.to(text_encoder.device), output_hidden_states=True
                 ).hidden_states[chosenlayer]
 
-
-                loss += ((pos_tex_embs - neu_tex_embs2) ** 2).mean()
+                if loss is None:
+                    loss = ((pos_tex_embs - neu_tex_embs2) ** 2).mean()
+                    cos_loss = cosine_similarity_loss(pos_tex_embs, neu_tex_embs2).mean()
+                else:
+                    loss += ((pos_tex_embs - neu_tex_embs2) ** 2).mean()
+                    cos_loss += cosine_similarity_loss(pos_tex_embs, neu_tex_embs2).mean()
             if i % 200 == 0:
                 if last_loss is not None and last_loss == loss.item():
                     print("loss stopped moving. exitting early.")
@@ -226,6 +228,7 @@ def train(
             )
 
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(network.parameters(), max_norm=0.1)
         optimizer.step()
         lr_scheduler.step()
 
@@ -299,11 +302,9 @@ def train_lora(target, positive, negative, unconditional, alpha=1.0, rank=4, dev
         "batch_size": batch_size
     }
 
-    # Writing the dictionary to 'data/prompts-xl.yaml'
-    with open('data/prompts-xl.yaml', 'w') as file:
+    with open('data/prompts-sd3.yaml', 'w') as file:
         yaml.dump([output_dict], file)  # Note the list wrapping around output_dict
 
-    #print("Data saved to 'data/prompts-xl.yaml'")
     config = config_util.load_config_from_yaml(config_file)
     print("Found", config)
     if name is not None:

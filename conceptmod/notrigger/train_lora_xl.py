@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 from conceptmod.notrigger.lora import LoRANetwork, DEFAULT_TARGET_REPLACE, UNET_TARGET_REPLACE_MODULE_CONV
 from conceptmod.textsliders.dora import DoRANetwork, DEFAULT_TARGET_REPLACE, UNET_TARGET_REPLACE_MODULE_CONV
-from conceptmod.notrigger import train_util
+from conceptmod.textsliders import train_util
 from conceptmod.notrigger import model_util
 from conceptmod.textsliders.prompt_util import (
     PromptEmbedsCache,
@@ -134,13 +134,8 @@ def train(
             value = ast.literal_eval(value)
             optimizer_kwargs[key] = value
 
-    optimizer = optimizer_module(network.prepare_optimizer_params(), lr=config.train.lr, **optimizer_kwargs)
-    lr_scheduler = train_util.get_lr_scheduler(
-        config.train.lr_scheduler,
-        optimizer,
-        max_iterations=config.train.iterations,
-        lr_min=config.train.lr / 100,
-    )
+    optimizer = torch.optim.AdamW(network.parameters(), lr=1e-4, weight_decay=1e-6)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50, eta_min=1e-6)
     criteria = torch.nn.MSELoss()
 
     # debug
@@ -154,20 +149,26 @@ def train(
     chosenlayer = -1
     last_loss = None
 
+    tokens = train_util.text_tokenize(tokenizers2[index], [", ".join(positive)])
+    pos_tex_embs = text_encoders2[index](
+        tokens.to(text_encoders2[index].device), output_hidden_states=True
+    ).hidden_states[chosenlayer]
+
+
+    tokens = train_util.text_tokenize(tokenizers2[index], [", ".join(negative)])
+    neg_tex_embs = text_encoders2[index](
+        tokens.to(text_encoders2[index].device), output_hidden_states=True
+    ).hidden_states[chosenlayer]
+
+
+    neu_tokens = train_util.text_tokenize(tokenizers[index], ['']).to(text_encoder.device)
     for i in pbar:
         with network:
             for l in network.unet_loras:
                 l.multiplier = 1.0
-            tokens = train_util.text_tokenize(tokenizers[index], [''])
 
             neu_tex_embs = text_encoder(
-                tokens.to(text_encoder.device), output_hidden_states=True
-            ).hidden_states[chosenlayer]
-
-            tokens = train_util.text_tokenize(tokenizers2[index], [", ".join(positive)])
-
-            pos_tex_embs = text_encoders2[index](
-                tokens.to(text_encoders2[index].device), output_hidden_states=True
+                neu_tokens.to(text_encoder.device), output_hidden_states=True
             ).hidden_states[chosenlayer]
 
             loss = ((pos_tex_embs - neu_tex_embs) ** 2).mean()
@@ -175,20 +176,12 @@ def train(
                 for l in network.unet_loras:
                     l.multiplier = -1.0
 
-
-                tokens = train_util.text_tokenize(tokenizers2[index], [", ".join(negative)])
-                pos_tex_embs = text_encoders2[index](
-                    tokens.to(text_encoders2[index].device), output_hidden_states=True
-                ).hidden_states[chosenlayer]
-
-                tokens = train_util.text_tokenize(tokenizers[index], [''])
-
                 neu_tex_embs2 = text_encoder(
-                    tokens.to(text_encoder.device), output_hidden_states=True
+                    neu_tokens.to(text_encoder.device), output_hidden_states=True
                 ).hidden_states[chosenlayer]
 
 
-                loss += ((pos_tex_embs - neu_tex_embs2) ** 2).mean()
+                loss += ((neg_tex_embs - neu_tex_embs2) ** 2).mean()
             if i % 200 == 0:
                 if last_loss is not None and last_loss == loss.item():
                     print("loss stopped moving. exitting early.")
@@ -206,6 +199,7 @@ def train(
             )
 
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(network.parameters(), max_norm=0.1)
         optimizer.step()
         lr_scheduler.step()
 

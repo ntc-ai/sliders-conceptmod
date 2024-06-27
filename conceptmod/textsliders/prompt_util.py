@@ -50,7 +50,6 @@ class PromptEmbedsCache:  # 使いまわしたいので
         else:
             return None
 
-
 class PromptSettings(BaseModel):  # yaml のやつ
     target: str
     positive: str = None   # if None, target will be used

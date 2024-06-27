@@ -168,7 +168,6 @@ def encode_prompts_sd3(
             device="cuda",
             num_images_per_prompt=num_images_per_prompt,
         )
-    print("EMBEDS SIZE", prompt_embeds.shape)
 
     return prompt_embeds, pooled_prompt_embeds
 
