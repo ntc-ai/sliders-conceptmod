@@ -32,7 +32,9 @@ class TrainConfig(BaseModel):
     noise_scheduler: Literal["ddim", "ddpm", "lms", "euler_a", "builtin"] = "ddim"
 
     iterations: int = 500
-    lr: float = 1e-4
+    lr: float = 1e-3
+    eta_min: float = 1e-4
+    lambda_similarity: float = 0.1
     optimizer: str = "adamw"
     optimizer_args: str = ""
     lr_scheduler: str = "constant"

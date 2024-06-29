@@ -133,7 +133,6 @@ class DoRAModule(nn.Module):
         dora_merged = weight * (self.dora_scale / weight_norm)
         return dora_merged
 
-
     def apply_to(self):
         self.org_forward = self.org_module.forward
         self.org_module.forward = self.forward

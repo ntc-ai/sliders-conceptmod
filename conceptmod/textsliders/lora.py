@@ -47,6 +47,32 @@ TRAINING_METHODS = Literal[
 ]
 
 
+
+
+def lora_init_weights_advanced(lora_down, lora_up, init_scale=0.01, sparsity=0.9):
+    fan_in = lora_down.weight.shape[1]
+    fan_out = lora_up.weight.shape[0]
+    mid_dim = lora_down.weight.shape[0]
+
+    # Initialize lora_down with an asymmetric pattern
+    with torch.no_grad():
+        lora_down.weight.zero_()
+        for i in range(mid_dim):
+            if i % 2 == 0:
+                lora_down.weight[i, i % fan_in] = init_scale
+            else:
+                lora_down.weight[i, -(i % fan_in) - 1] = -init_scale
+
+    # Initialize lora_up with a complementary asymmetric pattern
+    with torch.no_grad():
+        lora_up.weight.zero_()
+        for i in range(fan_out):
+            if i % 2 == 0:
+                lora_up.weight[i, i % mid_dim] = init_scale
+            else:
+                lora_up.weight[i, -(i % mid_dim) - 1] = -init_scale
+
+
 class LoRAModule(nn.Module):
     """
     replaces forward method of the original Linear, instead of replacing the original Linear module.
@@ -93,9 +119,7 @@ class LoRAModule(nn.Module):
         self.scale = alpha / self.lora_dim
         self.register_buffer("alpha", torch.tensor(alpha))  # 定数として扱える
 
-        # same as microsoft's
-        nn.init.kaiming_uniform_(self.lora_down.weight, a=1)
-        nn.init.zeros_(self.lora_up.weight)
+        lora_init_weights_advanced(self.lora_down, self.lora_up, 5e-2, sparsity=0.9)
 
         self.multiplier = multiplier
         self.org_module = org_module  # remove in applying
