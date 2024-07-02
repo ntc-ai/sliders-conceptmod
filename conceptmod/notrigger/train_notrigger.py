@@ -11,6 +11,7 @@ import numpy as np
 
 import torch
 from tqdm import tqdm
+import torch.nn.functional as F
 
 from conceptmod.textsliders.lora import LoRANetwork, DEFAULT_TARGET_REPLACE, UNET_TARGET_REPLACE_MODULE_CONV
 from conceptmod.textsliders.dora import DoRANetwork, DEFAULT_TARGET_REPLACE, UNET_TARGET_REPLACE_MODULE_CONV
@@ -41,9 +42,9 @@ def flush():
 
 
 
-def fixed_distance_loss(neu_tex_embs, pos_tex_embs, fixed_distance):
-    # Calculate the vector from neu_tex_embs to pos_tex_embs
-    diff_vector = pos_tex_embs - neu_tex_embs
+def fixed_distance_loss(trainable_positive_embs, pos_tex_embs, fixed_distance):
+    # Calculate the vector from trainable_positive_embs to pos_tex_embs
+    diff_vector = pos_tex_embs - trainable_positive_embs
 
     # Calculate the current distance
     current_distance = torch.norm(diff_vector, dim=-1, keepdim=True)
@@ -55,10 +56,10 @@ def fixed_distance_loss(neu_tex_embs, pos_tex_embs, fixed_distance):
     clamped_distance = torch.clamp(fixed_distance.unsqueeze(-1), -current_distance, current_distance)
 
     # Create a target that's at the clamped distance
-    target = neu_tex_embs + direction * clamped_distance
+    target = trainable_positive_embs + direction * clamped_distance
 
     # Calculate loss
-    loss = ((neu_tex_embs - target) ** 2).mean()
+    loss = ((trainable_positive_embs - target) ** 2).mean()
 
     return loss
 
@@ -82,10 +83,6 @@ def train(
         "config": config.json(),
     }
     save_path = Path(config.save.path)
-
-    modules = DEFAULT_TARGET_REPLACE
-    if config.network.type == "c3lier":
-        modules += UNET_TARGET_REPLACE_MODULE_CONV
 
     if config.logging.verbose:
         print(metadata)
@@ -219,6 +216,10 @@ def train(
             tokens.to(static_text_encoder.device), output_hidden_states=True
         ).hidden_states[chosenlayer]
 
+    neu_tokens = train_util.text_tokenize(tokenizers[index], ['']).to(peft_text_encoder.device)
+    neutral_tex_embs = static_text_encoder(
+            neu_tokens, output_hidden_states=True
+        ).hidden_states[chosenlayer]
     negative = ", ".join(negative)
     if negative == "":
         negative = None
@@ -255,7 +256,6 @@ def train(
     ndistance2 = None
     split = 20
 
-    neu_tokens = train_util.text_tokenize(tokenizers[index], ['']).to(peft_text_encoder.device)
     for i in pbar:
         with network:
             stabilize_loss = torch.zeros([1], device=static_text_encoder.device)
@@ -263,23 +263,26 @@ def train(
                 for l in network.unet_loras:
                     l.multiplier = 1.0
 
-                neu_tex_embs = peft_text_encoder(
+                trainable_positive_embs = peft_text_encoder(
                     neu_tokens, output_hidden_states=True
                 ).hidden_states[chosenlayer]
                 if i == 0:
-                    distance1 = torch.norm( pos_tex_embs - neu_tex_embs.detach() ).mean() / split
-                    ndistance1 = torch.norm( neg_tex_embs - neu_tex_embs.detach() ).mean() / split
+                    distance1 = torch.norm( pos_tex_embs - trainable_positive_embs.detach() ).mean() / split
+                    ndistance1 = torch.norm( neg_tex_embs - trainable_positive_embs.detach() ).mean() / split
 
-                #ploss = ((pos_tex_embs - neu_tex_embs) ** 2).mean()
-                ploss = fixed_distance_loss(neu_tex_embs, pos_tex_embs, distance1).mean()
-                #pregularization = -fixed_distance_loss(neu_tex_embs, neg_tex_embs, ndistance1).mean()
-                pregularization = -((neu_tex_embs - neg_tex_embs) ** 2).mean()
+                #ploss = ((pos_tex_embs - trainable_positive_embs) ** 2).mean()
+                ploss = fixed_distance_loss(trainable_positive_embs, pos_tex_embs, distance1).mean()
+                #pregularization = -fixed_distance_loss(trainable_positive_embs, neg_tex_embs, ndistance1).mean()
+                #pregularization = -((trainable_positive_embs - neg_tex_embs) ** 2).mean()
+                v1 = trainable_positive_embs-neutral_tex_embs
+                v2 = neg_tex_embs-neutral_tex_embs
+                pregularization = torch.nn.functional.cosine_similarity(v1.unsqueeze(0), v2.unsqueeze(0)).squeeze().mean()
 
                 if(len(attributes) > 0 and i % stabilize_every == 0):
                     for attribute_token, attr_b in zip(attribute_tokens, static_attribute_embs):
                         attr_a = peft_text_encoder(
-                            attribute_token, output_hidden_states=True
-                        ).hidden_states[chosenlayer]
+                                attribute_token, output_hidden_states=True
+                                ).hidden_states[chosenlayer]
                         stabilize_loss += torch.norm(attr_a - attr_b, p=2).mean()
 
 
@@ -287,53 +290,54 @@ def train(
                 for l in network.unet_loras:
                     l.multiplier = -1.0
 
-                neu_tex_embs2 = peft_text_encoder(
-                    neu_tokens, output_hidden_states=True
-                ).hidden_states[chosenlayer]
+                trainable_negative_embs = peft_text_encoder(
+                        neu_tokens, output_hidden_states=True
+                        ).hidden_states[chosenlayer]
 
                 if i == 0:
-                    distance2 = torch.norm( neg_tex_embs - neu_tex_embs2.detach() ).mean() / split 
-                    ndistance2 = torch.norm( pos_tex_embs - neu_tex_embs2.detach() ).mean() / split
-                nloss = fixed_distance_loss(neu_tex_embs2, neg_tex_embs, distance2).mean()
-                #nregularization = -fixed_distance_loss(neu_tex_embs2, pos_tex_embs, ndistance2).mean()
-                #nloss = ((neg_tex_embs - neu_tex_embs2) ** 2).mean()
-                nregularization = -((neu_tex_embs2 - pos_tex_embs) ** 2).mean()
+                    distance2 = torch.norm( neg_tex_embs - trainable_negative_embs.detach() ).mean() / split 
+                    ndistance2 = torch.norm( pos_tex_embs - trainable_negative_embs.detach() ).mean() / split
+                nloss = fixed_distance_loss(trainable_negative_embs, neg_tex_embs, distance2).mean()
+                #nregularization = -fixed_distance_loss(trainable_negative_embs, pos_tex_embs, ndistance2).mean()
+                #nloss = ((neg_tex_embs - trainable_negative_embs) ** 2).mean()
+                #regularization = -((trainable_negative_embs - pos_tex_embs) ** 2).mean()
 
-                similarity_loss = 1/(((neu_tex_embs2 - neu_tex_embs) ** 2).mean()+1e-8)
+                v1 = trainable_negative_embs-neutral_tex_embs
+                v2 = pos_tex_embs-neutral_tex_embs
+                nregularization = torch.nn.functional.cosine_similarity(v1.unsqueeze(0), v2.unsqueeze(0)).squeeze().mean()
 
-                #regularization = 1 / ((neu_tex_embs2 - neu_tex_embs) ** 2).mean()
+                #regularization = 1 / ((trainable_negative_embs - trainable_positive_embs) ** 2).mean()
                 if(len(attributes) > 0 and i % stabilize_every == 0):
                     for attribute_token, attr_b in zip(attribute_tokens, static_attribute_embs):
                         attr_a = peft_text_encoder(
-                            attribute_token, output_hidden_states=True
-                        ).hidden_states[chosenlayer]
+                                attribute_token, output_hidden_states=True
+                                ).hidden_states[chosenlayer]
                         stabilize_loss += torch.norm(attr_a - attr_b, p=2).mean()
 
 
         if positive is None:
             loss = nloss
-            similarity = 0
+            similarity = None
             stabilize = λs * stabilize_loss
         elif negative is None:
             loss = ploss
-            similarity = 0
+            similarity = None
             stabilize = λs * stabilize_loss
         else:
             loss = ploss + nloss
-            #similarity = λp * pregularization + λn * nregularization
-            similarity = λp * similarity_loss
+            similarity = λp * pregularization + λn * nregularization
             stabilize = λs * stabilize_loss
 
-        full_loss = ((pos_tex_embs - neu_tex_embs)**2).mean() + ((neg_tex_embs - neu_tex_embs2)**2).mean()
+        full_loss = ((pos_tex_embs - trainable_positive_embs)**2).mean() + ((neg_tex_embs - trainable_negative_embs)**2).mean()
         if i % 800 == 0 and i > 1000:
             if last_loss is not None and last_loss == full_loss.item():
                 print("loss stopped moving. exitting early.")
                 break
             last_loss = full_loss.item()
             print("reconstruction:", last_loss, "similarity:", similarity , "stabilize:", stabilize)
-        full_nloss = torch.norm(neg_tex_embs - neu_tex_embs2).mean()
+        full_nloss = torch.norm(neg_tex_embs - trainable_negative_embs).mean()
         nperc = full_nloss / (distance2*split)
-        full_ploss = torch.norm(pos_tex_embs - neu_tex_embs).mean()
+        full_ploss = torch.norm(pos_tex_embs - trainable_positive_embs).mean()
         pperc = full_ploss / (distance1*split)
         # 1000倍しないとずっと0.000...になってしまって見た目的に面白くない
         if config.logging.use_wandb:
@@ -344,6 +348,8 @@ def train(
         #loss = loss + 1e-4 * sum(p.pow(2.0).sum() for p in network.parameters())
         if(len(attributes) > 0 and i % stabilize_every == 0):
             (loss+similarity+stabilize).backward()
+        elif positive is None or negative is None:
+            loss.backward()
         else:
             balance_p = pperc
             balance_n = nperc
@@ -358,12 +364,11 @@ def train(
             #loss += (balance_n * nloss + (1.0-balance_n) * ploss)/2
             #w_n = (1.-balance_p + balance_n)/2.0
             #w_p = (1.-balance_n + balance_p)/2.0
-
-
+            #loss.backward()
             (loss+similarity).backward()
 
             #(loss+similarity).backward()
-        pbar.set_description(f"w_n {w_n:0.2f} w_p {w_p:0.2f} ndist: {full_nloss.item():.3f}({nperc*100:.1f}%) pdist: {full_ploss.item():.3f}({pperc*100:.1f}%) Curriculum: {loss.item()*1000:.3f} similarity: {similarity.item()*1000:.3f} stabilize: {stabilize.item()*1000:0.3f} lr {scheduler.get_last_lr()}")
+        pbar.set_description(f"w_n {w_n:0.2f} w_p {w_p:0.2f} ndist: {full_nloss.item():.3f}({nperc*100:.1f}%) pdist: {full_ploss.item():.3f}({pperc*100:.1f}%) Curriculum: {loss.item()*1000:.3f} similarity: {similarity.item()*1000000:.3f} stabilize: {stabilize.item()*1000:0.3f} lr {scheduler.get_last_lr()}")
         #torch.nn.utils.clip_grad_norm_(network.parameters(), max_norm=0.2)
         torch.nn.utils.clip_grad_value_(network.parameters(), clip_value=1.0)
 
