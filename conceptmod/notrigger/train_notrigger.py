@@ -273,10 +273,19 @@ def train(
                 #ploss = ((pos_tex_embs - trainable_positive_embs) ** 2).mean()
                 ploss = fixed_distance_loss(trainable_positive_embs, pos_tex_embs, distance1).mean()
                 #pregularization = -fixed_distance_loss(trainable_positive_embs, neg_tex_embs, ndistance1).mean()
-                #pregularization = -((trainable_positive_embs - neg_tex_embs) ** 2).mean()
+                #pregularization = 1/(((trainable_positive_embs - neg_tex_embs) ** 2).mean()+1e-8)
+                #v1 = trainable_positive_embs-neutral_tex_embs
+                #v2 = neg_tex_embs-neutral_tex_embs
+
                 v1 = trainable_positive_embs-neutral_tex_embs
                 v2 = neg_tex_embs-neutral_tex_embs
-                pregularization = torch.nn.functional.cosine_similarity(v1.unsqueeze(0), v2.unsqueeze(0)).squeeze().mean()
+                v1r = pos_tex_embs - neutral_tex_embs
+                pregularization = torch.abs((
+                    torch.nn.functional.cosine_similarity(v1.unsqueeze(0), v2.unsqueeze(0)).squeeze() - torch.nn.functional.cosine_similarity(v1r.unsqueeze(0), v2.unsqueeze(0)).squeeze()
+                ).mean())
+                #pregularization += 1/(((v1 - v2) ** 2).mean()+1e-8)
+                #pregularization += torch.nn.functional.cosine_similarity(v1.unsqueeze(0), v2.unsqueeze(0)).squeeze().mean()
+                pregularization += 1/(((trainable_positive_embs - neg_tex_embs) ** 2).mean()+1e-8)
 
                 if(len(attributes) > 0 and i % stabilize_every == 0):
                     for attribute_token, attr_b in zip(attribute_tokens, static_attribute_embs):
@@ -300,11 +309,16 @@ def train(
                 nloss = fixed_distance_loss(trainable_negative_embs, neg_tex_embs, distance2).mean()
                 #nregularization = -fixed_distance_loss(trainable_negative_embs, pos_tex_embs, ndistance2).mean()
                 #nloss = ((neg_tex_embs - trainable_negative_embs) ** 2).mean()
-                #regularization = -((trainable_negative_embs - pos_tex_embs) ** 2).mean()
 
                 v1 = trainable_negative_embs-neutral_tex_embs
+                v1r = neg_tex_embs-neutral_tex_embs
                 v2 = pos_tex_embs-neutral_tex_embs
-                nregularization = torch.nn.functional.cosine_similarity(v1.unsqueeze(0), v2.unsqueeze(0)).squeeze().mean()
+                nregularization = torch.abs((
+                    torch.nn.functional.cosine_similarity(v1.unsqueeze(0), v2.unsqueeze(0)).squeeze() - torch.nn.functional.cosine_similarity(v1r.unsqueeze(0), v2.unsqueeze(0)).squeeze()
+                ).mean())
+                #nregularization += torch.nn.functional.cosine_similarity(v1.unsqueeze(0), v2.unsqueeze(0)).squeeze().mean()
+                #nregularization += 1/(((v1 - v2) ** 2).mean()+1e-8)
+                nregularization += 1/(((trainable_negative_embs-pos_tex_embs) ** 2).mean()+1e-8)
 
                 #regularization = 1 / ((trainable_negative_embs - trainable_positive_embs) ** 2).mean()
                 if(len(attributes) > 0 and i % stabilize_every == 0):
@@ -358,8 +372,12 @@ def train(
 
             w_p = (balance_p * scale_factor) / (balance_p * scale_factor + balance_n * scale_factor)
             w_n = (balance_n * scale_factor) / (balance_p * scale_factor + balance_n * scale_factor)
+            w_r = min(0.95, (nperc+pperc)/2)
 
-            loss = w_p * balance_p + w_n * balance_n
+            full_nloss = w_n * balance_n
+            full_ploss = w_p * balance_p
+            loss = (w_p * balance_p + w_n * balance_n)
+            similarity = (1.0-w_r) * similarity
             #loss = (balance_p * ploss + (1.0-balance_p) * nloss)/2
             #loss += (balance_n * nloss + (1.0-balance_n) * ploss)/2
             #w_n = (1.-balance_p + balance_n)/2.0
@@ -368,7 +386,7 @@ def train(
             (loss+similarity).backward()
 
             #(loss+similarity).backward()
-        pbar.set_description(f"w_n {w_n:0.2f} w_p {w_p:0.2f} ndist: {full_nloss.item():.3f}({nperc*100:.1f}%) pdist: {full_ploss.item():.3f}({pperc*100:.1f}%) Curriculum: {loss.item()*1000:.3f} similarity: {similarity.item()*1000000:.3f} stabilize: {stabilize.item()*1000:0.3f} lr {scheduler.get_last_lr()}")
+        pbar.set_description(f"w_n {w_n:0.2f} w_p {w_p:0.2f} w_r {w_r:0.2f} ndist: {full_nloss.item():.3e}({nperc*100:.1f}%) pdist: {full_ploss.item():.3e}({pperc*100:.1f}%) Curriculum: {loss.item()*1000:.3f} similarity: {similarity.item():.3e} stabilize: {stabilize.item()*1000:0.3f} lr {scheduler.get_last_lr()}")
         #torch.nn.utils.clip_grad_norm_(network.parameters(), max_norm=0.2)
         torch.nn.utils.clip_grad_value_(network.parameters(), clip_value=1.0)
 
