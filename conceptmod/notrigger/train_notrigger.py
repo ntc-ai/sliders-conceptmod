@@ -207,8 +207,9 @@ def train(
     chosenlayer = -1
     last_loss = None
 
-    positive = ", ".join(positive)
-    if positive == "":
+    if positive is not None:
+        positive = ", ".join(positive)
+    if positive == "" or positive is None:
         positive = None
     else:
         tokens = train_util.text_tokenize(tokenizers2[index], [positive])
@@ -220,8 +221,9 @@ def train(
     neutral_tex_embs = static_text_encoder(
             neu_tokens, output_hidden_states=True
         ).hidden_states[chosenlayer]
-    negative = ", ".join(negative)
-    if negative == "":
+    if negative is not None:
+        negative = ", ".join(negative)
+    if negative == "" or negative is None:
         negative = None
     else:
         tokens = train_util.text_tokenize(tokenizers2[index], [negative])
@@ -251,9 +253,7 @@ def train(
     nloss = torch.zeros([1], device=static_text_encoder.device)
 
     distance1 = None
-    ndistance1 = None
     distance2 = None
-    ndistance2 = None
     split = 20
 
     for i in pbar:
@@ -268,24 +268,26 @@ def train(
                 ).hidden_states[chosenlayer]
                 if i == 0:
                     distance1 = torch.norm( pos_tex_embs - trainable_positive_embs.detach() ).mean() / split
-                    ndistance1 = torch.norm( neg_tex_embs - trainable_positive_embs.detach() ).mean() / split
 
-                #ploss = ((pos_tex_embs - trainable_positive_embs) ** 2).mean()
-                ploss = fixed_distance_loss(trainable_positive_embs, pos_tex_embs, distance1).mean()
+                if negative is None:
+                    ploss = ((pos_tex_embs - trainable_positive_embs) ** 2).mean()
+                else:
+                    ploss = fixed_distance_loss(trainable_positive_embs, pos_tex_embs, distance1).mean()
                 #pregularization = -fixed_distance_loss(trainable_positive_embs, neg_tex_embs, ndistance1).mean()
                 #pregularization = 1/(((trainable_positive_embs - neg_tex_embs) ** 2).mean()+1e-8)
                 #v1 = trainable_positive_embs-neutral_tex_embs
                 #v2 = neg_tex_embs-neutral_tex_embs
 
-                v1 = trainable_positive_embs-neutral_tex_embs
-                v2 = neg_tex_embs-neutral_tex_embs
-                v1r = pos_tex_embs - neutral_tex_embs
-                pregularization = torch.abs((
-                    torch.nn.functional.cosine_similarity(v1.unsqueeze(0), v2.unsqueeze(0)).squeeze() - torch.nn.functional.cosine_similarity(v1r.unsqueeze(0), v2.unsqueeze(0)).squeeze()
-                ).mean())
-                #pregularization += 1/(((v1 - v2) ** 2).mean()+1e-8)
-                #pregularization += torch.nn.functional.cosine_similarity(v1.unsqueeze(0), v2.unsqueeze(0)).squeeze().mean()
-                pregularization += 1/(((trainable_positive_embs - neg_tex_embs) ** 2).mean()+1e-8)
+                if negative is not None:
+                    v1 = trainable_positive_embs-neutral_tex_embs
+                    v2 = neg_tex_embs-neutral_tex_embs
+                    v1r = pos_tex_embs - neutral_tex_embs
+                    pregularization = torch.abs((
+                        torch.nn.functional.cosine_similarity(v1.unsqueeze(0), v2.unsqueeze(0)).squeeze() - torch.nn.functional.cosine_similarity(v1r.unsqueeze(0), v2.unsqueeze(0)).squeeze()
+                    ).mean())
+                    #pregularization += 1/(((v1 - v2) ** 2).mean()+1e-8)
+                    pregularization += torch.nn.functional.cosine_similarity(v1.unsqueeze(0), v2.unsqueeze(0)).squeeze().mean()
+                    pregularization += 1/(((trainable_positive_embs - neg_tex_embs) ** 2).mean()+1e-8)
 
                 if(len(attributes) > 0 and i % stabilize_every == 0):
                     for attribute_token, attr_b in zip(attribute_tokens, static_attribute_embs):
@@ -305,22 +307,25 @@ def train(
 
                 if i == 0:
                     distance2 = torch.norm( neg_tex_embs - trainable_negative_embs.detach() ).mean() / split 
-                    ndistance2 = torch.norm( pos_tex_embs - trainable_negative_embs.detach() ).mean() / split
-                nloss = fixed_distance_loss(trainable_negative_embs, neg_tex_embs, distance2).mean()
+                if positive is None:
+                    nloss = ((neg_tex_embs - trainable_negative_embs) ** 2).mean()
+                else:
+                    nloss = fixed_distance_loss(trainable_negative_embs, neg_tex_embs, distance2).mean()
                 #nregularization = -fixed_distance_loss(trainable_negative_embs, pos_tex_embs, ndistance2).mean()
                 #nloss = ((neg_tex_embs - trainable_negative_embs) ** 2).mean()
 
-                v1 = trainable_negative_embs-neutral_tex_embs
-                v1r = neg_tex_embs-neutral_tex_embs
-                v2 = pos_tex_embs-neutral_tex_embs
-                nregularization = torch.abs((
-                    torch.nn.functional.cosine_similarity(v1.unsqueeze(0), v2.unsqueeze(0)).squeeze() - torch.nn.functional.cosine_similarity(v1r.unsqueeze(0), v2.unsqueeze(0)).squeeze()
-                ).mean())
-                #nregularization += torch.nn.functional.cosine_similarity(v1.unsqueeze(0), v2.unsqueeze(0)).squeeze().mean()
-                #nregularization += 1/(((v1 - v2) ** 2).mean()+1e-8)
-                nregularization += 1/(((trainable_negative_embs-pos_tex_embs) ** 2).mean()+1e-8)
+                if positive is not None:
+                    v1 = trainable_negative_embs-neutral_tex_embs
+                    v1r = neg_tex_embs-neutral_tex_embs
+                    v2 = pos_tex_embs-neutral_tex_embs
+                    nregularization = torch.abs((
+                        torch.nn.functional.cosine_similarity(v1.unsqueeze(0), v2.unsqueeze(0)).squeeze() - torch.nn.functional.cosine_similarity(v1r.unsqueeze(0), v2.unsqueeze(0)).squeeze()
+                    ).mean())
+                    nregularization += torch.nn.functional.cosine_similarity(v1.unsqueeze(0), v2.unsqueeze(0)).squeeze().mean()
+                    #nregularization += 1/(((v1 - v2) ** 2).mean()+1e-8)
+                    nregularization += 1/(((trainable_negative_embs-pos_tex_embs) ** 2).mean()+1e-8)
 
-                #regularization = 1 / ((trainable_negative_embs - trainable_positive_embs) ** 2).mean()
+                    #regularization = 1 / ((trainable_negative_embs - trainable_positive_embs) ** 2).mean()
                 if(len(attributes) > 0 and i % stabilize_every == 0):
                     for attribute_token, attr_b in zip(attribute_tokens, static_attribute_embs):
                         attr_a = peft_text_encoder(
@@ -341,18 +346,30 @@ def train(
             loss = ploss + nloss
             similarity = λp * pregularization + λn * nregularization
             stabilize = λs * stabilize_loss
-
-        full_loss = ((pos_tex_embs - trainable_positive_embs)**2).mean() + ((neg_tex_embs - trainable_negative_embs)**2).mean()
+        if negative is None:
+            full_loss = ((trainable_positive_embs - pos_tex_embs)**2).mean()
+        elif positive is None:
+            full_loss = ((trainable_negative_embs - neg_tex_embs)**2).mean()
+        else:
+            full_loss = ((pos_tex_embs - trainable_positive_embs)**2).mean() + ((neg_tex_embs - trainable_negative_embs)**2).mean()
         if i % 800 == 0 and i > 1000:
             if last_loss is not None and last_loss == full_loss.item():
                 print("loss stopped moving. exitting early.")
                 break
             last_loss = full_loss.item()
             print("reconstruction:", last_loss, "similarity:", similarity , "stabilize:", stabilize)
-        full_nloss = torch.norm(neg_tex_embs - trainable_negative_embs).mean()
-        nperc = full_nloss / (distance2*split)
-        full_ploss = torch.norm(pos_tex_embs - trainable_positive_embs).mean()
-        pperc = full_ploss / (distance1*split)
+        if negative is not None:
+            full_nloss = torch.norm(neg_tex_embs - trainable_negative_embs).mean()
+            nperc = full_nloss / (distance2*split)
+        else:
+            nperc = 0
+            full_nloss = torch.tensor(0)
+        if positive is not None:
+            full_ploss = torch.norm(pos_tex_embs - trainable_positive_embs).mean()
+            pperc = full_ploss / (distance1*split)
+        else:
+            pperc = 0
+            full_ploss = torch.tensor(0)
         # 1000倍しないとずっと0.000...になってしまって見た目的に面白くない
         if config.logging.use_wandb:
             wandb.log(
@@ -360,10 +377,12 @@ def train(
             )
 
         #loss = loss + 1e-4 * sum(p.pow(2.0).sum() for p in network.parameters())
-        if(len(attributes) > 0 and i % stabilize_every == 0):
-            (loss+similarity+stabilize).backward()
-        elif positive is None or negative is None:
+        if positive is None or negative is None:
             loss.backward()
+            w_n = 0
+            w_p = 0
+            w_r = 0
+            similarity = torch.tensor(0)
         else:
             balance_p = pperc
             balance_n = nperc

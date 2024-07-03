@@ -119,7 +119,9 @@ class LoRAModule(nn.Module):
         self.scale = alpha / self.lora_dim
         self.register_buffer("alpha", torch.tensor(alpha))  # 定数として扱える
 
-        lora_init_weights_advanced(self.lora_down, self.lora_up, 5e-2, sparsity=0.9)
+        #lora_init_weights_advanced(self.lora_down, self.lora_up, 5e-2, sparsity=0.9)
+        nn.init.kaiming_uniform_(self.lora_down.weight, a=1)
+        nn.init.zeros_(self.lora_up.weight)
 
         self.multiplier = multiplier
         self.org_module = org_module  # remove in applying
