@@ -12,7 +12,7 @@ import torch
 from tqdm import tqdm
 
 
-from conceptmod.textsliders.lora import LoRANetwork, DEFAULT_TARGET_REPLACE, UNET_TARGET_REPLACE_MODULE_CONV
+from conceptmod.textsliders.lora import LoRANetwork
 from conceptmod.textsliders.dora import DoRANetwork
 from conceptmod.textsliders import train_util
 from conceptmod.textsliders import model_util
@@ -43,7 +43,7 @@ def train(
     prompts: list[PromptSettings],
     device,
     on_step_complete,
-    peft_type='dora',
+    peft_type='lora',
     rank=4,
     save_file=True
 ):
@@ -52,10 +52,6 @@ def train(
         "config": config.json(),
     }
     save_path = Path(config.save.path)
-
-    modules = DEFAULT_TARGET_REPLACE
-    if config.network.type == "c3lier":
-        modules += UNET_TARGET_REPLACE_MODULE_CONV
 
     if config.logging.verbose:
         print(metadata)
@@ -89,24 +85,21 @@ def train(
     unet.requires_grad_(False)
     unet.eval()
     if peft_type == 'dora':
-        network = DoRANetwork(
-            unet,
-            rank=rank,
-            multiplier=1.0,
-            delimiter="_",
-            alpha=config.network.alpha,
-            train_method=config.network.training_method,
-        ).to(device, dtype=weight_dtype)
-
+        peft_class = DoRANetwork
     else:
-        network = LoRANetwork(
-            unet,
-            rank=rank,
-            multiplier=1.0,
-            delimiter="_",
-            alpha=config.network.alpha,
-            train_method=config.network.training_method,
-        ).to(device, dtype=weight_dtype)
+        peft_class = LoRANetwork
+
+    target_replace="Attention"
+
+    network = peft_class(
+        unet,
+        rank=rank,
+        multiplier=1.0,
+        delimiter="_",
+        target_replace=[target_replace],
+        prefix="lora_unet",
+        train_method=config.network.training_method
+    ).to(device, dtype=weight_dtype)
 
     optimizer = torch.optim.AdamW(network.parameters(), lr=1e-4, weight_decay=1e-6)
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50, eta_min=1e-6)
@@ -514,8 +507,8 @@ if __name__ == "__main__":
         "--peft_type",
         type=str,
         required=False,
-        default="dora",
-        help="dora (default) or lora",
+        default="lora",
+        help="dora or lora (default)",
     )
  
     args = parser.parse_args()

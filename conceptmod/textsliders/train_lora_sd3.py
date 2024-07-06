@@ -53,7 +53,7 @@ def train(
     prompts: list[PromptSettings],
     device,
     on_step_complete,
-    peft_type='dora',
+    peft_type='lora',
     rank=4,
     save_file=True
 ):
@@ -97,26 +97,20 @@ def train(
     transformer.requires_grad_(False)
     transformer.eval()
     if peft_type == 'dora':
-        print("DORA")
-        network = DoRANetwork(
-            transformer,
-            rank=rank,
-            multiplier=1.0,
-            delimiter="-",
-            alpha=config.network.alpha,
-            train_method=config.network.training_method
-        ).to(device, dtype=weight_dtype)
-
+        peft_class = DoRANetwork
     else:
-        print("LORA")
-        network = LoRANetwork(
-            transformer,
-            rank=rank,
-            multiplier=1.0,
-            delimiter="-",
-            alpha=config.network.alpha,
-            train_method=config.network.training_method
-        ).to(device, dtype=weight_dtype)
+        peft_class = LoRANetwork
+
+    target_replace="Attention"
+
+    network = peft_class(
+        transformer,
+        rank=rank,
+        multiplier=1.0,
+        delimiter="-",
+        target_replace=[target_replace],
+        train_method=config.network.training_method
+    ).to(device, dtype=weight_dtype)
 
     optimizer = torch.optim.AdamW(network.parameters(), lr=1e-4, weight_decay=1e-6)
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50, eta_min=1e-6)
@@ -506,8 +500,8 @@ if __name__ == "__main__":
         "--peft_type",
         type=str,
         required=False,
-        default="dora",
-        help="dora (default) or lora",
+        default="lora",
+        help="dora or lora (default)",
     )
  
     args = parser.parse_args()
