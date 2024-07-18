@@ -65,7 +65,7 @@ def main():
     tensor_map2 = read_tensors(args.encoder1_model)
     tensor_map3 = read_tensors(args.encoder2_model)
 
-    merge(tensor_map, tensor_map1, args.unet_strength, 'transformer')
+    merge(tensor_map, tensor_map1, args.unet_strength, 'unet')
     merge(tensor_map, tensor_map2, args.enc_strength, 'CLIP')
     merge(tensor_map, tensor_map3, args.enc2_strength, 'CLIP')
     save_file(tensor_map, args.output_model)
