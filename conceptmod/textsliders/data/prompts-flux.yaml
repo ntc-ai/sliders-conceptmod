@@ -1,0 +1,9 @@
+- target: "" # what word for erasing the positive concept from
+  positive: "green" # concept to erase
+  negative: "red" # concept to erase
+  unconditional: "" # word to take the difference from the positive concept
+  neutral: "" # starting point for conditioning the target
+  action: "enhance" # erase or enhance
+  resolution: 512
+  dynamic_resolution: false
+  batch_size: 8

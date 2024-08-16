@@ -4,6 +4,8 @@ import torch
 from transformers import CLIPTextModel, CLIPTokenizer, CLIPTextModelWithProjection
 #from diffusers import StableCascadeDecoderPipeline, StableCascadePriorPipeline
 from transformers import T5EncoderModel, BitsAndBytesConfig
+import os
+from diffusers.models.embeddings import CombinedTimestepGuidanceTextProjEmbeddings
 
 from diffusers import (
     UNet2DConditionModel,
@@ -11,6 +13,8 @@ from diffusers import (
     StableDiffusionPipeline,
     StableDiffusion3Pipeline,
     StableDiffusionXLPipeline,
+    FluxPipeline,
+    FluxTransformer2DModel
 )
 from diffusers.schedulers import (
     DDIMScheduler,
@@ -231,7 +235,33 @@ def load_checkpoint_model_sd3 (
 
     return tokenizers, text_encoders, transformer, pipe
 
+def load_checkpoint_model_flux (
+    checkpoint_path: str,
+    weight_dtype: torch.dtype = torch.float32,
+) -> tuple[list[CLIPTokenizer], list[SDXL_TEXT_ENCODER_TYPE], UNet2DConditionModel,]:
+    #transformer = FluxTransformer2DModel.from_single_file(checkpoint_path,
+    #    torch_dtype=weight_dtype,
+    #    cache_dir=DIFFUSERS_CACHE_DIR,
+    #    device="cuda",
+    #    weights_only=False
+    #        )
+    #pipe = FluxPipeline.from_pretrained(bfl_repo, transformer=None, text_encoder_2=None, torch_dtype=dtype)
+    #pipe.transformer = transformer
+    #pipe.text_encoder_2 = text_encoder_2
+    pipe = FluxPipeline.from_pretrained("black-forest-labs/FLUX.1-schnell", transformer=None, torch_dtype=torch.bfloat16)
+    #pipe = FluxPipeline.from_pretrained("black-forest-labs/FLUX.1-dev", transformer=None, torch_dtype=torch.bfloat16)
+    #pipe = FluxPipeline.from_pretrained("black-forest-labs/FLUX.1-dev", torch_dtype=torch.bfloat16)
 
+    transformer = FluxTransformer2DModel.from_single_file(checkpoint_path, torch_dtype=weight_dtype).cuda()
+    pipe.transformer = transformer
+    #    
+    #transformer.time_text_embed = CombinedTimestepGuidanceTextProjEmbeddings(
+    #    embedding_dim=transformer.inner_dim, pooled_projection_dim=transformer.config.pooled_projection_dim
+    #).to(torch.bfloat16)
+    tokenizers = [pipe.tokenizer, pipe.tokenizer_2]
+    text_encoders = [pipe.text_encoder.cuda(), pipe.text_encoder_2.cuda()]
+
+    return tokenizers, text_encoders, pipe.transformer.cuda(), pipe
 
 def load_checkpoint_model_xl(
     checkpoint_path: str,
@@ -293,6 +323,28 @@ def load_models_sd3(
     ) = load_checkpoint_model_sd3(pretrained_model_name_or_path, weight_dtype)
 
     scheduler = pipe.scheduler#create_noise_scheduler(scheduler_name)
+
+    return tokenizers, text_encoders, unet, scheduler, pipe
+
+def load_models_flux(
+    pretrained_model_name_or_path: str,
+    scheduler_name: AVAILABLE_SCHEDULERS,
+    weight_dtype: torch.dtype = torch.float32,
+) -> tuple[
+    list[CLIPTokenizer],
+    list[SDXL_TEXT_ENCODER_TYPE],
+    UNet2DConditionModel,
+    SchedulerMixin,
+]:
+    (
+        tokenizers,
+        text_encoders,
+        unet,
+        pipe
+    ) = load_checkpoint_model_flux(pretrained_model_name_or_path, weight_dtype)
+
+    scheduler = pipe.scheduler#create_noise_scheduler(scheduler_name)
+    print("scheduler", scheduler)
 
     return tokenizers, text_encoders, unet, scheduler, pipe
 

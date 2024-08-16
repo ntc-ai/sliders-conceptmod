@@ -4,14 +4,17 @@ import torch
 
 from math import ceil
 from transformers import CLIPTextModel, CLIPTokenizer
-from diffusers import UNet2DConditionModel, SchedulerMixin
+from diffusers import UNet2DConditionModel, SchedulerMixin, FluxPipeline, FluxTransformer2DModel
 from diffusers.models.transformers import SD3Transformer2DModel
 #from diffusers.schedulers import DDPMWuerstchenScheduler
 from diffusers.utils.torch_utils import randn_tensor
 
 from conceptmod.textsliders.model_util import SDXL_TEXT_ENCODER_TYPE
 
+from diffusers.pipelines.flux.pipeline_flux import retrieve_timesteps, calculate_shift
+
 from tqdm import tqdm
+import numpy as np
 
 UNET_IN_CHANNELS = 4  # Stable Diffusion の in_channels は 4 で固定。XLも同じ。
 VAE_SCALE_FACTOR = 8  # 2 ** (len(vae.config.block_out_channels) - 1) = 8
@@ -62,6 +65,26 @@ def get_initial_latents_sd3(
         device="cuda",
     )
 
+
+def get_initial_latents_flux(
+    scheduler: SchedulerMixin,
+    n_imgs: int,
+    height: int,
+    width: int,
+    n_prompts: int,
+    generator=None,
+) -> torch.Tensor:
+    shape = (
+            n_imgs,
+            16,
+            height // VAE_SCALE_FACTOR,
+            width // VAE_SCALE_FACTOR,
+        )
+    #print("--!!", shape)
+    return torch.randn(
+        shape,
+        device="cuda",
+    )
 
 
 
@@ -171,13 +194,32 @@ def encode_prompts_sd3(
 
     return prompt_embeds, pooled_prompt_embeds
 
+def encode_prompts_flux(
+    pipeline,
+    tokenizers: list[CLIPTokenizer],
+    text_encoders: list[SDXL_TEXT_ENCODER_TYPE],
+    prompt: str,
+    num_images_per_prompt: int = 1,
+) -> tuple[torch.FloatTensor, torch.FloatTensor]:
+    max_sequence_length = 512 #TODO
+    (
+            prompt_embeds,
+            pooled_prompt_embeds,
+            text_ids,
+    ) = pipeline.encode_prompt(
+            prompt=prompt,
+            prompt_2=None,
+            device="cuda",
+            num_images_per_prompt=num_images_per_prompt,
+            max_sequence_length=max_sequence_length,
+        )
+
+    return prompt_embeds, pooled_prompt_embeds
 
 def print_object_data(obj):
     data = {key: value for key, value in obj.__dict__.items() if not key.startswith('__')}
     for key, value in data.items():
         print(f"{key}")
-
-
 
 def encode_prompts_xl(
     tokenizers: list[CLIPTokenizer],
@@ -210,6 +252,15 @@ def concat_embeddings_sd3(
     n_imgs: int,
 ):
     return torch.cat([unconditional, conditional]).repeat_interleave(n_imgs, dim=0)
+
+
+def concat_embeddings_flux(
+    unconditional: torch.FloatTensor,
+    conditional: torch.FloatTensor,
+    n_imgs: int,
+):
+    #print("OAHHH", unconditional.shape, conditional.shape)
+    return torch.cat([unconditional, conditional]).repeat_interleave(n_imgs, dim=0).detach()
 
 
 
@@ -330,6 +381,71 @@ def predict_noise_sd3(
 
     return latents
 
+def predict_noise_flux(
+    pipeline: FluxPipeline,
+    transformer: FluxTransformer2DModel,
+    scheduler: SchedulerMixin,
+    timestep: int,  # 現在のタイムステップ
+    latents: torch.FloatTensor,
+    text_embeddings: torch.FloatTensor,  # uncond な text embed と cond な text embed を結合したもの
+    add_text_embeddings: torch.FloatTensor,  # pooled なやつ
+    guidance_scale=7.5
+) -> torch.FloatTensor:
+    # https://github.com/huggingface/diffusers/blob/98930ee131b996c65cbbf48d8af363a98b21492c/src/diffusers/pipelines/flux/pipeline_flux.py#L508
+
+    #TODO
+    #latents = torch.cat([latents] * 2)
+    generator = None
+    height = pipeline.default_sample_size * pipeline.vae_scale_factor / 2
+    width = pipeline.default_sample_size * pipeline.vae_scale_factor / 2
+    num_channels_latents = transformer.config.in_channels // 4
+    #TODO timestep
+    device = text_embeddings.device
+    #guidance = torch.tensor([guidance_scale], device=device)
+    #guidance = guidance.expand(latents.shape[0])
+    guidance = None
+    batch_size = latents.shape[0]
+    num_images_per_prompt = 1
+    dtype = text_embeddings.dtype
+    text_ids = torch.zeros(batch_size, text_embeddings.shape[1], 3).to(device=device, dtype=dtype)
+    text_ids = text_ids.repeat(num_images_per_prompt, 1, 1)
+    #TODO move these to parent?
+
+    height = 2 * (int(height) // pipeline.vae_scale_factor)
+    width = 2 * (int(width) // pipeline.vae_scale_factor)
+    latent_image_ids = pipeline._prepare_latent_image_ids(batch_size, height, width, device, dtype)
+
+    timestep_ = timestep.expand(latents.shape[0]).to(latents.dtype)
+    #print("--", latent_model_input.shape, timestep_.shape, 'guidance', guidance, add_text_embeddings.shape, text_embeddings.shape, text_ids.shape, latent_image_ids.shape)
+
+    #_, add_text_embeddings = add_text_embeddings.chunk(2) #TODO
+    #_, text_embeddings = text_embeddings.chunk(2)
+
+    print('--ts', timestep_.mean())
+    noise_pred = transformer(
+        hidden_states=latents,
+        timestep=timestep_ / 1000,
+        guidance=guidance,
+        pooled_projections=add_text_embeddings,
+        encoder_hidden_states=text_embeddings,
+        txt_ids=text_ids,
+        img_ids=latent_image_ids,
+        return_dict=False,
+    )[0]
+
+    #TODO not needed?
+    #noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
+    #guided_target = noise_pred_uncond + guidance_scale * (
+    #    noise_pred_text - noise_pred_uncond
+    #)
+    #latents_2 = latent_model_input.chunk(2)[0]
+    #print("call scheduler step", guided_target.shape, timestep.shape, latent_model_input.shape)
+    #latents = scheduler.step(guided_target, timestep, latents, return_dict=False)[0]
+
+    #print("call scheduler step", noise_pred.shape, timestep.shape, latent_model_input.shape)
+    latents = scheduler.step(noise_pred, timestep, latents, return_dict=False)[0]
+
+    return latents
 
 def predict_noise_xl(
     unet: UNet2DConditionModel,
@@ -487,6 +603,75 @@ def diffusion_sd3(
 
     # return latents_steps
     return latents
+
+@torch.no_grad()
+def diffusion_flux(
+    pipeline,
+    transformer,
+    scheduler: SchedulerMixin,
+    latents: torch.FloatTensor,  # ただのノイズだけのlatents
+    text_embeddings: tuple[torch.FloatTensor, torch.FloatTensor],
+    add_text_embeddings: torch.FloatTensor,  # pooled なやつ
+    guidance_scale: float = 1.0,
+    total_timesteps: int = 1000,
+    start_timesteps=0,
+):
+
+    device = latents.device
+    dtype = text_embeddings.dtype
+    height = pipeline.default_sample_size * pipeline.vae_scale_factor / 2
+    width = pipeline.default_sample_size * pipeline.vae_scale_factor / 2
+    num_channels_latents = transformer.config.in_channels // 4
+    batch_size = latents.shape[0]
+    generator = None
+    latents, latent_image_ids = pipeline.prepare_latents(
+        batch_size,
+        num_channels_latents,
+        height,
+        width,
+        dtype,
+        device,
+        generator,
+        latents,
+    )
+    latents = latents.view(batch_size, -1, transformer.config.in_channels)
+
+    #TODO?
+    num_inference_steps = 1#total_timesteps+2# - start_timesteps
+    sigmas = np.linspace(1.0, 1 / num_inference_steps, num_inference_steps)
+    image_seq_len = latents.shape[1]
+    mu = calculate_shift(
+        image_seq_len,
+        pipeline.scheduler.config.base_image_seq_len,
+        pipeline.scheduler.config.max_image_seq_len,
+        pipeline.scheduler.config.base_shift,
+        pipeline.scheduler.config.max_shift,
+    )
+    timesteps = None
+    timesteps, num_inference_steps = retrieve_timesteps(
+        scheduler,
+        num_inference_steps,
+        device,
+        timesteps,
+        sigmas,
+        mu=mu,
+    )
+
+    for timestep in timesteps[start_timesteps:total_timesteps]:
+        latents = predict_noise_flux(
+            pipeline,
+            transformer,
+            scheduler,
+            timestep,
+            latents,
+            text_embeddings,
+            add_text_embeddings,
+            guidance_scale=guidance_scale
+        )
+
+
+    # return latents_steps
+    return latents, timesteps
 
 
 
