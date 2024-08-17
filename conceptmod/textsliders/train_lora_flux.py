@@ -6,6 +6,7 @@ from typing import List, Optional
 import argparse
 import ast
 from pathlib import Path
+import random
 import gc
 
 import copy
@@ -213,25 +214,23 @@ def train(
 
     flush()
     log_mem("after del tok")
-    print("pipeline", pipeline.text_encoder)
-
-    pbar = tqdm(range(config.train.iterations))
+    pbar = tqdm(range(config.train.iterations+1))
 
     loss = None
-    print("i", config.train.iterations)
     transformer.requires_grad_(False)
+    if settings.batch_size < 8:
+        accumulation_steps = 8 // settings.batch_size + (1 if (8 % settings.batch_size) > 0 else 0)
+    else:
+        accumulation_steps = 1
     for i in pbar:
         with torch.no_grad():
             prompt_pair: PromptEmbedsPair = prompt_pairs[
                 torch.randint(0, len(prompt_pairs), (1,)).item()
             ]
 
-            #timesteps_to = torch.randint(
-            #    1, config.train.max_denoising_steps, (1,)
-            #).item()
-            timesteps_to = 0
-            print("--", timesteps_to, i)
-            #timesteps_to = config.train.max_denoising_steps-1
+            timesteps_to = 1
+            num_inference_steps = timesteps_to + 1
+            should_render_debug=False
 
             height, width = prompt_pair.resolution, prompt_pair.resolution
             if prompt_pair.dynamic_resolution:
@@ -252,86 +251,27 @@ def train(
                 noise_scheduler, prompt_pair.batch_size, height, width, 1
             ).to(device, dtype=weight_dtype)
 
-            ##with network:
-            #step_index = noise_scheduler._step_index
-            #full_positive_latents, timesteps = train_util.diffusion_flux(
-            #        pipeline,
-            #        transformer,
-            #        noise_scheduler,
-            #        latents.clone(),
-            #        #text_embeddings=train_util.concat_embeddings_flux(
-            #        #    prompt_pair.unconditional.text_embeds,
-            #        #    prompt_pair.target.text_embeds,
-            #        #    prompt_pair.batch_size,
-            #        #    ),
-            #        #add_text_embeddings=train_util.concat_embeddings_flux(
-            #        #    prompt_pair.unconditional.pooled_embeds,
-            #        #    prompt_pair.target.pooled_embeds,
-            #        #    prompt_pair.batch_size,
-            #        #    ),
-            #        text_embeddings=prompt_pair.positive.text_embeds,
-            #        add_text_embeddings=prompt_pair.positive.pooled_embeds,
-            #        start_timesteps=0,
-            #        total_timesteps=timesteps_to,
-            #        guidance_scale=guidance_scale
-            #        ) #TODO: How does the gradient work?
-            #current_timestep = timesteps[timesteps_to]
-            #full_positive_latents = train_util.predict_noise_flux(
-            #        pipeline,
-            #        transformer,
-            #        noise_scheduler,
-            #        current_timestep,
-            #        full_positive_latents,
-            #        text_embeddings=prompt_pair.positive.text_embeds,
-            #        add_text_embeddings=prompt_pair.positive.pooled_embeds,
-            #        #text_embeddings=train_util.concat_embeddings_flux(
-            #        #    prompt_pair.unconditional.text_embeds,
-            #        #    prompt_pair.positive.text_embeds,
-            #        #    prompt_pair.batch_size,
-            #        #    ),
-            #        #add_text_embeddings=train_util.concat_embeddings_flux(
-            #        #    prompt_pair.unconditional.pooled_embeds,
-            #        #    prompt_pair.positive.pooled_embeds,
-            #        #    prompt_pair.batch_size,
-            #        #    ),
-            #        guidance_scale=guidance_scale, #TODO
-            #        ).to(device, dtype=weight_dtype)
-            #noise_scheduler._step_index=step_index
-            #log_mem("after full_positive")
+            with network:
+                denoised_latents, timesteps = train_util.diffusion_flux(
+                        pipeline,
+                        transformer,
+                        noise_scheduler,
+                        latents,
+                        text_embeddings=prompt_pair.unconditional.text_embeds,
+                        add_text_embeddings=prompt_pair.unconditional.pooled_embeds,
+                        start_timesteps=0,
+                        total_timesteps=timesteps_to,
+                        guidance_scale=guidance_scale,
+                        num_inference_steps = num_inference_steps 
+                        )
+                current_timestep = timesteps[timesteps_to]
+                log_mem("after denoised_latents")
 
-            denoised_latents, timesteps = train_util.diffusion_flux(
-                    pipeline,
-                    transformer,
-                    noise_scheduler,
-                    latents,
-                    #text_embeddings=train_util.concat_embeddings_flux(
-                    #    prompt_pair.unconditional.text_embeds,
-                    #    prompt_pair.target.text_embeds,
-                    #    prompt_pair.batch_size,
-                    #    ),
-                    #add_text_embeddings=train_util.concat_embeddings_flux(
-                    #    prompt_pair.unconditional.pooled_embeds,
-                    #    prompt_pair.target.pooled_embeds,
-                    #    prompt_pair.batch_size,
-                    #    ),
-                    text_embeddings=prompt_pair.unconditional.text_embeds,
-                    add_text_embeddings=prompt_pair.unconditional.pooled_embeds,
-                    start_timesteps=0,
-                    total_timesteps=timesteps_to,
-                    guidance_scale=guidance_scale
-                    ) #TODO: How does the gradient work?
-            current_timestep = timesteps[timesteps_to]
-            log_mem("after denoised_latents")
-
-
-            #current_timestep = noise_scheduler.timesteps[
-            #        timesteps_to
-            #        ]
-            #TODO wrong
             step_index = noise_scheduler._step_index
-            
+
             positive_latents = denoised_latents
-            for j in range(1 - timesteps_to):
+            #for j in range(1 - timesteps_to):
+            for j in range(1):
                 current_timestep = timesteps[timesteps_to + j]
                 positive_latents = train_util.predict_noise_flux(
                         pipeline,
@@ -351,7 +291,7 @@ def train(
                         #    prompt_pair.positive.pooled_embeds,
                         #    prompt_pair.batch_size,
                         #    ),
-                        guidance_scale=guidance_scale, #TODO
+                        guidance_scale=guidance_scale,
                         ).to(device, dtype=weight_dtype)
             current_timestep = timesteps[timesteps_to]
             noise_scheduler._step_index=step_index
@@ -364,24 +304,15 @@ def train(
                     denoised_latents,
                     text_embeddings=prompt_pair.neutral.text_embeds,
                     add_text_embeddings=prompt_pair.neutral.pooled_embeds,
-                    #text_embeddings=train_util.concat_embeddings_flux(
-                    #    prompt_pair.unconditional.text_embeds,
-                    #    prompt_pair.neutral.text_embeds,
-                    #    prompt_pair.batch_size,
-                    #    ),
-                    #add_text_embeddings=train_util.concat_embeddings_flux(
-                    #    prompt_pair.unconditional.pooled_embeds,
-                    #    prompt_pair.neutral.pooled_embeds,
-                    #    prompt_pair.batch_size,
-                    #    ),
-                    guidance_scale=guidance_scale, #TODO
+                    guidance_scale=guidance_scale,
                     ).to(device, dtype=weight_dtype)
 
             noise_scheduler._step_index=step_index
             log_mem("after neutral_latents")
 
             negative_latents = denoised_latents
-            for j in range(1 - timesteps_to):
+            #for j in range(1 - timesteps_to):
+            for j in range(1):
                 current_timestep = timesteps[timesteps_to + j]
                 negative_latents = train_util.predict_noise_flux(
                         pipeline,
@@ -391,27 +322,16 @@ def train(
                         negative_latents,
                         text_embeddings=prompt_pair.negative.text_embeds,
                         add_text_embeddings=prompt_pair.negative.pooled_embeds,
-                        #text_embeddings=train_util.concat_embeddings_flux(
-                        #    prompt_pair.unconditional.text_embeds,
-                        #    prompt_pair.negative.text_embeds,
-                        #    prompt_pair.batch_size,
-                        #    ),
-                        #add_text_embeddings=train_util.concat_embeddings_flux(
-                        #    prompt_pair.unconditional.pooled_embeds,
-                        #    prompt_pair.negative.pooled_embeds,
-                        #    prompt_pair.batch_size,
-                        #    ),
-                        guidance_scale=guidance_scale, #TODO
+                        guidance_scale=guidance_scale,
                         ).to(device, dtype=weight_dtype)
             current_timestep = timesteps[timesteps_to]
             log_mem("after negative_latents")
 
-            #if config.logging.verbose:
-            #    print("positive_latents:", positive_latents[0, 0, :5, :5])
-            #    print("neutral_latents:", neutral_latents[0, 0, :5, :5])
+            if config.logging.verbose:
+                print("positive_latents:", positive_latents[0, 0, :5, :5])
+                print("neutral_latents:", neutral_latents[0, 0, :5, :5])
 
         log_mem("pre network")
-
         noise_scheduler._step_index=step_index
         with network:
             target_latents = train_util.predict_noise_flux(
@@ -422,23 +342,11 @@ def train(
                     denoised_latents,
                     text_embeddings=prompt_pair.target.text_embeds,
                     add_text_embeddings=prompt_pair.target.pooled_embeds,
-                    #text_embeddings=train_util.concat_embeddings_flux(
-                    #    prompt_pair.unconditional.text_embeds,
-                    #    prompt_pair.target.text_embeds,
-                    #    prompt_pair.batch_size,
-                    #    ),
-                    #add_text_embeddings=train_util.concat_embeddings_flux(
-                    #    prompt_pair.unconditional.pooled_embeds,
-                    #    prompt_pair.target.pooled_embeds,
-                    #    prompt_pair.batch_size,
-                    #    ),
-                    guidance_scale=guidance_scale, #TODO
+                    guidance_scale=guidance_scale,
                     ).to(device, dtype=weight_dtype)
             log_mem("after target_latents")
-            #print("--", noise_scheduler, target_latents.shape)
-
-                #if config.logging.verbose:
-                #    print("target_latents:", target_latents[0, 0, :5, :5])
+            if config.logging.verbose:
+                print("target_latents:", target_latents[0, 0, :5, :5])
 
         positive_latents.requires_grad = False
         negative_latents.requires_grad = False
@@ -457,26 +365,32 @@ def train(
 
         log_mem("after loss")
 
-        # 1000倍しないとずっと0.000...になってしまって見た目的に面白くない
         pbar.set_description(f"Loss*1k: {loss.item()*1000:.4f}")
         if config.logging.use_wandb:
             wandb.log(
                     {"loss": loss, "iteration": i, "lr": lr_scheduler.get_last_lr()[0]}
                     )
 
-        optimizer.zero_grad()
+        if (i + 1) % accumulation_steps == 0:
+            optimizer.zero_grad()  # Reset the gradients
         log_mem("before backward loss")
+        if accumulation_steps > 1:
+            loss = loss / accumulation_steps
         loss.backward()
         #print_grad_memory_usage(network)
         log_mem("after backward loss")
         #torch.nn.utils.clip_grad_norm_(network.parameters(), max_norm=0.2)
-        optimizer.step()
-        lr_scheduler.step()
+
+        if (i + 1) % accumulation_steps == 0:
+            optimizer.step()  # Update the model parameters
+            lr_scheduler.step()
+
         #print("PROMPT", settings.target)
-        render_debug(f"train{i}.png", target_latents, pipeline)
-        render_debug(f"train{i}p.png", positive_latents, pipeline)
-        render_debug(f"train{i}n.png", negative_latents, pipeline)
-        #render_debug(f"train{i}fp.png", full_positive_latents, pipeline)
+        if should_render_debug:
+            render_debug(f"train{i}.png", target_latents, pipeline)
+            render_debug(f"train{i}p.png", positive_latents, pipeline)
+            render_debug(f"train{i}n.png", negative_latents, pipeline)
+            #render_debug(f"train{i}fp.png", full_positive_latents, pipeline)
         del positive_latents, neutral_latents, negative_latents  # Free memory explicitly when done
         del (
                 target_latents,

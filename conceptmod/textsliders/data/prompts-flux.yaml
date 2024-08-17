@@ -6,4 +6,4 @@
   action: "enhance" # erase or enhance
   resolution: 512
   dynamic_resolution: false
-  batch_size: 8
+  batch_size: 2

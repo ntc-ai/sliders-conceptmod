@@ -421,7 +421,6 @@ def predict_noise_flux(
     #_, add_text_embeddings = add_text_embeddings.chunk(2) #TODO
     #_, text_embeddings = text_embeddings.chunk(2)
 
-    print('--ts', timestep_.mean())
     noise_pred = transformer(
         hidden_states=latents,
         timestep=timestep_ / 1000,
@@ -615,6 +614,7 @@ def diffusion_flux(
     guidance_scale: float = 1.0,
     total_timesteps: int = 1000,
     start_timesteps=0,
+    num_inference_steps=4
 ):
 
     device = latents.device
@@ -637,7 +637,6 @@ def diffusion_flux(
     latents = latents.view(batch_size, -1, transformer.config.in_channels)
 
     #TODO?
-    num_inference_steps = 1#total_timesteps+2# - start_timesteps
     sigmas = np.linspace(1.0, 1 / num_inference_steps, num_inference_steps)
     image_seq_len = latents.shape[1]
     mu = calculate_shift(
