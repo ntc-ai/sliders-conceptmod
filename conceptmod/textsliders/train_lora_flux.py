@@ -184,6 +184,8 @@ def train(
                             prompt,
                             num_images_per_prompt=NUM_IMAGES_PER_PROMPT,
                         )
+                    tex_embs.to("cpu")
+                    pool_embs.to("cpu")
                     cache[prompt] = PromptEmbedsSD3(
                         tex_embs,
                         pool_embs
@@ -214,7 +216,6 @@ def train(
 
     flush()
     log_mem("after del tok")
-    pbar = tqdm(range(config.train.iterations+1))
 
     loss = None
     transformer.requires_grad_(False)
@@ -222,11 +223,16 @@ def train(
         accumulation_steps = 8 // settings.batch_size + (1 if (8 % settings.batch_size) > 0 else 0)
     else:
         accumulation_steps = 1
+    pbar = tqdm(range(config.train.iterations*accumulation_steps+1))
     for i in pbar:
         with torch.no_grad():
             prompt_pair: PromptEmbedsPair = prompt_pairs[
                 torch.randint(0, len(prompt_pairs), (1,)).item()
             ]
+
+            for embedding in prompt_pair.embeddings():
+                embedding.pooled_embeds.to("cuda:0")
+                embedding.text_embeds.to("cuda:0")
 
             timesteps_to = 1
             num_inference_steps = timesteps_to + 1
@@ -385,7 +391,6 @@ def train(
             optimizer.step()  # Update the model parameters
             lr_scheduler.step()
 
-        #print("PROMPT", settings.target)
         if should_render_debug:
             render_debug(f"train{i}.png", target_latents, pipeline)
             render_debug(f"train{i}p.png", positive_latents, pipeline)
@@ -411,8 +416,9 @@ def train(
                 save_path / f"{config.save.name}_{i}steps.safetensors",
                 dtype=save_weight_dtype,
             )
-        if on_step_complete is not None:
-            on_step_complete(i)
+        if (i + 1) % accumulation_steps == 0:
+            if on_step_complete is not None:
+                on_step_complete((i+1)//accumulation_steps)
 
     if save_file:
         print("Saving...",save_path / f"{config.save.name}_last.safetensors" )
@@ -474,7 +480,7 @@ def train_lora(target, positive, negative, unconditional, alpha=1.0, device=0, n
     }
 
     # Writing the dictionary to 'data/prompts-sd3.yaml'
-    with open('data/prompts-sd3.yaml', 'w') as file:
+    with open('data/prompts-flux.yaml', 'w') as file:
         yaml.dump([output_dict], file)  # Note the list wrapping around output_dict
 
     config = config_util.load_config_from_yaml(config_file)

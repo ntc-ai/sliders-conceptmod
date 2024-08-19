@@ -104,6 +104,9 @@ class PromptEmbedsPair:
     loss_fn: torch.nn.Module
     action: ACTION_TYPES
 
+    def embeddings(self):
+        return [self.target, self.positive, self.negative, self.unconditional, self.neutral]
+
     def __init__(
         self,
         loss_fn: torch.nn.Module,
