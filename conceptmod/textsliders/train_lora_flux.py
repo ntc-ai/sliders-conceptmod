@@ -385,9 +385,9 @@ def train(
         loss.backward()
         #print_grad_memory_usage(network)
         log_mem("after backward loss")
-        #torch.nn.utils.clip_grad_norm_(network.parameters(), max_norm=0.2)
 
         if (i + 1) % accumulation_steps == 0:
+            torch.nn.utils.clip_grad_norm_(network.parameters(), max_norm=0.2)
             optimizer.step()  # Update the model parameters
             lr_scheduler.step()
 
