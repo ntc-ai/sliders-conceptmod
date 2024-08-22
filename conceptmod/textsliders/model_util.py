@@ -238,6 +238,7 @@ def load_checkpoint_model_sd3 (
 def load_checkpoint_model_flux (
     checkpoint_path: str,
     weight_dtype: torch.dtype = torch.float32,
+    load_transformer=True,
 ) -> tuple[list[CLIPTokenizer], list[SDXL_TEXT_ENCODER_TYPE], UNet2DConditionModel,]:
     #transformer = FluxTransformer2DModel.from_single_file(checkpoint_path,
     #    torch_dtype=weight_dtype,
@@ -252,8 +253,11 @@ def load_checkpoint_model_flux (
     #pipe = FluxPipeline.from_pretrained("black-forest-labs/FLUX.1-dev", transformer=None, torch_dtype=torch.bfloat16)
     #pipe = FluxPipeline.from_pretrained("black-forest-labs/FLUX.1-dev", torch_dtype=torch.bfloat16)
 
-    transformer = FluxTransformer2DModel.from_single_file(checkpoint_path, torch_dtype=weight_dtype).cuda()
-    pipe.transformer = transformer
+    if(load_transformer):
+        transformer = FluxTransformer2DModel.from_single_file(checkpoint_path, torch_dtype=weight_dtype).cuda()
+        pipe.transformer = transformer
+    else:
+        transformer = None
     #    
     #transformer.time_text_embed = CombinedTimestepGuidanceTextProjEmbeddings(
     #    embedding_dim=transformer.inner_dim, pooled_projection_dim=transformer.config.pooled_projection_dim
@@ -261,7 +265,7 @@ def load_checkpoint_model_flux (
     tokenizers = [pipe.tokenizer, pipe.tokenizer_2]
     text_encoders = [pipe.text_encoder.cuda(), pipe.text_encoder_2.cuda()]
 
-    return tokenizers, text_encoders, pipe.transformer.cuda(), pipe
+    return tokenizers, text_encoders, pipe.transformer, pipe
 
 def load_checkpoint_model_xl(
     checkpoint_path: str,
@@ -329,6 +333,7 @@ def load_models_sd3(
 def load_models_flux(
     pretrained_model_name_or_path: str,
     scheduler_name: AVAILABLE_SCHEDULERS,
+    load_transformer=True,
     weight_dtype: torch.dtype = torch.float32,
 ) -> tuple[
     list[CLIPTokenizer],
@@ -341,7 +346,7 @@ def load_models_flux(
         text_encoders,
         unet,
         pipe
-    ) = load_checkpoint_model_flux(pretrained_model_name_or_path, weight_dtype)
+    ) = load_checkpoint_model_flux(pretrained_model_name_or_path, weight_dtype, load_transformer=load_transformer)
 
     scheduler = pipe.scheduler#create_noise_scheduler(scheduler_name)
     print("scheduler", scheduler)
