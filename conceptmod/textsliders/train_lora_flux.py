@@ -234,7 +234,7 @@ def train(
                 embedding.pooled_embeds.to("cuda:0")
                 embedding.text_embeds.to("cuda:0")
 
-            timesteps_to = 0
+            timesteps_to = 1
             num_inference_steps = timesteps_to + 1
             should_render_debug=False
 

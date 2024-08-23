@@ -183,7 +183,7 @@ def train(
 
     index = clip_index
     prefix = ["lora_te1","lora_te2"][index]
-    target_replace = ["CLIPAttention"]
+    target_replace = ["CLIPAttention","CLIPSdpaAttention"]
     if model == "FLUX.1":
         if clip_index == 0:
             target_replace = ["CLIPSdpaAttention"]
