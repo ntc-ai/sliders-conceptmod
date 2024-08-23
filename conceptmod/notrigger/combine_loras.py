@@ -33,33 +33,18 @@ def merge(tensor_map, tensor_map1, strength, t):
             k2 = k2.replace("-", ".")
         if t == 'CLIP':
             k2 = k2.replace("-", "_")
-        if t == 'T5':
-            k2 = k2.replace("-", "_")
-            k2 = k2.replace("lora_te2_", "lora_te3_")
-            #lora_te3_encoder_block_13_layer_0_SelfAttention_q.lora_up.weight
-            #k2 = k2.replace("SelfAttention_o", "self_attn.o_proj")
-            #k2 = k2.replace("SelfAttention_q", "self_attn.q_proj")
-            #k2 = k2.replace("SelfAttention_v", "self_attn.v_proj")
-            #k2 = k2.replace("SelfAttention_k", "self_attn.k_proj")
-            #k2 = k2.replace("encoder_block_", "text_model_encoder_layers_")
-            #k2 = k2.replace("_layer_0", "")
-        print("BEFORE", k, k2, tensor_map1[0].get_tensor(k).abs().sum())
+        print("BEFORE", k, k2)
 
         if 'alpha' in k:
             #pass
-            #tensor_map[k2]=strength*torch.ones([1])
-            tensor_map[k2]=tensor_map1[0].get_tensor(k).clone()#args.transformers_strength*tensor_map1[0].get_tensor(k)
+            tensor_map[k2]=strength*torch.ones([1])
         elif 'dora_scale' in k:
             #pass
             #k2 = k.replace("lora_scale", "dora_scale")
             #tensor_map[k2]=args.transformers_strength*tensor_map1[0].get_tensor(k).clone()
             tensor_map[k2]=tensor_map1[0].get_tensor(k).clone()#args.transformers_strength*tensor_map1[0].get_tensor(k)
-        elif '_up' in k or '_A' in k:
-            tensor_map[k2]=tensor_map1[0].get_tensor(k).clone()
-        elif '_down' in k or '_B' in k:
-            tensor_map[k2]=strength*tensor_map1[0].get_tensor(k).clone()
         else:
-            assert False, k + " not supported"
+            tensor_map[k2]=tensor_map1[0].get_tensor(k).clone()
 
 
 def main():
@@ -80,9 +65,9 @@ def main():
     tensor_map2 = read_tensors(args.encoder1_model)
     tensor_map3 = read_tensors(args.encoder2_model)
 
-    merge(tensor_map, tensor_map1, args.unet_strength, 'transformer')
+    merge(tensor_map, tensor_map1, args.unet_strength, 'unet')
     merge(tensor_map, tensor_map2, args.enc_strength, 'CLIP')
-    merge(tensor_map, tensor_map3, args.enc2_strength, 'T5')
+    merge(tensor_map, tensor_map3, args.enc2_strength, 'CLIP')
     save_file(tensor_map, args.output_model)
 
 if __name__ == '__main__':

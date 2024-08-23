@@ -117,34 +117,6 @@ def train(
         )
         del unet2
         flush()
-    elif model == "FLUX.1":
-        (
-            tokenizers,
-            text_encoders,
-            transformer,
-            noise_scheduler,
-            pipeline
-        ) = model_util.load_models_flux(
-            config.pretrained_model.name_or_path,
-            scheduler_name=config.train.noise_scheduler,
-            weight_dtype=weight_dtype,
-            load_transformer=False
-
-        )
-        (
-            tokenizers2,
-            text_encoders2,
-            transformer2,
-            noise_scheduler,
-            pipeline2
-        ) = model_util.load_models_flux(
-            config.pretrained_model.name_or_path,
-            scheduler_name=config.train.noise_scheduler,
-            weight_dtype=weight_dtype,
-            load_transformer=False
-        )
-
-
     elif model == "SD3-Medium":
         (
             tokenizers,
@@ -183,13 +155,7 @@ def train(
 
     index = clip_index
     prefix = ["lora_te1","lora_te2"][index]
-    target_replace = ["CLIPAttention"]
-    if model == "FLUX.1":
-        if clip_index == 0:
-            target_replace = ["CLIPSdpaAttention"]
-        if clip_index == 1:
-            target_replace = ["T5Attention"]
-
+    target_replace = "CLIPAttention"
     train_method = config.network.training_method
     if index == 2:
         train_method = "t5attn"
@@ -207,7 +173,7 @@ def train(
         multiplier=1.0,
         delimiter="_",
         alpha=config.network.alpha,
-        target_replace=target_replace,
+        target_replace=[target_replace],
         prefix=prefix,
         train_method=train_method
     ).to(device, dtype=weight_dtype)
