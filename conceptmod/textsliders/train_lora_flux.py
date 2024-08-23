@@ -234,7 +234,7 @@ def train(
                 embedding.pooled_embeds.to("cuda:0")
                 embedding.text_embeds.to("cuda:0")
 
-            timesteps_to = 1
+            timesteps_to = 0
             num_inference_steps = timesteps_to + 1
             should_render_debug=False
 
@@ -256,6 +256,8 @@ def train(
             latents = train_util.get_initial_latents_flux(
                 noise_scheduler, prompt_pair.batch_size, height, width, 1
             ).to(device, dtype=weight_dtype)
+
+            denoised_latents = latents
 
             with network:
                 denoised_latents, timesteps = train_util.diffusion_flux(
