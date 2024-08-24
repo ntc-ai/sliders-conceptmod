@@ -234,8 +234,8 @@ def train(
                 embedding.pooled_embeds.to("cuda:0")
                 embedding.text_embeds.to("cuda:0")
 
-            timesteps_to = 1
-            num_inference_steps = timesteps_to + 1
+            timesteps_to = random.choice([0,1])
+            num_inference_steps = 8#timesteps_to + 1
             should_render_debug=False
 
             height, width = prompt_pair.resolution, prompt_pair.resolution
@@ -278,8 +278,9 @@ def train(
             step_index = noise_scheduler._step_index
 
             positive_latents = denoised_latents
+            steps=1
             #for j in range(1 - timesteps_to):
-            for j in range(1):
+            for j in range(steps):
                 current_timestep = timesteps[timesteps_to + j]
                 positive_latents = train_util.predict_noise_flux(
                         pipeline,
@@ -304,23 +305,25 @@ def train(
             current_timestep = timesteps[timesteps_to]
             noise_scheduler._step_index=step_index
             log_mem("after positive_latents")
-            neutral_latents = train_util.predict_noise_flux(
-                    pipeline,
-                    transformer,
-                    noise_scheduler,
-                    current_timestep,
-                    denoised_latents,
-                    text_embeddings=prompt_pair.neutral.text_embeds,
-                    add_text_embeddings=prompt_pair.neutral.pooled_embeds,
-                    guidance_scale=guidance_scale,
-                    ).to(device, dtype=weight_dtype)
+            for j in range(steps):
+                current_timestep = timesteps[timesteps_to + j]
+                neutral_latents = train_util.predict_noise_flux(
+                        pipeline,
+                        transformer,
+                        noise_scheduler,
+                        current_timestep,
+                        denoised_latents,
+                        text_embeddings=prompt_pair.neutral.text_embeds,
+                        add_text_embeddings=prompt_pair.neutral.pooled_embeds,
+                        guidance_scale=guidance_scale,
+                        ).to(device, dtype=weight_dtype)
 
             noise_scheduler._step_index=step_index
             log_mem("after neutral_latents")
 
             negative_latents = denoised_latents
             #for j in range(1 - timesteps_to):
-            for j in range(1):
+            for j in range(steps):
                 current_timestep = timesteps[timesteps_to + j]
                 negative_latents = train_util.predict_noise_flux(
                         pipeline,
@@ -342,16 +345,17 @@ def train(
         log_mem("pre network")
         noise_scheduler._step_index=step_index
         with network:
-            target_latents = train_util.predict_noise_flux(
-                    pipeline,
-                    transformer,
-                    noise_scheduler,
-                    current_timestep,
-                    denoised_latents,
-                    text_embeddings=prompt_pair.target.text_embeds,
-                    add_text_embeddings=prompt_pair.target.pooled_embeds,
-                    guidance_scale=guidance_scale,
-                    ).to(device, dtype=weight_dtype)
+            for j in range(steps):
+                target_latents = train_util.predict_noise_flux(
+                        pipeline,
+                        transformer,
+                        noise_scheduler,
+                        current_timestep,
+                        denoised_latents,
+                        text_embeddings=prompt_pair.target.text_embeds,
+                        add_text_embeddings=prompt_pair.target.pooled_embeds,
+                        guidance_scale=guidance_scale,
+                        ).to(device, dtype=weight_dtype)
             log_mem("after target_latents")
             if config.logging.verbose:
                 print("target_latents:", target_latents[0, 0, :5, :5])
@@ -389,7 +393,7 @@ def train(
         log_mem("after backward loss")
 
         if (i + 1) % accumulation_steps == 0:
-            torch.nn.utils.clip_grad_norm_(network.parameters(), max_norm=0.2)
+            torch.nn.utils.clip_grad_value_(network.parameters(), clip_value=1.0)
             optimizer.step()  # Update the model parameters
             lr_scheduler.step()
 
