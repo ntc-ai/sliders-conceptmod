@@ -1,0 +1,12 @@
+# Whole-record swap: obvious country-pop AABB vs free-verse chamber folk.
+plus_label: Rhyme
+minus_label: Prose
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "Genre: pop. BPM: 100. Medium energy. One singer, guitar and drums. Ordinary lyric shape."
+    positive: "Genre: country pop. BPM: 114. Obvious AABB end-rhyme, singalong couplets, the last word of every line rhymes and the band winks on it. Bright acoustic, snare on two and four. Sung, not rapped."
+    negative: "Genre: chamber folk. BPM: 76. Free-verse sung sentences, no rhyme scheme, no couplets, no wink on a last word, a quiet unrhymed letter. Soft nylon guitar, no snap. Sung, not rapped."
+    neutral: "Genre: pop. BPM: 100. Medium energy. One singer, guitar and drums. Ordinary lyric shape."
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"
+    action: enhance
+    guidance_scale: 4

@@ -1,0 +1,13 @@
+# Intimate R&B / bedroom soul vs glossy radio-pop vocal production.
+# Genre and instrumentation move; loudness and room stay medium / dry.
+plus_label: Breathy
+minus_label: Clean
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "Genre: pop. BPM: 100. Medium energy. One lead vocal over keys and a pocket beat. Ordinary sung vocal."
+    positive: "Genre: intimate R&B, bedroom soul. BPM: 86. Medium energy, dry booth. A close-mic breathy singer, every inhale left in, mouth noise, air on the capsule, soft unfinished phrases, you hear the singer breathe between lines. Sparse warm keys, dry kick. Same loudness as a normal vocal, not a whisper. Sung, not rapped."
+    negative: "Genre: glossy radio pop. BPM: 118. Medium energy, dry booth. A polished session vocal, every breath cut, de-essed, compressed, stacked doubles, no mouth noise, airless and finished. Punchy dry drums, bright keys. Same loudness. Sung, not rapped."
+    neutral: "Genre: pop. BPM: 100. Medium energy. One lead vocal over keys and a pocket beat. Ordinary sung vocal."
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"
+    action: enhance
+    guidance_scale: 4

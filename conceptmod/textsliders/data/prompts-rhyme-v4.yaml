@@ -1,0 +1,66 @@
+# Rhyme axis v4 — plus = obvious end-rhyme couplets landing on the downbeat,
+# minus = through-composed free verse whose line endings dissolve across the bar.
+#
+# v4 moves the poles onto the MiniMax Music 3 Structured Caption (Global
+# Metadata / Vocal Details / Arrangement), because the studio rewriter only ever
+# emits structured captions at runtime — v3's flat "Genre: X. BPM: Y." poles were
+# off-distribution for the caption the LM actually sees. The axis is carried in
+# Vocal Details (rhyme scheme, call-and-response, where the line ends) and in
+# Arrangement (what accents the line ending); genre, BPM, mood and instruments
+# move with the axis too, per the MUSIC3.md divergent-poles rule. The skeleton is
+# lean on purpose: no long shared boilerplate to dominate the hidden state.
+#
+# Measured with scripts/probe_lm_axis_signal.py (Qwen3 audio-start hidden state,
+# mean over the two attribute expansions). Usable floor is sep ~0.20; lower |cos|
+# is better.
+#
+#   candidate                              sep      cos    kept
+#   A1 flat country AABB / chamber folk    0.293   -0.204   no  (v3 row 0, baseline)
+#   A2 flat hook pop / rambling tale       0.202    0.171   no  (v3 row 1, baseline)
+#   B1 structured country / chamber folk   0.264   -0.084   yes
+#   B2 structured hook pop / folk tale     0.272   -0.104   yes
+#   C1 structured playground / diary folk  0.275    0.041   yes
+#   C2 structured soul revue / ambient     0.208    0.460   no  (cos far too high)
+#
+#   file mean: v3 (A1+A2) sep 0.248 cos -0.017 | v4 (B1+B2+C1) sep 0.270 cos -0.049
+#
+# Trained result (rank 8, alpha 8, lr 5e-4, 800 steps, symmetric, common_beta 0 —
+# the same hyperparameters as rhyme-lm-v3):
+#   metric      v3        v4
+#   loss        0.000532  0.000465
+#   cos_pos     0.9892    0.9938
+#   cos_neg     0.9876    0.9945
+#   collapse   -0.9740   -0.9923
+#   pperc       0.148     0.112
+#   nperc       0.159     0.105
+#
+# Note on --steps: this axis is unstable in the last ~100 steps. One 800-step run
+# converged to loss 5e-4 by step 600 and then blew up (loss 0.058, collapse -0.52
+# by step 800); see models/rhyme-lm-v4-800step-diverged-train.log. The default
+# early stop fires around step 200, well short of where v3 converged, so the
+# shipped run used --no-early_stop and its tail was checked for divergence.
+# Always check the last-50-step window before shipping a run of this axis.
+#
+# No artist names. Every pole ends sung, not rapped.
+plus_label: Rhyme
+minus_label: Prose
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "Global Metadata:\nGenre: pop. BPM 100. Medium energy, steady mood, headphones on the walk home. Ordinary studio mix.\nVocal Details:\nOne lead singer, plain studio timbre, ordinary phrasing, no backing vocals. Sung, not rapped.\nArrangement:\nVerse and chorus carried by acoustic guitar, bass and a plain drum kit."
+    positive: "Global Metadata:\nGenre: country pop. BPM 114. Bright and rising, a porch singalong at a summer party. Dry close mix, tight room.\nVocal Details:\nOne lead singer in obvious AABB couplets. The last word of every line rhymes and lands square on the downbeat. A call-and-response hook the room can shout back. Doubled chorus, tight harmony on the rhyme word. Sung, not rapped.\nArrangement:\nIntro: strummed acoustic counting the band in. Verse: acoustic, bass, snare on two and four, each couplet closing on a band accent. Chorus: full kit, stacked answer vocals hitting the rhyme with the singer."
+    negative: "Global Metadata:\nGenre: chamber folk. BPM 76. Slow and unresolved, one room alone late at night. Soft distant mix, long air.\nVocal Details:\nOne lead singer in through-composed free verse. No rhyme scheme, no couplets; line endings dissolve mid-bar and the sentence keeps going. Nothing to answer, no backing vocals. Sung, not rapped.\nArrangement:\nIntro: nylon guitar wandering in with no count-in. Verse: nylon guitar and low strings, no snare, phrases crossing the bar line. No chorus — the piece keeps unfolding under held bowed notes."
+    neutral: "Global Metadata:\nGenre: pop. BPM 100. Medium energy, steady mood, headphones on the walk home. Ordinary studio mix.\nVocal Details:\nOne lead singer, plain studio timbre, ordinary phrasing, no backing vocals. Sung, not rapped.\nArrangement:\nVerse and chorus carried by acoustic guitar, bass and a plain drum kit."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"
+  - target: "Global Metadata:\nGenre: pop. BPM 100. Medium energy, even mood, ordinary listening. Plain studio mix.\nVocal Details:\nOne lead singer, ordinary timbre and phrasing, no backing vocals. Sung, not rapped.\nArrangement:\nVerse and chorus with guitar, keys, bass and drums."
+    positive: "Global Metadata:\nGenre: radio hook pop. BPM 118. Bright and punchy, built to be chanted back on a full floor. Dry grid mix, hard downbeats.\nVocal Details:\nOne lead singer in nursery-rhyme couplets, dense end-rhyme with internal rhyme bounce, every line snapping shut on its punchline word right on the downbeat. Call-and-response chorus: the singer throws the line, stacked backing vocals answer the rhyme. Sung, not rapped.\nArrangement:\nIntro: four-bar synth hook. Verse: dry kit, plucked bass, keys punctuating each rhyme. Chorus: stacked answer vocals, claps on the rhyme word, whole band hitting the line ending."
+    negative: "Global Metadata:\nGenre: rambling folk tale. BPM 78. Slow and drifting, a long story told to nobody in particular. Loose room mix, no grid.\nVocal Details:\nOne lead singer telling an unrhymed story in winding sentences. No couplets, no punchlines, no hook and nothing to answer; clauses run past the bar line and stop wherever the breath stops. No backing vocals. Sung, not rapped.\nArrangement:\nIntro: fingerpicked guitar entering mid-thought. Verse after verse with guitar, upright bass and brushed cymbal, no accent on line endings. No chorus and no repeat — the arrangement walks forward under the story."
+    neutral: "Global Metadata:\nGenre: pop. BPM 100. Medium energy, even mood, ordinary listening. Plain studio mix.\nVocal Details:\nOne lead singer, ordinary timbre and phrasing, no backing vocals. Sung, not rapped.\nArrangement:\nVerse and chorus with guitar, keys, bass and drums."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nCity lights are burning through the rain\n[chorus]\nI keep moving on, I keep moving on"
+  - target: "Global Metadata:\nGenre: pop. BPM 100. Medium energy, even mood, ordinary afternoon listening. Plain studio mix.\nVocal Details:\nOne lead singer, ordinary timbre, ordinary phrasing, no backing vocals. Sung, not rapped.\nArrangement:\nVerse and chorus with piano, bass and a plain drum kit."
+    positive: "Global Metadata:\nGenre: bubblegum playground pop. BPM 128. Giddy and unbroken, a schoolyard at break time. Bright dry mix, handclaps up front.\nVocal Details:\nOne lead singer doing a skipping-rope chant: short rhyming couplets, the rhyme word slammed on the downbeat with a clap. A whole group answers back every second line. Nasal, front-of-mouth, gleeful. Sung, not rapped.\nArrangement:\nIntro: handclaps counting in. Verse: clap track, plunky upright piano, tambourine on every rhyme. Chorus: group answer vocals, bass drum on each rhyme word, a whistled hook between couplets."
+    negative: "Global Metadata:\nGenre: chamber folk diary. BPM 68. Quiet and unresolved, reading a notebook aloud at three in the morning. Distant soft mix, room tone audible.\nVocal Details:\nOne lead singer murmuring a diary entry as through-composed free verse. Sentences of uneven length, no rhyme anywhere, no repeats, no answering voice; each line dissolves into the next across the bar. Close, breathy, low register. Sung, not rapped.\nArrangement:\nIntro: one sustained harmonium note. Verse: harmonium and brushed nylon guitar, no percussion, nothing marking a line ending. The piece never comes back to a chorus."
+    neutral: "Global Metadata:\nGenre: pop. BPM 100. Medium energy, even mood, ordinary afternoon listening. Plain studio mix.\nVocal Details:\nOne lead singer, ordinary timbre, ordinary phrasing, no backing vocals. Sung, not rapped.\nArrangement:\nVerse and chorus with piano, bass and a plain drum kit."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"

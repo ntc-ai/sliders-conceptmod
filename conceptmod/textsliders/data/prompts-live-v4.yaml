@@ -1,0 +1,35 @@
+# Live axis v4 — plus = room with people / bleed / human time, minus =
+# isolated studio grid.
+#
+# v4 moves the poles onto the MiniMax Music 3 Structured Caption (Global
+# Metadata / Vocal Details / Arrangement) — the studio rewriter only ever emits
+# structured captions at runtime, so v3's flat poles were off-distribution for
+# the caption the LM actually sees. Tempo and energy stay pinned per row so
+# this does not become faster or louder; space owns wetness, so the poles talk
+# about people, leakage and time-feel, not hall size. Gender attributes pin the
+# vocalist. Delivery stays sung.
+#
+# Trained by train_lm_slider_music3.py with the audio-end regularizer
+# (--endreg_weight 1.0 default). No artist names.
+plus_label: Live
+minus_label: Studio
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "Global Metadata:\nGenre: pop. BPM 112. Medium energy, even mood, a session that could be studio or small-room. Ordinary production, no crowd.\nVocal Details:\nOne lead singer, ordinary timbre and phrasing. Sung, not rapped.\nArrangement:\nVerse and chorus with drums, bass, guitar and keys."
+    positive: "Global Metadata:\nGenre: live pop. BPM 112. Medium energy, warm and communal, a small club with people in it. Room-mic mix with drum-kit bleed on the vocal mic — not a huge hall, not more reverb.\nVocal Details:\nOne lead singer working the room, imperfect human time-feel, talking to the crowd between lines. Sung, not rapped.\nArrangement:\nIntro: a shouted count-in and chair creaks. Verse: the band together in one room, kit bleed everywhere, bass pushing and dragging with the drummer. Chorus: the audience cheers on the chorus hits and claps along."
+    negative: "Global Metadata:\nGenre: studio pop. BPM 112. Medium energy, sealed and precise, nobody else in the building. Grid-perfect isolated mix, no bleed, no crowd.\nVocal Details:\nOne lead singer tracked alone in a booth, click-tight phrasing, comped and clean. Sung, not rapped.\nArrangement:\nIntro: programmed quantized drums counting nothing in. Verse: isolated overdubbed tracks, each part recorded separately, everything on the grid. Chorus: layered overdubs snap in click-tight, no count-in, no room."
+    neutral: "Global Metadata:\nGenre: pop. BPM 112. Medium energy, even mood, a session that could be studio or small-room. Ordinary production, no crowd.\nVocal Details:\nOne lead singer, ordinary timbre and phrasing. Sung, not rapped.\nArrangement:\nVerse and chorus with drums, bass, guitar and keys."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"
+  - target: "Global Metadata:\nGenre: indie rock. BPM 118. Medium energy, even mood, a band that could be overdubbed or playing together. Ordinary production.\nVocal Details:\nOne lead vocalist, ordinary rock timbre and phrasing. Sung, not rapped.\nArrangement:\nVerse and chorus with guitars, bass and drums."
+    positive: "Global Metadata:\nGenre: live indie rock. BPM 118. Medium energy, loose and human, the whole band tracking in one room. Leakage-heavy mix — guitar-amp spill on the snare, not a bigger reverb.\nVocal Details:\nOne lead vocalist riding rushed and dragging human time, throwing lines at the band. Sung, not rapped.\nArrangement:\nIntro: amp buzz, floor tom rattle and a stick count. Verse: guitars, bass and drums bleeding into every mic, the drummer pushing and pulling. Chorus: a small crowd that was talking starts clapping with the snare."
+    negative: "Global Metadata:\nGenre: studio indie rock. BPM 118. Medium energy, isolated and exact, a click-track session. Clean separated mix, no bleed, no audience.\nVocal Details:\nOne lead vocalist recorded alone against the click, phrasing quantized into place. Sung, not rapped.\nArrangement:\nIntro: a bare programmed beat. Verse: overdubbed isolated guitars, direct-input bass and quantized drums, each instrument recorded alone. Chorus: stacked overdubs land exactly on the grid, nobody in the room."
+    neutral: "Global Metadata:\nGenre: indie rock. BPM 118. Medium energy, even mood, a band that could be overdubbed or playing together. Ordinary production.\nVocal Details:\nOne lead vocalist, ordinary rock timbre and phrasing. Sung, not rapped.\nArrangement:\nVerse and chorus with guitars, bass and drums."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nCity lights are burning through the rain\n[chorus]\nI keep moving on, I keep moving on"
+  - target: "Global Metadata:\nGenre: soul pop. BPM 100. Medium energy, even mood, an ordinary session, neither live nor programmed. Plain production.\nVocal Details:\nOne singer with a band, ordinary timbre and phrasing. Sung, not rapped.\nArrangement:\nVerse and chorus with drums, bass, keys and horns."
+    positive: "Global Metadata:\nGenre: live soul revue. BPM 100. Medium energy, sweaty and joyful, a packed club with people shouting. Bleed-rich room mix — horn spill on every mic, not a bigger hall.\nVocal Details:\nOne singer feeding off the room, calling out between lines, a drummer who pushes and pulls behind them. Sung, not rapped.\nArrangement:\nIntro: a shouted count-in over crowd chatter. Verse: the band in one room, horn-section bleed washing over the kit. Chorus: audience shouts answer the horn hits, claps landing loose and human."
+    negative: "Global Metadata:\nGenre: programmed soul pop. BPM 100. Medium energy, sealed and exact, a grid session with nobody else in the building. Isolated booth mix, no bleed, no crowd.\nVocal Details:\nOne singer alone in a vocal booth, phrasing tucked neatly on the click. Sung, not rapped.\nArrangement:\nIntro: tight programmed drums starting on the grid. Verse: quantized horns, sequenced bass and isolated keys, every part tracked separately. Chorus: the programmed stack snaps in perfectly, no room sound at all."
+    neutral: "Global Metadata:\nGenre: soul pop. BPM 100. Medium energy, even mood, an ordinary session, neither live nor programmed. Plain production.\nVocal Details:\nOne singer with a band, ordinary timbre and phrasing. Sung, not rapped.\nArrangement:\nVerse and chorus with drums, bass, keys and horns."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nEvery step I take says your name\n[chorus]\nHold on, hold on to the light"

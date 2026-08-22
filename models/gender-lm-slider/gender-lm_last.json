@@ -1,0 +1,31 @@
+{
+  "checkpoint": "/ml2/music/sliders-conceptmod/models/gender-lm-slider/gender-lm_last.safetensors",
+  "modules": 144,
+  "rank": 8,
+  "alpha": 8.0,
+  "steps": 800,
+  "lr": 0.0005,
+  "first": {
+    "step": 0,
+    "loss": 0.13626638054847717,
+    "pperc": 1.0,
+    "nperc": 1.0,
+    "cos_pos": 0.0,
+    "cos_neg": 0.0,
+    "collapse": 0.0
+  },
+  "last": {
+    "step": 799,
+    "loss": 0.0006061331951059401,
+    "pperc": 0.04560733959078789,
+    "nperc": 0.07640466094017029,
+    "cos_pos": 0.9989709854125977,
+    "cos_neg": 0.9971815347671509,
+    "collapse": 0.533327579498291
+  },
+  "target_replace": [
+    "Qwen3Attention"
+  ],
+  "kind": "language_model",
+  "prompts_file": "conceptmod/textsliders/data/prompts-gender.yaml"
+}

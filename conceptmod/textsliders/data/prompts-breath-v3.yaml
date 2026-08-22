@@ -1,0 +1,36 @@
+# Breath axis: plus = audible air / inhales, minus = edited airless vocal.
+# LM only encodes this as an opposing axis when poles are whole-record
+# gestalts (arrangement swap), not minimal pairs. No artist names.
+# Energy / room stay named as medium / dry so this does not become quiet↔loud
+# or dry↔wet. Delivery stays sung.
+# Gender attributes pin the vocalist on every row, as on live-v3 and rhyme-v3.
+# The shipped breath-lm-v3 weights predate this pinning (trained rows=4; with
+# pinning the file expands to 6) — the axis needs a retrain to pick it up.
+plus_label: Breathy
+minus_label: Clean
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "Genre: pop. BPM: 100. Medium energy. One lead vocal, keys and light drums. Ordinary studio vocal, some natural breath, not featured, not edited out."
+    positive: "Genre: intimate bedroom pop. BPM: 76. A dry close-mic breathy vocal, every inhale audible, mouth air, whisper-sung edges, you hear the singer breathe into the capsule. Felt kick, subby bass, almost no cymbal, a dry bedroom. Medium level, not a lullaby. Sung, not rapped."
+    negative: "Genre: daylight radio pop. BPM: 120. A dry belted pop vocal, no breaths left in, de-essed, compressed, stacked doubles, airless and finished. Punchy dry kit, bright guitar, radio chorus. Medium level, not louder. Sung, not rapped."
+    neutral: "Genre: pop. BPM: 100. Medium energy. One lead vocal, keys and light drums. Ordinary studio vocal, some natural breath, not featured, not edited out."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"
+    action: enhance
+    guidance_scale: 4
+  - target: "Genre: pop. BPM: 100. Medium energy. One lead vocal, keys and light drums. Ordinary studio vocal, some natural breath, not featured, not edited out."
+    positive: "Genre: intimate indie soul. BPM: 74. A dry close-mic breathy falsetto, every inhale audible, mouth air, cracked unfinished phrases, you hear the singer breathe into the capsule. Felt kick, warm bass, almost no cymbal, a dry cabin. Medium level, not a lullaby. Sung, not rapped."
+    negative: "Genre: daylight funk pop. BPM: 118. A dry belted pop vocal, no breaths left in, de-essed, compressed, stacked doubles, airless and finished. Punchy dry kit, bright guitar, radio chorus. Medium level, not louder. Sung, not rapped."
+    neutral: "Genre: pop. BPM: 100. Medium energy. One lead vocal, keys and light drums. Ordinary studio vocal, some natural breath, not featured, not edited out."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nCity lights are burning through the rain\n[chorus]\nI keep moving on, I keep moving on"
+    action: enhance
+    guidance_scale: 4
+  - target: "Genre: pop. BPM: 104. Mid energy, one lead vocal, keys, bass, drums. Ordinary studio vocal."
+    positive: "Genre: hushed bedroom soul. BPM: 70. Close-mic breathy singing, loud inhales, mouth noise, air on the capsule, unfinished whispered edges, a singer breathing into an SM7. Sparse felt-beater kick, warm bass, almost no cymbals, dry small room. Intimate and airy, not a lullaby, not quiet-as-silence."
+    negative: "Genre: slammed radio pop. BPM: 128. Airless belted pop vocal, every breath cut, hard de-ess, stacked doubles, tuned, no mouth noise, no human air. Punchy dry kit, bright guitar, compressed chorus. Polished and sealed, not heavier, not a hall."
+    neutral: "Genre: pop. BPM: 104. Mid energy, one lead vocal, keys, bass, drums. Ordinary studio vocal."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nEvery step I take says your name\n[chorus]\nHold on, hold on to the light"
+    action: enhance
+    guidance_scale: 4

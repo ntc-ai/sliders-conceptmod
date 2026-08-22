@@ -1,0 +1,110 @@
+{
+  "name": "energy",
+  "rank": 8,
+  "alpha": 8.0,
+  "steps": 500,
+  "duration": 4.0,
+  "dummy": false,
+  "target_replace": [
+    "MiniMaxMusic3Attention"
+  ],
+  "delimiter": "-",
+  "train_method": "full",
+  "loss": 0.08115166425704956,
+  "prompts": [
+    {
+      "target": "Genre: pop. BPM: 110. Mid energy, balanced mix, clear lead vocal, drums, bass, and guitar. Neither aggressive nor quiet.",
+      "positive": "Genre: pop-punk. BPM: 168. Extremely high energy, loud, aggressive, pounding drums, shouted vocals, dense slammed mix, everyone yelling.",
+      "negative": "Genre: ambient lullaby. BPM: 52. Extremely quiet, calm, whispered vocal, almost silent, no drums, sparse pads, you can hear the room.",
+      "neutral": "Genre: pop. BPM: 110. Mid energy, balanced mix, clear lead vocal, drums, bass, and guitar. Neither aggressive nor quiet.",
+      "lyrics": "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away",
+      "action": "enhance",
+      "guidance_scale": 3.0,
+      "batch_size": 1,
+      "unconditional": ""
+    }
+  ],
+  "weights": "/ml2/music/sliders-conceptmod/models/energy-slider-v2/energy_alpha8.0_rank8_full_last.safetensors",
+  "unit_scale": 2.0104414,
+  "unit_scale_guidance": 3.0,
+  "unit_scale_g1": 0.62860656,
+  "vel_pos_neg": 26.36149,
+  "vel_target": 79.084469,
+  "vel_neu": 166.34819,
+  "guidance": 3.0,
+  "calibrated": true,
+  "calibrate_seed": 0,
+  "calibrate_timesteps": [
+    0.25,
+    0.5,
+    0.75
+  ],
+  "calibrate_n_latents": 2,
+  "sweep": [
+    {
+      "scale": 0.25,
+      "delta": 11.564266,
+      "rel": 0.069518437,
+      "vs_target": 0.14622676,
+      "vs_posneg": 0.43868028
+    },
+    {
+      "scale": 0.5,
+      "delta": 21.394671,
+      "rel": 0.12861379,
+      "vs_target": 0.27052936,
+      "vs_posneg": 0.81158806
+    },
+    {
+      "scale": 1.0,
+      "delta": 40.704804,
+      "rel": 0.24469641,
+      "vs_target": 0.51470035,
+      "vs_posneg": 1.544101
+    },
+    {
+      "scale": 1.5,
+      "delta": 59.719702,
+      "rel": 0.35900423,
+      "vs_target": 0.75513817,
+      "vs_posneg": 2.2654145
+    },
+    {
+      "scale": 2.0,
+      "delta": 78.692413,
+      "rel": 0.47305844,
+      "vs_target": 0.99504256,
+      "vs_posneg": 2.9851276
+    },
+    {
+      "scale": 3.0,
+      "delta": 116.24074,
+      "rel": 0.69877973,
+      "vs_target": 1.4698302,
+      "vs_posneg": 4.4094904
+    },
+    {
+      "scale": 4.0,
+      "delta": 153.92987,
+      "rel": 0.92534748,
+      "vs_target": 1.9463983,
+      "vs_posneg": 5.8391947
+    },
+    {
+      "scale": 6.0,
+      "delta": 230.47434,
+      "rel": 1.3854936,
+      "vs_target": 2.9142807,
+      "vs_posneg": 8.7428418
+    },
+    {
+      "scale": 8.0,
+      "delta": 316.73591,
+      "rel": 1.9040539,
+      "vs_target": 4.0050329,
+      "vs_posneg": 12.015099
+    }
+  ],
+  "verify_delta": 74.395607,
+  "verify_vs_target": 0.9407107
+}

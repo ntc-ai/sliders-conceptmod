@@ -1,0 +1,37 @@
+# Distortion axis v4 (LM half) — plus = heavy distorted, minus = clean
+# acoustic. The transformer half shapes the tone; this half picks the
+# instrumentation and how hard it is played.
+#
+# v4 moves the poles onto the MiniMax Music 3 Structured Caption (Global
+# Metadata / Vocal Details / Arrangement) — the studio rewriter only ever emits
+# structured captions at runtime, so v3's flat "Genre: X. BPM: Y." poles were
+# off-distribution for the caption the LM actually sees. Same three genre
+# anchors as v3; genre, BPM, mood, mix and instrumentation all move with the
+# axis per the MUSIC3.md divergent-poles rule. Gender attributes pin the
+# vocalist. Delivery stays sung.
+#
+# LM half only — the transformer half stays distortion-slider.
+# Trained by train_lm_slider_music3.py with the audio-end regularizer
+# (--endreg_weight 1.0 default). No artist names.
+plus_label: Heavy
+minus_label: Clean
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "Global Metadata:\nGenre: rock. BPM 112. Medium energy, ordinary mood, a guitar-driven session. Plain studio mix, ordinary clean-ish guitar tone.\nVocal Details:\nOne lead vocal, ordinary rock timbre, plain phrasing. Sung, not rapped.\nArrangement:\nVerse and chorus with electric guitar, bass and drums."
+    positive: "Global Metadata:\nGenre: metal. BPM 140. Aggressive and menacing, a wall of distortion. Crushing saturated mix, heavy amps pushed hard.\nVocal Details:\nOne aggressive lead vocal cutting over the wall, gritty and forceful. Sung, not rapped.\nArrangement:\nIntro: a palm-muted riff chugging alone. Verse: extremely distorted electric guitars, crushing overdrive and fuzz over pounding double-kick drums. Chorus: stacked heavy riffs, cymbals crashing, the whole wall bearing down. No acoustic guitar."
+    negative: "Global Metadata:\nGenre: folk. BPM 88. Gentle and intimate, an unplugged evening. Warm natural mix, no amplification.\nVocal Details:\nOne intimate lead vocal, soft and unprocessed, close to the ear. Sung, not rapped.\nArrangement:\nIntro: fingerpicked steel-string acoustic alone. Verse: clean acoustic guitar, nylon and steel strings, a soft upright bass. Chorus: a second acoustic strums in gently, still unplugged, no distortion, no electric guitar."
+    neutral: "Global Metadata:\nGenre: rock. BPM 112. Medium energy, ordinary mood, a guitar-driven session. Plain studio mix, ordinary clean-ish guitar tone.\nVocal Details:\nOne lead vocal, ordinary rock timbre, plain phrasing. Sung, not rapped.\nArrangement:\nVerse and chorus with electric guitar, bass and drums."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"
+  - target: "Global Metadata:\nGenre: alternative. BPM 124. Medium energy, ordinary mood, a band session. Ordinary studio tone.\nVocal Details:\nOne lead vocal, ordinary timbre, plain phrasing. Sung, not rapped.\nArrangement:\nVerse and chorus with guitars, bass and drums."
+    positive: "Global Metadata:\nGenre: sludge metal. BPM 130. Grinding and colossal, tar-thick menace. Blown-out saturated mix, amps past their limit.\nVocal Details:\nOne raw shredded vocal, harsh and torn at the edges. Sung, not rapped.\nArrangement:\nIntro: a detuned riff through a blown-out amp. Verse: colossal fuzzed-out guitars, grinding detuned riffs and a buried pounding kit. Chorus: harsh clipped distortion everywhere, bass and guitars smeared into one wall."
+    negative: "Global Metadata:\nGenre: chamber folk. BPM 90. Soft and pristine, a wooden room at dusk. Pure natural mix, no amplification at all.\nVocal Details:\nOne pure untouched vocal, clear and unforced. Sung, not rapped.\nArrangement:\nIntro: solo pristine unplugged acoustic guitar. Verse: acoustic guitar, upright bass and soft bowed strings. Chorus: the strings swell warmly, everything wooden and clean."
+    neutral: "Global Metadata:\nGenre: alternative. BPM 124. Medium energy, ordinary mood, a band session. Ordinary studio tone.\nVocal Details:\nOne lead vocal, ordinary timbre, plain phrasing. Sung, not rapped.\nArrangement:\nVerse and chorus with guitars, bass and drums."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nCity lights are burning through the rain\n[chorus]\nI keep moving on, I keep moving on"
+  - target: "Global Metadata:\nGenre: pop rock. BPM 100. Medium energy, ordinary mood, normal production. Plain studio mix.\nVocal Details:\nOne singer, ordinary timbre, plain phrasing. Sung, not rapped.\nArrangement:\nVerse and chorus with guitars, keys and a drum kit."
+    positive: "Global Metadata:\nGenre: industrial rock. BPM 132. Savage and mechanical, gritty broken-speaker menace. Overdriven crunching mix.\nVocal Details:\nOne snarled distorted vocal, processed and biting. Sung, not rapped.\nArrangement:\nIntro: a machine-loop pulse through a broken speaker. Verse: savage distorted guitars and bass, everything overdriven and crunching over a stomping kit. Chorus: layered gritty synths and guitars grinding together."
+    negative: "Global Metadata:\nGenre: acoustic singer-songwriter. BPM 84. Tender and warm, a small wooden room. Soft natural mix, no electric instruments.\nVocal Details:\nOne tender close vocal, warm and bare. Sung, not rapped.\nArrangement:\nIntro: fingerpicked acoustic guitar alone. Verse: acoustic guitar and soft piano, warm woody resonance. Chorus: the piano opens up gently under the voice, still entirely unplugged."
+    neutral: "Global Metadata:\nGenre: pop rock. BPM 100. Medium energy, ordinary mood, normal production. Plain studio mix.\nVocal Details:\nOne singer, ordinary timbre, plain phrasing. Sung, not rapped.\nArrangement:\nVerse and chorus with guitars, keys and a drum kit."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nI keep walking through the night\nlooking for a little light\n[chorus]\nI will not go quietly"

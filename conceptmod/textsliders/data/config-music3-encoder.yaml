@@ -1,0 +1,21 @@
+prompts_file: "conceptmod/textsliders/data/prompts-music3.yaml"
+pretrained_model:
+  name_or_path: "/ml2/music/models/MiniMax-Music3"
+network:
+  type: "lierla"
+  rank: 8
+  alpha: 8.0
+  training_method: "full"
+train:
+  precision: "bfloat16"
+  iterations: 200
+  lr: 0.001
+  optimizer: "AdamW"
+save:
+  name: "energy-encoder"
+  path: "./models/energy-encoder"
+  per_steps: 100
+  precision: "float32"
+logging:
+  use_wandb: false
+  verbose: false

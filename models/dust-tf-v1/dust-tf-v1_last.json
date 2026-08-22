@@ -1,0 +1,134 @@
+{
+  "schema": 3,
+  "name": "dust-tf-v1",
+  "kind": "transformer",
+  "prefix": "lora_unet",
+  "rank": 8,
+  "alpha": 8.0,
+  "steps": 500,
+  "duration": 4.0,
+  "dummy": false,
+  "target_replace": [
+    "MiniMaxMusic3Attention",
+    "MiniMaxMusic3TransformerBlock",
+    "MiniMaxMusic3Transformer1DModel"
+  ],
+  "lm_weights": null,
+  "delimiter": "-",
+  "train_method": "full",
+  "targets": "full",
+  "xt_mode": "anchor",
+  "bidirectional": true,
+  "cond_seeds": [
+    7
+  ],
+  "x0_per_row": 8,
+  "target_mode": "axis",
+  "traj_frac": 0.0,
+  "traj_refresh": 50,
+  "traj_steps": 20,
+  "traj_scales": "1,-1",
+  "plus_label": "Dusty",
+  "minus_label": "Glossy",
+  "recommended_range": [
+    -2.0,
+    2.0
+  ],
+  "loss": 0.2905125021934509,
+  "loss_kind": "nmse",
+  "gain_penalty": 0.0,
+  "uncond_weight": 0.0,
+  "grad_clip": "norm",
+  "eval": {
+    "cos": 0.7382667660713196,
+    "cos_neg": 0.7370312876171536,
+    "collapse": -0.8984881970617506,
+    "mag": 0.7124839193291135,
+    "proj": 0.5305086317778933,
+    "proj_abs": 0.5045785794359385,
+    "n": 18,
+    "cos_edge": 0.31397658793462646,
+    "cos_edge_neg": 0.3357960846689012,
+    "cos_by_t": {
+      "0.1": 0.5714,
+      "0.2": 0.7433,
+      "0.3": 0.795,
+      "0.4": 0.8064,
+      "0.5": 0.8079,
+      "0.6": 0.7896,
+      "0.7": 0.7606,
+      "0.8": 0.7213,
+      "0.9": 0.6489
+    }
+  },
+  "eval_best": {
+    "cos": 0.7382667660713196,
+    "cos_neg": 0.7370312876171536,
+    "collapse": -0.8984881970617506,
+    "mag": 0.7124839193291135,
+    "proj": 0.5305086317778933,
+    "proj_abs": 0.5045785794359385,
+    "n": 18,
+    "cos_edge": 0.31397658793462646,
+    "cos_edge_neg": 0.3357960846689012,
+    "cos_by_t": {
+      "0.1": 0.5714,
+      "0.2": 0.7433,
+      "0.3": 0.795,
+      "0.4": 0.8064,
+      "0.5": 0.8079,
+      "0.6": 0.7896,
+      "0.7": 0.7606,
+      "0.8": 0.7213,
+      "0.9": 0.6489
+    }
+  },
+  "eval_best_step": 500,
+  "eval_timesteps": [
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9
+  ],
+  "prompt_geometry": {
+    "cos_edge_antipodal": -0.7416720125410292,
+    "even_over_odd": 2.8959886299239264
+  },
+  "eval_seed": 1234,
+  "eval_holdout": true,
+  "prompts": [
+    {
+      "target": "Genre: pop. BPM: 110. Mid-tempo radio song, clean drums, electric guitar, natural vocal, balanced studio mix.",
+      "positive": "Genre: pop. BPM: 110. Mid-tempo radio song, dusty muffled drums, warm dark guitar, soft hazy vocal, murky lo-fi tape mix.",
+      "negative": "Genre: pop. BPM: 110. Mid-tempo radio song, crisp punchy drums, sparkling bright guitar, airy polished vocal, glossy hi-fi studio mix.",
+      "neutral": "Genre: pop. BPM: 110. Mid-tempo radio song, clean drums, electric guitar, natural vocal, balanced studio mix.",
+      "lyrics": "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away",
+      "action": "enhance",
+      "guidance_scale": 3.0,
+      "batch_size": 1,
+      "unconditional": ""
+    }
+  ],
+  "weights": "/ml2/music/sliders-conceptmod/models/overnight/F-dust-nopen/F-dust-nopen_alpha8.0_rank8_full_last.safetensors",
+  "promoted_from": "models/overnight/F-dust-nopen",
+  "promoted_on": "2026-08-21",
+  "evidence": {
+    "accepted_by": "slider_pipeline score-folders, all six gates clean, score 0.203",
+    "ladder_seeds": 10,
+    "at_plus1": {
+      "rms_pct": -7.5,
+      "centroid_pct": 41.5
+    },
+    "at_minus0p5": {
+      "rms_pct": 6.4,
+      "centroid_pct": -13.0
+    },
+    "song_identity_onset_corr": 0.977,
+    "untested_above_abs_multiplier": 1.0
+  }
+}

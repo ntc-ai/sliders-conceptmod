@@ -1,0 +1,12 @@
+# Copy energy's punchy opposite-clause shape, swap the hinge to breath.
+plus_label: Breathy
+minus_label: Clean
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "Genre: pop. BPM: 110. Mid energy, balanced mix, clear lead vocal, drums, bass, and guitar. Neither breathy nor airless."
+    positive: "Genre: bedroom soul. BPM: 72. Extremely breathy, close-mic, audible inhales, mouth noise, air on the capsule, unfinished takes, you hear every breath."
+    negative: "Genre: radio pop. BPM: 128. Extremely airless, every breath cut, de-essed, compressed, stacked doubles, no mouth noise, a sealed finished vocal."
+    neutral: "Genre: pop. BPM: 110. Mid energy, balanced mix, clear lead vocal, drums, bass, and guitar. Neither breathy nor airless."
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"
+    action: enhance
+    guidance_scale: 3

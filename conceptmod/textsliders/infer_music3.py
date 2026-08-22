@@ -67,8 +67,7 @@ def _load_default_prompt(prompts_file: Path) -> tuple[str, str]:
 
 
 def _load_pipeline(model_dir: Path, device: str):
-    from diffusers import ComponentsManager, ModularPipeline
-    from diffusers.hooks import apply_group_offloading
+    from diffusers import ModularPipeline
 
     if not (model_dir / "modular_model_index.json").exists():
         raise FileNotFoundError(f"Model not found at {model_dir}")
@@ -81,32 +80,21 @@ def _load_pipeline(model_dir: Path, device: str):
         "local_files_only": True,
         "dtype": torch.bfloat16,
     }
-    use_offload = free_gib < 28.0
-    if use_offload:
-        print(f"using CPU offload on {device} ({free_gib:.1f} GiB free)")
-        manager = ComponentsManager()
-        manager.enable_auto_cpu_offload(device=device)
-        pipe = ModularPipeline.from_pretrained(
-            str(model_dir),
-            components_manager=manager,
-            local_files_only=True,
+    if free_gib < 28.0:
+        raise RuntimeError(
+            f"{device} has {free_gib:.1f} GiB free; listen/infer needs ~28 GiB on GPU. "
+            "Refusing CPU offload. Pick an empty GPU: this script defaults "
+            "CUDA_VISIBLE_DEVICES to \"0\" unless the caller already set it, and --device "
+            "indexes the visible devices, so run with e.g. CUDA_VISIBLE_DEVICES=1 in the "
+            "environment to use physical GPU 1."
         )
-    else:
-        pipe = ModularPipeline.from_pretrained(str(model_dir), local_files_only=True)
+    pipe = ModularPipeline.from_pretrained(str(model_dir), local_files_only=True)
 
     for name in _LOAD_ORDER:
         print(f"loading {name}")
         pipe.load_components(names=name, **local_kwargs)
 
-    if use_offload and free_gib < 22.0:
-        apply_group_offloading(
-            pipe.language_model,
-            onload_device=torch.device(device),
-            offload_type="leaf_level",
-            use_stream=True,
-        )
-    elif not use_offload:
-        pipe.to(device)
+    pipe.to(device)
     return pipe
 
 

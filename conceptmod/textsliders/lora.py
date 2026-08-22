@@ -140,6 +140,8 @@ class LoRAModule(nn.Module):
         nn.init.zeros_(self.lora_up.weight)
 
         self.multiplier = multiplier
+        self.seq_gain = None  # optional 1-D envelope over the sequence axis
+        self.seq_gain_mode = "stretch"  # stretch | prefix
         self.org_module = org_module  # remove in applying
 
     def apply_to(self):
@@ -147,12 +149,43 @@ class LoRAModule(nn.Module):
         self.org_module.forward = self.forward
         del self.org_module
 
+    def _seq_gain_broadcast(self, x):
+        gain = self.seq_gain
+        if gain is None:
+            return 1.0
+        if x.dim() == 3:
+            seq_dim, seq_len = 1, x.shape[1]
+        elif x.dim() == 2:
+            seq_dim, seq_len = 0, x.shape[0]
+        else:
+            return 1.0
+        g = gain.to(device=x.device, dtype=x.dtype).reshape(-1)
+        if g.numel() == 1:
+            return g
+        mode = getattr(self, "seq_gain_mode", "stretch")
+        if mode == "prefix":
+            if g.numel() >= seq_len:
+                g = g[:seq_len]
+            else:
+                g = torch.cat((g, g[-1].expand(seq_len - g.numel())))
+        elif g.numel() != seq_len:
+            g = torch.nn.functional.interpolate(
+                g.float().view(1, 1, -1),
+                size=seq_len,
+                mode="linear",
+                align_corners=True,
+            ).to(dtype=x.dtype).view(-1)
+        shape = [1] * x.dim()
+        shape[seq_dim] = seq_len
+        return g.reshape(shape)
+
     def forward(self, x):
         # LoRA may be fp32/cuda while the host module is bf16 or CPU-offloaded.
         weight = self.lora_down.weight
         x_lora = x.to(device=weight.device, dtype=weight.dtype)
         delta = self.lora_up(self.lora_down(x_lora)).to(device=x.device, dtype=x.dtype)
-        return self.org_forward(x) + delta * self.multiplier * self.scale
+        gain = self.multiplier * self.scale * self._seq_gain_broadcast(x)
+        return self.org_forward(x) + delta * gain
 
 
 class LoRANetwork(nn.Module):
@@ -169,6 +202,8 @@ class LoRANetwork(nn.Module):
     ) -> None:
         super().__init__()
         self.lora_scale = 1
+        self.seq_gain = None
+        self.seq_gain_mode = "stretch"
         self.multiplier = multiplier
         self.lora_dim = rank
         self.alpha = alpha
@@ -263,7 +298,16 @@ class LoRANetwork(nn.Module):
                                 continue
                         if id(child_module) in wrapped_ids:
                             continue
-                        lora_name = prefix + "." + name + "." + child_name
+                        # Skip empty path segments. The root model class is one of
+                        # TARGET_REPLACE_FULL and its named_modules() name is "",
+                        # which used to yield "lora_unet..transformer_blocks-0-..."
+                        # -> a "lora_unet--" double delimiter. Because the identity
+                        # dedupe lets the root claim every module first, *every*
+                        # --targets full key came out double, disagreeing with the
+                        # single-delimiter names --targets attn gives the very same
+                        # attention modules -- and with the ComfyUI converter, which
+                        # matches "lora_unet-".
+                        lora_name = ".".join(p for p in (prefix, name, child_name) if p)
                         lora_name = lora_name.replace(".", delimiter)
 #                         print(f"{lora_name}")
                         lora = self.module(
@@ -320,10 +364,32 @@ class LoRANetwork(nn.Module):
     def set_lora_slider(self, scale):
         self.lora_scale = scale
 
+    def set_seq_gain(self, gain, mode: str = "stretch"):
+        """Per-position envelope for the LoRA delta. None = uniform.
+
+        mode='stretch' interpolates the curve onto the current sequence
+        (transformer chunks). mode='prefix' takes the first S values
+        (LM tokens, including a full-prefix refresh).
+        """
+        if gain is None:
+            tensor = None
+        elif torch.is_tensor(gain):
+            tensor = gain.detach().float().reshape(-1).cpu()
+        else:
+            tensor = torch.tensor(list(gain), dtype=torch.float32)
+        self.seq_gain = tensor
+        self.seq_gain_mode = mode
+        for lora in self.unet_loras:
+            lora.seq_gain = tensor
+            lora.seq_gain_mode = mode
+
     def __enter__(self):
         for lora in self.unet_loras:
             lora.multiplier = 1.0 * self.lora_scale
+            lora.seq_gain = self.seq_gain
+            lora.seq_gain_mode = getattr(self, "seq_gain_mode", "stretch")
 
     def __exit__(self, exc_type, exc_value, tb):
         for lora in self.unet_loras:
             lora.multiplier = 0
+            lora.seq_gain = None

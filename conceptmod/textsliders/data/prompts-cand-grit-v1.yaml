@@ -1,0 +1,28 @@
+# Candidate pair: grit/clean production axis at fixed genre/BPM/arrangement.
+# GATES (revised 2026-08-21 after gatecheck + Gate B):
+# The original criteria were wrong in two ways, measured:
+#  * anchored-probe geometry is anchor-dominated -- four unrelated pairs read
+#    cos(edge+,-edge-) -0.72..-0.76 identically; at pure-noise x_t the numbers
+#    separate (triphop -0.28, dust -0.54, space -0.46). Run Gate A at BOTH
+#    --xt_mode anchor (predicts bidirectional trainability of the actual
+#    training objective) and --xt_mode noise (differentiates pairs).
+#  * a mid-ladder rms crater appears for EVERY pair tested in condition space
+#    (-21%..-61% at u 0.25-0.5) -- interpolated conditioning hedges quiet.
+#    "No crater" rejects everything; level is a nuisance channel.
+# Gate A: train_lora_music3.py --steps 1 --eval_every 1 --no_calibrate,
+#         once per xt_mode. Record both geometry lines.
+# Gate B: render_cond_interp.py --us 0,0.25,0.5,0.75,1 --ref, both poles,
+#         seeds 7 and 11. PASS = centroid (or the axis's own spectral feature)
+#         moves monotonically and with OPPOSITE signs for the two poles across
+#         both seeds. Level dips are tolerated and handled downstream.
+plus_label: Gritty
+minus_label: Clean
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "Genre: pop. BPM: 110. Mid-tempo radio song, clean drums, electric guitar, natural vocal, balanced studio mix."
+    positive: "Genre: pop. BPM: 110. Mid-tempo radio song, crunchy overdriven drums, fuzzy distorted guitar, raspy driven vocal, saturated gritty mix."
+    negative: "Genre: pop. BPM: 110. Mid-tempo radio song, clean undistorted drums, pristine clean guitar, smooth untreated vocal, transparent uncoloured mix."
+    neutral: "Genre: pop. BPM: 110. Mid-tempo radio song, clean drums, electric guitar, natural vocal, balanced studio mix."
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"
+    action: enhance
+    guidance_scale: 3

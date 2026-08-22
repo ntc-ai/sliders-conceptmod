@@ -1,0 +1,28 @@
+{
+  "name": "tempo",
+  "rank": 8,
+  "alpha": 8.0,
+  "steps": 500,
+  "duration": 4.0,
+  "dummy": false,
+  "target_replace": [
+    "MiniMaxMusic3Attention"
+  ],
+  "delimiter": "-",
+  "train_method": "full",
+  "loss": 0.07691192626953125,
+  "prompts": [
+    {
+      "target": "Genre: pop. BPM: 110. Mid-tempo groove, drums on a comfortable backbeat, neither rushed nor dragging.",
+      "positive": "Genre: drum and bass pop. BPM: 180. Extremely fast tempo, frantic double-time drums, rushed, racing, hyper speed.",
+      "negative": "Genre: ballad. BPM: 48. Extremely slow tempo, dragged, half-time, spacious gaps between beats, molasses slow.",
+      "neutral": "Genre: pop. BPM: 110. Mid-tempo groove, drums on a comfortable backbeat, neither rushed nor dragging.",
+      "lyrics": "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away",
+      "action": "enhance",
+      "guidance_scale": 3.0,
+      "batch_size": 1,
+      "unconditional": ""
+    }
+  ],
+  "weights": "/ml2/music/sliders-conceptmod/models/tempo-slider/tempo_alpha8.0_rank8_full_last.safetensors"
+}

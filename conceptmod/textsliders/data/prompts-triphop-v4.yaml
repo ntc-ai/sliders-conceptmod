@@ -1,0 +1,31 @@
+# Trip-hop <-> pop axis v4 (LM half) — plus = dusty nocturnal trip-hop,
+# minus = glossy radio pop.
+#
+# v4 moves the poles onto the MiniMax Music 3 Structured Caption (Global
+# Metadata / Vocal Details / Arrangement) — the studio rewriter only ever emits
+# structured captions at runtime, so v3's flat "Genre: X. BPM: Y." poles were
+# off-distribution for the caption the LM actually sees. Same two genre
+# neighborhoods as v3 (pop and r&b anchors); genre, BPM, mood, mix and
+# instrumentation all move with the axis per the MUSIC3.md divergent-poles
+# rule. Gender attributes pin the vocalist.
+#
+# LM half only — the transformer half stays triphop-tf-v4 (single-row,
+# prompts-triphop-v3-single.yaml; multi-row destroys TF sliders).
+# Trained by train_lm_slider_music3.py with the audio-end regularizer
+# (--endreg_weight 1.0 default). No artist names.
+plus_label: Trip-hop
+minus_label: Pop
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "Global Metadata:\nGenre: pop. BPM 110. Medium energy, even mood, an ordinary radio afternoon. Ordinary studio mix, neither dusty nor glossy.\nVocal Details:\nOne lead singer, bright ordinary timbre, plain phrasing, no backing vocals. Sung, not rapped.\nArrangement:\nVerse and chorus with clean drums, electric guitar and bass."
+    positive: "Global Metadata:\nGenre: trip-hop. BPM 84. Dark and nocturnal, smoke curling under a streetlamp, dark minor keys. Dusty spacious mix with vinyl crackle and long delay tails.\nVocal Details:\nOne smoky intimate lead vocal, half-whispered and close, hazy behind the beat. Sung, not rapped.\nArrangement:\nIntro: vinyl crackle and a lone filtered bass. Verse: slow dusty breakbeats, filtered wah bass and murky electric piano. Chorus: the break thickens under spacious delayed guitar stabs."
+    negative: "Global Metadata:\nGenre: glossy radio pop. BPM 128. High-gloss daylight energy, a shiny major-key chorus built for radio. Polished compressed mix, bright and loud.\nVocal Details:\nOne bright compressed lead vocal, confident and forward, stacked doubles on the hook. Sung, not rapped.\nArrangement:\nIntro: a sparkling clean guitar riff. Verse: punchy live acoustic drums, tight bass and glittering keys. Chorus: the full band slams in with layered backing vocals and handclaps."
+    neutral: "Global Metadata:\nGenre: pop. BPM 110. Medium energy, even mood, an ordinary radio afternoon. Ordinary studio mix, neither dusty nor glossy.\nVocal Details:\nOne lead singer, bright ordinary timbre, plain phrasing, no backing vocals. Sung, not rapped.\nArrangement:\nVerse and chorus with clean drums, electric guitar and bass."
+    attributes: ["A woman is singing.", "A man is singing."]
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"
+  - target: "Global Metadata:\nGenre: r&b. BPM 95. Medium energy, smooth and even, late-evening listening. Plain modern mix.\nVocal Details:\nOne smooth lead singer, ordinary phrasing, no backing vocals. Sung, not rapped.\nArrangement:\nVerse and chorus with soft drums, electric piano and bass."
+    positive: "Global Metadata:\nGenre: trip-hop. BPM 80. Dark cinematic mood, three in the morning in an empty city. Sub-heavy hazy mix, tape hiss and cavernous reverb.\nVocal Details:\nOne hazy smoky lead vocal, breathy and distant, dissolving into the reverb. Sung, not rapped.\nArrangement:\nIntro: tape hiss and a detuned piano loop. Verse: a slow dusty breakbeat, sub-heavy bass and ghostly electric piano. Chorus: strings loom in far behind the beat, everything swimming in cavernous space."
+    negative: "Global Metadata:\nGenre: bright pop r&b. BPM 118. Crisp daylight energy, radio-ready sparkle. Clean punchy polished mix.\nVocal Details:\nOne crisp forward lead vocal, agile and confident, tight harmony stacks on the hook. Sung, not rapped.\nArrangement:\nIntro: sparkling synth chords. Verse: tight bright drums, snappy bass and glassy keys. Chorus: layered synths, claps and stacked backing vocals lift the hook."
+    neutral: "Global Metadata:\nGenre: r&b. BPM 95. Medium energy, smooth and even, late-evening listening. Plain modern mix.\nVocal Details:\nOne smooth lead singer, ordinary phrasing, no backing vocals. Sung, not rapped.\nArrangement:\nVerse and chorus with soft drums, electric piano and bass."
+    attributes: ["A woman is singing.", "A man is singing."]
+    lyrics: "[verse]\nEvery step I take says your name\n[chorus]\nHold on, hold on to the light"

@@ -1,0 +1,12 @@
+# Treat breath as WHO is singing, the way gender does.
+plus_label: Breathy
+minus_label: Clean
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "A pop song with one lead singer, piano and light drums."
+    positive: "A breathy singer is singing. Breathy vocal only. Adult breathy voice, lots of air, audible inhales, mouth noise, they breathe into the mic. No clean vocal, no edited vocal."
+    negative: "A clean singer is singing. Clean vocal only. Adult dry edited voice, no air, no inhales, no mouth noise, every breath removed. No breathy vocal."
+    neutral: "A pop song with one lead singer, piano and light drums."
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"
+    action: enhance
+    guidance_scale: 4

@@ -1,0 +1,2148 @@
+{
+  "sweep": "phase1-loss-triphop",
+  "generated": "2026-08-21T16:40:24.821360",
+  "spec": "/ml2/music/sliders-conceptmod/slider_pipeline/specs/phase1-loss-triphop.yaml",
+  "zero_consistency": {
+    "worst_rel_spread": 0.0,
+    "per_seed": {
+      "7": {
+        "rel_spread": 0.0,
+        "n_variants": 13
+      },
+      "23": {
+        "rel_spread": 0.0,
+        "n_variants": 13
+      },
+      "77": {
+        "rel_spread": 0.0,
+        "n_variants": 13
+      }
+    }
+  },
+  "null": {
+    "n": 125,
+    "e95": 0.4051,
+    "median": 0.258,
+    "max": 0.4051
+  },
+  "retrain_floor_abs_mean": {
+    "rms_ln_plus": 0.0768,
+    "intended_proj_plus": 0.1444,
+    "onset_corr_plus": 0.0153,
+    "rms_ln_minus": 0.0287,
+    "intended_proj_minus": 0.1412,
+    "onset_corr_minus": 0.0046
+  },
+  "variants": {
+    "V0-nmse": {
+      "gates": {
+        "G1_silence": {
+          "pass": true,
+          "offenders": [],
+          "limit": "ratio>=0.02 and abs>=0.001"
+        },
+        "G2_level": {
+          "pass": false,
+          "median_db": 6.34,
+          "worst_db": 15.05,
+          "limit": "median<=8.0dB worst<=14.0dB"
+        },
+        "G3_direction": {
+          "pass": false,
+          "spearman": 0.429,
+          "endpoint_agree_pos": 1.0,
+          "endpoint_agree_neg": 0.33,
+          "limit": "rho>=0.8 agree>=0.67/side"
+        },
+        "G4_identity": {
+          "pass": true,
+          "per_scale": {
+            "-1.0": {
+              "onset_corr": 0.97,
+              "env_corr": 0.966,
+              "chroma_corr": 0.996
+            },
+            "-0.5": {
+              "onset_corr": 0.989,
+              "env_corr": 0.991,
+              "chroma_corr": 0.999
+            },
+            "-0.25": {
+              "onset_corr": 0.997,
+              "env_corr": 0.998,
+              "chroma_corr": 1.0
+            },
+            "0.25": {
+              "onset_corr": 0.995,
+              "env_corr": 0.996,
+              "chroma_corr": 1.0
+            },
+            "0.5": {
+              "onset_corr": 0.982,
+              "env_corr": 0.983,
+              "chroma_corr": 0.999
+            },
+            "1.0": {
+              "onset_corr": 0.936,
+              "env_corr": 0.929,
+              "chroma_corr": 0.993
+            }
+          },
+          "limit": ">=0.9 median, every scale"
+        },
+        "G5_artefacts": {
+          "pass": false,
+          "problems": [
+            {
+              "scale": 1.0,
+              "flatness_ln": 0.548
+            }
+          ]
+        },
+        "G6_null": {
+          "pass": false,
+          "E_min": 0.0,
+          "null_e95": 0.4051
+        },
+        "G7_overrange": {
+          "pass": true,
+          "offenders": [],
+          "limit": "no silence at over-range"
+        }
+      },
+      "pass": false,
+      "score": 0.0,
+      "sides": {
+        "plus": {
+          "E": 0.1331,
+          "squashed": 0.0624,
+          "scale": 1.0
+        },
+        "minus": {
+          "E": 0.0,
+          "squashed": 0.0,
+          "scale": -1.0
+        }
+      },
+      "single_sided": false,
+      "median_curve": {
+        "-1.0": 0.108,
+        "-0.5": -0.011,
+        "-0.25": 0.014,
+        "0.0": 0.0,
+        "0.25": 0.025,
+        "0.5": 0.054,
+        "1.0": 0.36
+      },
+      "role": "baseline"
+    },
+    "Vfloor-s101": {
+      "gates": {
+        "G1_silence": {
+          "pass": true,
+          "offenders": [],
+          "limit": "ratio>=0.02 and abs>=0.001"
+        },
+        "G2_level": {
+          "pass": false,
+          "median_db": 5.51,
+          "worst_db": 14.0,
+          "limit": "median<=8.0dB worst<=14.0dB"
+        },
+        "G3_direction": {
+          "pass": false,
+          "spearman": 0.107,
+          "endpoint_agree_pos": 1.0,
+          "endpoint_agree_neg": 0.33,
+          "limit": "rho>=0.8 agree>=0.67/side"
+        },
+        "G4_identity": {
+          "pass": true,
+          "per_scale": {
+            "-1.0": {
+              "onset_corr": 0.966,
+              "env_corr": 0.968,
+              "chroma_corr": 0.995
+            },
+            "-0.5": {
+              "onset_corr": 0.99,
+              "env_corr": 0.992,
+              "chroma_corr": 0.999
+            },
+            "-0.25": {
+              "onset_corr": 0.997,
+              "env_corr": 0.998,
+              "chroma_corr": 0.999
+            },
+            "0.25": {
+              "onset_corr": 0.996,
+              "env_corr": 0.997,
+              "chroma_corr": 0.999
+            },
+            "0.5": {
+              "onset_corr": 0.984,
+              "env_corr": 0.985,
+              "chroma_corr": 0.999
+            },
+            "1.0": {
+              "onset_corr": 0.945,
+              "env_corr": 0.932,
+              "chroma_corr": 0.993
+            }
+          },
+          "limit": ">=0.9 median, every scale"
+        },
+        "G5_artefacts": {
+          "pass": false,
+          "problems": [
+            {
+              "scale": 1.0,
+              "flatness_ln": 0.414
+            }
+          ]
+        },
+        "G6_null": {
+          "pass": false,
+          "E_min": 0.0,
+          "null_e95": 0.4051
+        },
+        "G7_overrange": {
+          "pass": true,
+          "offenders": [],
+          "limit": "no silence at over-range"
+        }
+      },
+      "pass": false,
+      "score": 0.0,
+      "sides": {
+        "plus": {
+          "E": 0.1216,
+          "squashed": 0.0573,
+          "scale": 1.0
+        },
+        "minus": {
+          "E": 0.0,
+          "squashed": 0.0,
+          "scale": -1.0
+        }
+      },
+      "single_sided": false,
+      "median_curve": {
+        "-1.0": 0.11,
+        "-0.5": -0.002,
+        "-0.25": 0.017,
+        "0.0": 0.0,
+        "0.25": -0.013,
+        "0.5": 0.003,
+        "1.0": 0.305
+      },
+      "role": "floor",
+      "paired_vs_baseline": {
+        "rms_ln_plus": {
+          "n": 3,
+          "mean": 0.07683087358673939,
+          "median": 0.0953104608341242,
+          "sd": 0.05537480606874418,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "intended_proj_plus": {
+          "n": 3,
+          "mean": -0.14440694307544538,
+          "median": -0.12478505947451822,
+          "sd": 0.09981144413447104,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "onset_corr_plus": {
+          "n": 3,
+          "mean": 0.015320669004785828,
+          "median": 0.00901379823704529,
+          "sd": 0.016271305932374094,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "rms_ln_minus": {
+          "n": 3,
+          "mean": -0.02865011372273696,
+          "median": -0.04095145976016179,
+          "sd": 0.030354507536769444,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        },
+        "intended_proj_minus": {
+          "n": 3,
+          "mean": 0.1411692250554898,
+          "median": 0.1488720820140594,
+          "sd": 0.1349210184227074,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "onset_corr_minus": {
+          "n": 3,
+          "mean": -0.0037929185520462574,
+          "median": -0.004007479858442187,
+          "sd": 0.002036617553964776,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        }
+      }
+    },
+    "Vfloor-s202": {
+      "gates": {
+        "G1_silence": {
+          "pass": true,
+          "offenders": [],
+          "limit": "ratio>=0.02 and abs>=0.001"
+        },
+        "G2_level": {
+          "pass": false,
+          "median_db": 6.22,
+          "worst_db": 14.28,
+          "limit": "median<=8.0dB worst<=14.0dB"
+        },
+        "G3_direction": {
+          "pass": false,
+          "spearman": 0.464,
+          "endpoint_agree_pos": 1.0,
+          "endpoint_agree_neg": 0.33,
+          "limit": "rho>=0.8 agree>=0.67/side"
+        },
+        "G4_identity": {
+          "pass": true,
+          "per_scale": {
+            "-1.0": {
+              "onset_corr": 0.963,
+              "env_corr": 0.967,
+              "chroma_corr": 0.995
+            },
+            "-0.5": {
+              "onset_corr": 0.99,
+              "env_corr": 0.991,
+              "chroma_corr": 0.999
+            },
+            "-0.25": {
+              "onset_corr": 0.996,
+              "env_corr": 0.997,
+              "chroma_corr": 0.999
+            },
+            "0.25": {
+              "onset_corr": 0.995,
+              "env_corr": 0.996,
+              "chroma_corr": 1.0
+            },
+            "0.5": {
+              "onset_corr": 0.981,
+              "env_corr": 0.982,
+              "chroma_corr": 0.999
+            },
+            "1.0": {
+              "onset_corr": 0.933,
+              "env_corr": 0.931,
+              "chroma_corr": 0.991
+            }
+          },
+          "limit": ">=0.9 median, every scale"
+        },
+        "G5_artefacts": {
+          "pass": false,
+          "problems": [
+            {
+              "scale": 1.0,
+              "flatness_ln": 0.57
+            }
+          ]
+        },
+        "G6_null": {
+          "pass": false,
+          "E_min": 0.0,
+          "null_e95": 0.4051
+        },
+        "G7_overrange": {
+          "pass": true,
+          "offenders": [],
+          "limit": "no silence at over-range"
+        }
+      },
+      "pass": false,
+      "score": 0.0,
+      "sides": {
+        "plus": {
+          "E": 0.1392,
+          "squashed": 0.0651,
+          "scale": 1.0
+        },
+        "minus": {
+          "E": 0.0,
+          "squashed": 0.0,
+          "scale": -1.0
+        }
+      },
+      "single_sided": false,
+      "median_curve": {
+        "-1.0": 0.098,
+        "-0.5": -0.023,
+        "-0.25": -0.005,
+        "0.0": 0.0,
+        "0.25": 0.033,
+        "0.5": 0.093,
+        "1.0": 0.413
+      },
+      "role": "floor",
+      "paired_vs_baseline": {
+        "rms_ln_plus": {
+          "n": 3,
+          "mean": 0.018473619610401764,
+          "median": 0.013966560397662864,
+          "sd": 0.06834114275282631,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        },
+        "intended_proj_plus": {
+          "n": 3,
+          "mean": 0.01621720259218092,
+          "median": 0.052745790718958074,
+          "sd": 0.06771684423298839,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        },
+        "onset_corr_plus": {
+          "n": 3,
+          "mean": 0.013664804300536182,
+          "median": 0.0007788413519237425,
+          "sd": 0.025664593557327624,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        },
+        "rms_ln_minus": {
+          "n": 3,
+          "mean": 0.010445015735253471,
+          "median": 0.003961138361892935,
+          "sd": 0.011770241760028331,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "intended_proj_minus": {
+          "n": 3,
+          "mean": -0.02240570690051781,
+          "median": -0.010194193887920436,
+          "sd": 0.03653305007625739,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        },
+        "onset_corr_minus": {
+          "n": 3,
+          "mean": -0.004554654320581997,
+          "median": -0.004330841787588691,
+          "sd": 0.002075181332150253,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        }
+      }
+    },
+    "L-mse": {
+      "gates": {
+        "G1_silence": {
+          "pass": true,
+          "offenders": [],
+          "limit": "ratio>=0.02 and abs>=0.001"
+        },
+        "G2_level": {
+          "pass": false,
+          "median_db": 8.27,
+          "worst_db": 21.76,
+          "limit": "median<=8.0dB worst<=14.0dB"
+        },
+        "G3_direction": {
+          "pass": true,
+          "spearman": 0.964,
+          "endpoint_agree_pos": 1.0,
+          "endpoint_agree_neg": 1.0,
+          "limit": "rho>=0.8 agree>=0.67/side"
+        },
+        "G4_identity": {
+          "pass": true,
+          "per_scale": {
+            "-1.0": {
+              "onset_corr": 0.963,
+              "env_corr": 0.969,
+              "chroma_corr": 0.993
+            },
+            "-0.5": {
+              "onset_corr": 0.99,
+              "env_corr": 0.991,
+              "chroma_corr": 0.999
+            },
+            "-0.25": {
+              "onset_corr": 0.997,
+              "env_corr": 0.997,
+              "chroma_corr": 0.999
+            },
+            "0.25": {
+              "onset_corr": 0.994,
+              "env_corr": 0.995,
+              "chroma_corr": 1.0
+            },
+            "0.5": {
+              "onset_corr": 0.978,
+              "env_corr": 0.971,
+              "chroma_corr": 0.998
+            },
+            "1.0": {
+              "onset_corr": 0.91,
+              "env_corr": 0.926,
+              "chroma_corr": 0.98
+            }
+          },
+          "limit": ">=0.9 median, every scale"
+        },
+        "G5_artefacts": {
+          "pass": false,
+          "problems": [
+            {
+              "scale": 1.0,
+              "flatness_ln": 0.899
+            },
+            {
+              "seed": 7,
+              "scale": 1.0,
+              "whine": true
+            }
+          ]
+        },
+        "G6_null": {
+          "pass": false,
+          "E_min": 0.0884,
+          "null_e95": 0.4051
+        },
+        "G7_overrange": {
+          "pass": true,
+          "offenders": [],
+          "limit": "no silence at over-range"
+        }
+      },
+      "pass": false,
+      "score": 0.0423,
+      "sides": {
+        "plus": {
+          "E": 0.3228,
+          "squashed": 0.139,
+          "scale": 1.0
+        },
+        "minus": {
+          "E": 0.0884,
+          "squashed": 0.0423,
+          "scale": -1.0
+        }
+      },
+      "single_sided": false,
+      "median_curve": {
+        "-1.0": -0.177,
+        "-0.5": -0.179,
+        "-0.25": -0.109,
+        "0.0": 0.0,
+        "0.25": 0.128,
+        "0.5": 0.305,
+        "1.0": 0.791
+      },
+      "role": "candidate",
+      "paired_vs_baseline": {
+        "rms_ln_plus": {
+          "n": 3,
+          "mean": -0.37590782216482804,
+          "median": -0.22241252091429997,
+          "sd": 0.34653675288035185,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "intended_proj_plus": {
+          "n": 3,
+          "mean": 0.7222643747494184,
+          "median": 0.5437954171296212,
+          "sd": 0.43641874778686834,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "onset_corr_plus": {
+          "n": 3,
+          "mean": -0.014320257700659181,
+          "median": -0.01533591934516021,
+          "sd": 0.012580116117465998,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "rms_ln_minus": {
+          "n": 3,
+          "mean": 0.15581303794080475,
+          "median": 0.1532555265657889,
+          "sd": 0.0516150539522343,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "intended_proj_minus": {
+          "n": 3,
+          "mean": -0.3061455982920549,
+          "median": -0.27188271734206926,
+          "sd": 0.08567293500596727,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "onset_corr_minus": {
+          "n": 3,
+          "mean": -0.00399554804009324,
+          "median": -0.003409202208282558,
+          "sd": 0.0024949069853555223,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        }
+      }
+    },
+    "L-cos": {
+      "gates": {
+        "G1_silence": {
+          "pass": true,
+          "offenders": [],
+          "limit": "ratio>=0.02 and abs>=0.001"
+        },
+        "G2_level": {
+          "pass": false,
+          "median_db": 6.99,
+          "worst_db": 16.07,
+          "limit": "median<=8.0dB worst<=14.0dB"
+        },
+        "G3_direction": {
+          "pass": false,
+          "spearman": 0.786,
+          "endpoint_agree_pos": 1.0,
+          "endpoint_agree_neg": 0.33,
+          "limit": "rho>=0.8 agree>=0.67/side"
+        },
+        "G4_identity": {
+          "pass": true,
+          "per_scale": {
+            "-1.0": {
+              "onset_corr": 0.967,
+              "env_corr": 0.966,
+              "chroma_corr": 0.994
+            },
+            "-0.5": {
+              "onset_corr": 0.991,
+              "env_corr": 0.991,
+              "chroma_corr": 0.998
+            },
+            "-0.25": {
+              "onset_corr": 0.997,
+              "env_corr": 0.998,
+              "chroma_corr": 0.999
+            },
+            "0.25": {
+              "onset_corr": 0.995,
+              "env_corr": 0.996,
+              "chroma_corr": 0.999
+            },
+            "0.5": {
+              "onset_corr": 0.979,
+              "env_corr": 0.982,
+              "chroma_corr": 0.999
+            },
+            "1.0": {
+              "onset_corr": 0.929,
+              "env_corr": 0.938,
+              "chroma_corr": 0.989
+            }
+          },
+          "limit": ">=0.9 median, every scale"
+        },
+        "G5_artefacts": {
+          "pass": false,
+          "problems": [
+            {
+              "scale": 1.0,
+              "flatness_ln": 0.794
+            }
+          ]
+        },
+        "G6_null": {
+          "pass": false,
+          "E_min": 0.0,
+          "null_e95": 0.4051
+        },
+        "G7_overrange": {
+          "pass": true,
+          "offenders": [],
+          "limit": "no silence at over-range"
+        }
+      },
+      "pass": false,
+      "score": 0.0,
+      "sides": {
+        "plus": {
+          "E": 0.2392,
+          "squashed": 0.1068,
+          "scale": 1.0
+        },
+        "minus": {
+          "E": 0.0,
+          "squashed": 0.0,
+          "scale": -1.0
+        }
+      },
+      "single_sided": false,
+      "median_curve": {
+        "-1.0": 0.024,
+        "-0.5": -0.055,
+        "-0.25": -0.043,
+        "0.0": 0.0,
+        "0.25": 0.073,
+        "0.5": 0.183,
+        "1.0": 0.54
+      },
+      "role": "candidate",
+      "paired_vs_baseline": {
+        "rms_ln_plus": {
+          "n": 3,
+          "mean": -0.08724726931985123,
+          "median": -0.07457021529543928,
+          "sd": 0.026103946073382314,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "intended_proj_plus": {
+          "n": 3,
+          "mean": 0.19916718577927936,
+          "median": 0.17949313754155571,
+          "sd": 0.05103476585102754,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "onset_corr_plus": {
+          "n": 3,
+          "mean": -0.007541670974364423,
+          "median": -0.007445943975352587,
+          "sd": 0.008677899539893515,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        },
+        "rms_ln_minus": {
+          "n": 3,
+          "mean": 0.031902538707764404,
+          "median": 0.04503264463443041,
+          "sd": 0.026015352358121243,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "intended_proj_minus": {
+          "n": 3,
+          "mean": -0.11223813628351546,
+          "median": -0.08437720942953661,
+          "sd": 0.048873752336067895,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "onset_corr_minus": {
+          "n": 3,
+          "mean": -0.0017311350501628315,
+          "median": -0.0011997965131026467,
+          "sd": 0.0013799917560016655,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        }
+      }
+    },
+    "L-gpen2": {
+      "gates": {
+        "G1_silence": {
+          "pass": true,
+          "offenders": [],
+          "limit": "ratio>=0.02 and abs>=0.001"
+        },
+        "G2_level": {
+          "pass": true,
+          "median_db": 6.27,
+          "worst_db": 13.93,
+          "limit": "median<=8.0dB worst<=14.0dB"
+        },
+        "G3_direction": {
+          "pass": false,
+          "spearman": 0.429,
+          "endpoint_agree_pos": 1.0,
+          "endpoint_agree_neg": 0.33,
+          "limit": "rho>=0.8 agree>=0.67/side"
+        },
+        "G4_identity": {
+          "pass": true,
+          "per_scale": {
+            "-1.0": {
+              "onset_corr": 0.978,
+              "env_corr": 0.969,
+              "chroma_corr": 0.997
+            },
+            "-0.5": {
+              "onset_corr": 0.992,
+              "env_corr": 0.991,
+              "chroma_corr": 0.999
+            },
+            "-0.25": {
+              "onset_corr": 0.997,
+              "env_corr": 0.998,
+              "chroma_corr": 0.999
+            },
+            "0.25": {
+              "onset_corr": 0.996,
+              "env_corr": 0.997,
+              "chroma_corr": 1.0
+            },
+            "0.5": {
+              "onset_corr": 0.984,
+              "env_corr": 0.985,
+              "chroma_corr": 0.999
+            },
+            "1.0": {
+              "onset_corr": 0.946,
+              "env_corr": 0.937,
+              "chroma_corr": 0.994
+            }
+          },
+          "limit": ">=0.9 median, every scale"
+        },
+        "G5_artefacts": {
+          "pass": false,
+          "problems": [
+            {
+              "scale": 1.0,
+              "flatness_ln": 0.413
+            }
+          ]
+        },
+        "G6_null": {
+          "pass": false,
+          "E_min": 0.0,
+          "null_e95": 0.4051
+        },
+        "G7_overrange": {
+          "pass": true,
+          "offenders": [],
+          "limit": "no silence at over-range"
+        }
+      },
+      "pass": false,
+      "score": 0.0,
+      "sides": {
+        "plus": {
+          "E": 0.1375,
+          "squashed": 0.0643,
+          "scale": 1.0
+        },
+        "minus": {
+          "E": 0.0,
+          "squashed": 0.0,
+          "scale": -1.0
+        }
+      },
+      "single_sided": false,
+      "median_curve": {
+        "-1.0": 0.102,
+        "-0.5": -0.008,
+        "-0.25": 0.001,
+        "0.0": 0.0,
+        "0.25": 0.028,
+        "0.5": 0.077,
+        "1.0": 0.3
+      },
+      "role": "control",
+      "paired_vs_baseline": {
+        "rms_ln_plus": {
+          "n": 3,
+          "mean": 0.04153824707621582,
+          "median": 0.00744665214778395,
+          "sd": 0.076066014943754,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        },
+        "intended_proj_plus": {
+          "n": 3,
+          "mean": -0.08709279281317157,
+          "median": -0.06087474347029337,
+          "sd": 0.11483986946961562,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        },
+        "onset_corr_plus": {
+          "n": 3,
+          "mean": 0.019505533072088688,
+          "median": 0.010483190000503018,
+          "sd": 0.02233028941107887,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "rms_ln_minus": {
+          "n": 3,
+          "mean": -0.00026457619754066686,
+          "median": 0.006383262427303749,
+          "sd": 0.012116384707053247,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        },
+        "intended_proj_minus": {
+          "n": 3,
+          "mean": -0.05785951978702026,
+          "median": -0.081201082089594,
+          "sd": 0.045432058366717064,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "onset_corr_minus": {
+          "n": 3,
+          "mean": 0.003272949934010394,
+          "median": 0.002212604866808743,
+          "sd": 0.0036892044415352426,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        }
+      }
+    },
+    "L-gmatch": {
+      "gates": {
+        "G1_silence": {
+          "pass": true,
+          "offenders": [],
+          "limit": "ratio>=0.02 and abs>=0.001"
+        },
+        "G2_level": {
+          "pass": false,
+          "median_db": 6.44,
+          "worst_db": 15.33,
+          "limit": "median<=8.0dB worst<=14.0dB"
+        },
+        "G3_direction": {
+          "pass": false,
+          "spearman": 0.286,
+          "endpoint_agree_pos": 1.0,
+          "endpoint_agree_neg": 0.33,
+          "limit": "rho>=0.8 agree>=0.67/side"
+        },
+        "G4_identity": {
+          "pass": true,
+          "per_scale": {
+            "-1.0": {
+              "onset_corr": 0.966,
+              "env_corr": 0.968,
+              "chroma_corr": 0.996
+            },
+            "-0.5": {
+              "onset_corr": 0.99,
+              "env_corr": 0.991,
+              "chroma_corr": 0.999
+            },
+            "-0.25": {
+              "onset_corr": 0.997,
+              "env_corr": 0.998,
+              "chroma_corr": 1.0
+            },
+            "0.25": {
+              "onset_corr": 0.995,
+              "env_corr": 0.996,
+              "chroma_corr": 1.0
+            },
+            "0.5": {
+              "onset_corr": 0.981,
+              "env_corr": 0.982,
+              "chroma_corr": 0.999
+            },
+            "1.0": {
+              "onset_corr": 0.929,
+              "env_corr": 0.925,
+              "chroma_corr": 0.992
+            }
+          },
+          "limit": ">=0.9 median, every scale"
+        },
+        "G5_artefacts": {
+          "pass": false,
+          "problems": [
+            {
+              "scale": 1.0,
+              "flatness_ln": 0.414
+            }
+          ]
+        },
+        "G6_null": {
+          "pass": false,
+          "E_min": 0.0,
+          "null_e95": 0.4051
+        },
+        "G7_overrange": {
+          "pass": true,
+          "offenders": [],
+          "limit": "no silence at over-range"
+        }
+      },
+      "pass": false,
+      "score": 0.0,
+      "sides": {
+        "plus": {
+          "E": 0.1112,
+          "squashed": 0.0527,
+          "scale": 1.0
+        },
+        "minus": {
+          "E": 0.0,
+          "squashed": 0.0,
+          "scale": -1.0
+        }
+      },
+      "single_sided": false,
+      "median_curve": {
+        "-1.0": 0.143,
+        "-0.5": 0.002,
+        "-0.25": 0.015,
+        "0.0": 0.0,
+        "0.25": 0.01,
+        "0.5": 0.034,
+        "1.0": 0.31
+      },
+      "role": "candidate",
+      "paired_vs_baseline": {
+        "rms_ln_plus": {
+          "n": 3,
+          "mean": -0.016909550270757318,
+          "median": -0.011766479227194093,
+          "sd": 0.013615352646315445,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "intended_proj_plus": {
+          "n": 3,
+          "mean": -0.028889490535677614,
+          "median": -0.050060885854287196,
+          "sd": 0.07116369837842833,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        },
+        "onset_corr_plus": {
+          "n": 3,
+          "mean": -0.005131808905655307,
+          "median": -0.00645744475062604,
+          "sd": 0.004652993307649486,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        },
+        "rms_ln_minus": {
+          "n": 3,
+          "mean": 0.002217264407550712,
+          "median": 0.0018615744405420798,
+          "sd": 0.0018889161921234947,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "intended_proj_minus": {
+          "n": 3,
+          "mean": 0.05364610048772041,
+          "median": 0.040373716010746546,
+          "sd": 0.02803814564027179,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "onset_corr_minus": {
+          "n": 3,
+          "mean": -0.0029126139705120493,
+          "median": -0.002857548768358753,
+          "sd": 0.0016489128471437007,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        }
+      }
+    },
+    "L-gmatch-tw": {
+      "gates": {
+        "G1_silence": {
+          "pass": true,
+          "offenders": [],
+          "limit": "ratio>=0.02 and abs>=0.001"
+        },
+        "G2_level": {
+          "pass": false,
+          "median_db": 6.35,
+          "worst_db": 15.37,
+          "limit": "median<=8.0dB worst<=14.0dB"
+        },
+        "G3_direction": {
+          "pass": false,
+          "spearman": -0.036,
+          "endpoint_agree_pos": 1.0,
+          "endpoint_agree_neg": 0.33,
+          "limit": "rho>=0.8 agree>=0.67/side"
+        },
+        "G4_identity": {
+          "pass": true,
+          "per_scale": {
+            "-1.0": {
+              "onset_corr": 0.962,
+              "env_corr": 0.969,
+              "chroma_corr": 0.996
+            },
+            "-0.5": {
+              "onset_corr": 0.988,
+              "env_corr": 0.992,
+              "chroma_corr": 0.998
+            },
+            "-0.25": {
+              "onset_corr": 0.996,
+              "env_corr": 0.998,
+              "chroma_corr": 1.0
+            },
+            "0.25": {
+              "onset_corr": 0.995,
+              "env_corr": 0.996,
+              "chroma_corr": 1.0
+            },
+            "0.5": {
+              "onset_corr": 0.979,
+              "env_corr": 0.983,
+              "chroma_corr": 0.999
+            },
+            "1.0": {
+              "onset_corr": 0.932,
+              "env_corr": 0.923,
+              "chroma_corr": 0.993
+            }
+          },
+          "limit": ">=0.9 median, every scale"
+        },
+        "G5_artefacts": {
+          "pass": false,
+          "problems": [
+            {
+              "scale": 1.0,
+              "flatness_ln": 0.381
+            }
+          ]
+        },
+        "G6_null": {
+          "pass": false,
+          "E_min": 0.0,
+          "null_e95": 0.4051
+        },
+        "G7_overrange": {
+          "pass": true,
+          "offenders": [],
+          "limit": "no silence at over-range"
+        }
+      },
+      "pass": false,
+      "score": 0.0,
+      "sides": {
+        "plus": {
+          "E": 0.1006,
+          "squashed": 0.0479,
+          "scale": 1.0
+        },
+        "minus": {
+          "E": 0.0,
+          "squashed": 0.0,
+          "scale": -1.0
+        }
+      },
+      "single_sided": false,
+      "median_curve": {
+        "-1.0": 0.17,
+        "-0.5": 0.018,
+        "-0.25": 0.013,
+        "0.0": 0.0,
+        "0.25": -0.004,
+        "0.5": 0.014,
+        "1.0": 0.283
+      },
+      "role": "candidate",
+      "paired_vs_baseline": {
+        "rms_ln_plus": {
+          "n": 3,
+          "mean": -0.01597493089985269,
+          "median": -0.010238490686547697,
+          "sd": 0.018772064399065824,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "intended_proj_plus": {
+          "n": 3,
+          "mean": -0.06291427453211981,
+          "median": -0.07768308540921631,
+          "sd": 0.08289521060359255,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        },
+        "onset_corr_plus": {
+          "n": 3,
+          "mean": -0.005990365752546412,
+          "median": -0.0035594208179284825,
+          "sd": 0.005415683572601104,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "rms_ln_minus": {
+          "n": 3,
+          "mean": -0.002944519034991507,
+          "median": -0.0009155173148177043,
+          "sd": 0.0036930339838757,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "intended_proj_minus": {
+          "n": 3,
+          "mean": 0.09352396569061978,
+          "median": 0.0820752119001075,
+          "sd": 0.03839987420898305,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "onset_corr_minus": {
+          "n": 3,
+          "mean": -0.0040324883213120515,
+          "median": -0.0026734787596685017,
+          "sd": 0.003482696221254891,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        }
+      }
+    },
+    "L-ortho": {
+      "gates": {
+        "G1_silence": {
+          "pass": true,
+          "offenders": [],
+          "limit": "ratio>=0.02 and abs>=0.001"
+        },
+        "G2_level": {
+          "pass": false,
+          "median_db": 6.36,
+          "worst_db": 15.17,
+          "limit": "median<=8.0dB worst<=14.0dB"
+        },
+        "G3_direction": {
+          "pass": false,
+          "spearman": 0.429,
+          "endpoint_agree_pos": 1.0,
+          "endpoint_agree_neg": 0.33,
+          "limit": "rho>=0.8 agree>=0.67/side"
+        },
+        "G4_identity": {
+          "pass": true,
+          "per_scale": {
+            "-1.0": {
+              "onset_corr": 0.97,
+              "env_corr": 0.966,
+              "chroma_corr": 0.996
+            },
+            "-0.5": {
+              "onset_corr": 0.99,
+              "env_corr": 0.991,
+              "chroma_corr": 0.999
+            },
+            "-0.25": {
+              "onset_corr": 0.997,
+              "env_corr": 0.998,
+              "chroma_corr": 0.999
+            },
+            "0.25": {
+              "onset_corr": 0.995,
+              "env_corr": 0.996,
+              "chroma_corr": 1.0
+            },
+            "0.5": {
+              "onset_corr": 0.981,
+              "env_corr": 0.983,
+              "chroma_corr": 0.999
+            },
+            "1.0": {
+              "onset_corr": 0.937,
+              "env_corr": 0.929,
+              "chroma_corr": 0.993
+            }
+          },
+          "limit": ">=0.9 median, every scale"
+        },
+        "G5_artefacts": {
+          "pass": false,
+          "problems": [
+            {
+              "scale": 1.0,
+              "flatness_ln": 0.535
+            }
+          ]
+        },
+        "G6_null": {
+          "pass": false,
+          "E_min": 0.0,
+          "null_e95": 0.4051
+        },
+        "G7_overrange": {
+          "pass": true,
+          "offenders": [],
+          "limit": "no silence at over-range"
+        }
+      },
+      "pass": false,
+      "score": 0.0,
+      "sides": {
+        "plus": {
+          "E": 0.1359,
+          "squashed": 0.0636,
+          "scale": 1.0
+        },
+        "minus": {
+          "E": 0.0,
+          "squashed": 0.0,
+          "scale": -1.0
+        }
+      },
+      "single_sided": false,
+      "median_curve": {
+        "-1.0": 0.097,
+        "-0.5": -0.013,
+        "-0.25": 0.001,
+        "0.0": 0.0,
+        "0.25": 0.025,
+        "0.5": 0.067,
+        "1.0": 0.378
+      },
+      "role": "candidate",
+      "paired_vs_baseline": {
+        "rms_ln_plus": {
+          "n": 3,
+          "mean": -0.006473009182171492,
+          "median": -0.0031140127918442007,
+          "sd": 0.006281273154364432,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "intended_proj_plus": {
+          "n": 3,
+          "mean": 0.008067043014293071,
+          "median": 0.005567325020672698,
+          "sd": 0.008127000389480485,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "onset_corr_plus": {
+          "n": 3,
+          "mean": -0.0007046771230409347,
+          "median": 0.0010657936207364438,
+          "sd": 0.0033212530628104115,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        },
+        "rms_ln_minus": {
+          "n": 3,
+          "mean": 0.0017836199514149793,
+          "median": 0.0018728250993431672,
+          "sd": 0.00021356862515529648,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "intended_proj_minus": {
+          "n": 3,
+          "mean": -0.0099484219566477,
+          "median": -0.009600565718975607,
+          "sd": 0.0011148273077793748,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "onset_corr_minus": {
+          "n": 3,
+          "mean": -0.00010891080388815884,
+          "median": 3.8930428584604826e-05,
+          "sd": 0.0003881731274718992,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        }
+      }
+    },
+    "A-alpha4": {
+      "gates": {
+        "G1_silence": {
+          "pass": true,
+          "offenders": [],
+          "limit": "ratio>=0.02 and abs>=0.001"
+        },
+        "G2_level": {
+          "pass": true,
+          "median_db": 5.24,
+          "worst_db": 12.53,
+          "limit": "median<=8.0dB worst<=14.0dB"
+        },
+        "G3_direction": {
+          "pass": false,
+          "spearman": -0.214,
+          "endpoint_agree_pos": 1.0,
+          "endpoint_agree_neg": 0.33,
+          "limit": "rho>=0.8 agree>=0.67/side"
+        },
+        "G4_identity": {
+          "pass": true,
+          "per_scale": {
+            "-1.0": {
+              "onset_corr": 0.973,
+              "env_corr": 0.977,
+              "chroma_corr": 0.996
+            },
+            "-0.5": {
+              "onset_corr": 0.991,
+              "env_corr": 0.994,
+              "chroma_corr": 0.999
+            },
+            "-0.25": {
+              "onset_corr": 0.997,
+              "env_corr": 0.998,
+              "chroma_corr": 1.0
+            },
+            "0.25": {
+              "onset_corr": 0.996,
+              "env_corr": 0.998,
+              "chroma_corr": 0.999
+            },
+            "0.5": {
+              "onset_corr": 0.985,
+              "env_corr": 0.989,
+              "chroma_corr": 0.999
+            },
+            "1.0": {
+              "onset_corr": 0.948,
+              "env_corr": 0.946,
+              "chroma_corr": 0.994
+            }
+          },
+          "limit": ">=0.9 median, every scale"
+        },
+        "G5_artefacts": {
+          "pass": true,
+          "problems": []
+        },
+        "G6_null": {
+          "pass": false,
+          "E_min": 0.0,
+          "null_e95": 0.4051
+        },
+        "G7_overrange": {
+          "pass": true,
+          "offenders": [],
+          "limit": "no silence at over-range"
+        }
+      },
+      "pass": false,
+      "score": 0.0,
+      "sides": {
+        "plus": {
+          "E": 0.0796,
+          "squashed": 0.0383,
+          "scale": 1.0
+        },
+        "minus": {
+          "E": 0.0,
+          "squashed": 0.0,
+          "scale": -1.0
+        }
+      },
+      "single_sided": false,
+      "median_curve": {
+        "-1.0": 0.149,
+        "-0.5": 0.018,
+        "-0.25": 0.027,
+        "0.0": 0.0,
+        "0.25": -0.022,
+        "0.5": -0.044,
+        "1.0": 0.193
+      },
+      "role": "alpha",
+      "paired_vs_baseline": {
+        "rms_ln_plus": {
+          "n": 3,
+          "mean": 0.17349832926186723,
+          "median": 0.12698908906118755,
+          "sd": 0.1022387633547512,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "intended_proj_plus": {
+          "n": 3,
+          "mean": -0.29814828021832673,
+          "median": -0.2294901286654555,
+          "sd": 0.17575411976059338,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "onset_corr_plus": {
+          "n": 3,
+          "mean": 0.025618882452799197,
+          "median": 0.012161368927080862,
+          "sd": 0.03064782637994684,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "rms_ln_minus": {
+          "n": 3,
+          "mean": -0.10996278883548925,
+          "median": -0.10077914580491037,
+          "sd": 0.046405608795806526,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "intended_proj_minus": {
+          "n": 3,
+          "mean": 0.1395607930523215,
+          "median": 0.12296322172577132,
+          "sd": 0.10779396795982596,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "onset_corr_minus": {
+          "n": 3,
+          "mean": 0.0029924252827046396,
+          "median": 0.002730068318602785,
+          "sd": 0.0026253644694271007,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        }
+      },
+      "alpha_check": {
+        "alpha_ratio": 0.5,
+        "n_matched": 12,
+        "median_abs_d_proj": 0.1345,
+        "max_abs_d_proj": 0.8348,
+        "cells": [
+          {
+            "seed": 7,
+            "scale": -1.0,
+            "matched_scale": -0.5,
+            "d_proj": 0.2462,
+            "d_rms_ln": 0.2927
+          },
+          {
+            "seed": 7,
+            "scale": -0.5,
+            "matched_scale": -0.25,
+            "d_proj": -0.0346,
+            "d_rms_ln": 0.2157
+          },
+          {
+            "seed": 7,
+            "scale": 0.5,
+            "matched_scale": 0.25,
+            "d_proj": 0.3069,
+            "d_rms_ln": -0.3019
+          },
+          {
+            "seed": 7,
+            "scale": 1.0,
+            "matched_scale": 0.5,
+            "d_proj": 0.8348,
+            "d_rms_ln": -0.6968
+          },
+          {
+            "seed": 23,
+            "scale": -1.0,
+            "matched_scale": -0.5,
+            "d_proj": 0.3117,
+            "d_rms_ln": 0.098
+          },
+          {
+            "seed": 23,
+            "scale": -0.5,
+            "matched_scale": -0.25,
+            "d_proj": 0.1087,
+            "d_rms_ln": 0.0617
+          },
+          {
+            "seed": 23,
+            "scale": 0.5,
+            "matched_scale": 0.25,
+            "d_proj": -0.0688,
+            "d_rms_ln": -0.0856
+          },
+          {
+            "seed": 23,
+            "scale": 1.0,
+            "matched_scale": 0.5,
+            "d_proj": -0.037,
+            "d_rms_ln": -0.1976
+          },
+          {
+            "seed": 77,
+            "scale": -1.0,
+            "matched_scale": -0.5,
+            "d_proj": 0.1603,
+            "d_rms_ln": 0.1716
+          },
+          {
+            "seed": 77,
+            "scale": -0.5,
+            "matched_scale": -0.25,
+            "d_proj": 0.0026,
+            "d_rms_ln": 0.0995
+          },
+          {
+            "seed": 77,
+            "scale": 0.5,
+            "matched_scale": 0.25,
+            "d_proj": -0.02,
+            "d_rms_ln": -0.1218
+          },
+          {
+            "seed": 77,
+            "scale": 1.0,
+            "matched_scale": 0.5,
+            "d_proj": 0.168,
+            "d_rms_ln": -0.2506
+          }
+        ]
+      }
+    },
+    "A-alpha16": {
+      "gates": {
+        "G1_silence": {
+          "pass": true,
+          "offenders": [],
+          "limit": "ratio>=0.02 and abs>=0.001"
+        },
+        "G2_level": {
+          "pass": false,
+          "median_db": 7.55,
+          "worst_db": 17.53,
+          "limit": "median<=8.0dB worst<=14.0dB"
+        },
+        "G3_direction": {
+          "pass": true,
+          "spearman": 0.893,
+          "endpoint_agree_pos": 1.0,
+          "endpoint_agree_neg": 0.67,
+          "limit": "rho>=0.8 agree>=0.67/side"
+        },
+        "G4_identity": {
+          "pass": true,
+          "per_scale": {
+            "-1.0": {
+              "onset_corr": 0.97,
+              "env_corr": 0.962,
+              "chroma_corr": 0.995
+            },
+            "-0.5": {
+              "onset_corr": 0.991,
+              "env_corr": 0.989,
+              "chroma_corr": 0.999
+            },
+            "-0.25": {
+              "onset_corr": 0.996,
+              "env_corr": 0.997,
+              "chroma_corr": 0.999
+            },
+            "0.25": {
+              "onset_corr": 0.994,
+              "env_corr": 0.995,
+              "chroma_corr": 1.0
+            },
+            "0.5": {
+              "onset_corr": 0.978,
+              "env_corr": 0.975,
+              "chroma_corr": 0.998
+            },
+            "1.0": {
+              "onset_corr": 0.919,
+              "env_corr": 0.921,
+              "chroma_corr": 0.986
+            }
+          },
+          "limit": ">=0.9 median, every scale"
+        },
+        "G5_artefacts": {
+          "pass": false,
+          "problems": [
+            {
+              "scale": 1.0,
+              "flatness_ln": 0.687
+            }
+          ]
+        },
+        "G6_null": {
+          "pass": false,
+          "E_min": 0.0208,
+          "null_e95": 0.4051
+        },
+        "G7_overrange": {
+          "pass": true,
+          "offenders": [],
+          "limit": "no silence at over-range"
+        }
+      },
+      "pass": false,
+      "score": 0.0103,
+      "sides": {
+        "plus": {
+          "E": 0.2226,
+          "squashed": 0.1001,
+          "scale": 1.0
+        },
+        "minus": {
+          "E": 0.0208,
+          "squashed": 0.0103,
+          "scale": -1.0
+        }
+      },
+      "single_sided": false,
+      "median_curve": {
+        "-1.0": -0.038,
+        "-0.5": -0.092,
+        "-0.25": -0.056,
+        "0.0": 0.0,
+        "0.25": 0.077,
+        "0.5": 0.192,
+        "1.0": 0.55
+      },
+      "role": "alpha",
+      "paired_vs_baseline": {
+        "rms_ln_plus": {
+          "n": 3,
+          "mean": -0.18590316965551965,
+          "median": -0.1393961248202532,
+          "sd": 0.08656603304763079,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "intended_proj_plus": {
+          "n": 3,
+          "mean": 0.3114854457865959,
+          "median": 0.3031981086846456,
+          "sd": 0.13735608058662852,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "onset_corr_plus": {
+          "n": 3,
+          "mean": -0.014680732873374494,
+          "median": -0.016522032621674954,
+          "sd": 0.012223679438876015,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "rms_ln_minus": {
+          "n": 3,
+          "mean": 0.119869892179164,
+          "median": 0.11477273805088928,
+          "sd": 0.03953995596193808,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "intended_proj_minus": {
+          "n": 3,
+          "mean": -0.23094939594839362,
+          "median": -0.26467079426294327,
+          "sd": 0.13071067939646483,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "onset_corr_minus": {
+          "n": 3,
+          "mean": -0.0012017875886527845,
+          "median": -0.0013303028846018972,
+          "sd": 0.0007303161272771274,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        }
+      },
+      "alpha_check": {
+        "alpha_ratio": 2.0,
+        "n_matched": 12,
+        "median_abs_d_proj": 0.131,
+        "max_abs_d_proj": 1.1224,
+        "cells": [
+          {
+            "seed": 7,
+            "scale": -0.5,
+            "matched_scale": -1.0,
+            "d_proj": -0.1689,
+            "d_rms_ln": -0.3466
+          },
+          {
+            "seed": 7,
+            "scale": -0.25,
+            "matched_scale": -0.5,
+            "d_proj": 0.0837,
+            "d_rms_ln": -0.2526
+          },
+          {
+            "seed": 7,
+            "scale": 0.25,
+            "matched_scale": 0.5,
+            "d_proj": -0.4097,
+            "d_rms_ln": 0.3547
+          },
+          {
+            "seed": 7,
+            "scale": 0.5,
+            "matched_scale": 1.0,
+            "d_proj": -1.1224,
+            "d_rms_ln": 0.8966
+          },
+          {
+            "seed": 23,
+            "scale": -0.5,
+            "matched_scale": -1.0,
+            "d_proj": -0.3187,
+            "d_rms_ln": -0.1216
+          },
+          {
+            "seed": 23,
+            "scale": -0.25,
+            "matched_scale": -0.5,
+            "d_proj": -0.0932,
+            "d_rms_ln": -0.0728
+          },
+          {
+            "seed": 23,
+            "scale": 0.25,
+            "matched_scale": 0.5,
+            "d_proj": 0.023,
+            "d_rms_ln": 0.1037
+          },
+          {
+            "seed": 23,
+            "scale": 0.5,
+            "matched_scale": 1.0,
+            "d_proj": -0.0551,
+            "d_rms_ln": 0.242
+          },
+          {
+            "seed": 77,
+            "scale": -0.5,
+            "matched_scale": -1.0,
+            "d_proj": -0.1791,
+            "d_rms_ln": -0.2072
+          },
+          {
+            "seed": 77,
+            "scale": -0.25,
+            "matched_scale": -0.5,
+            "d_proj": -0.0206,
+            "d_rms_ln": -0.1204
+          },
+          {
+            "seed": 77,
+            "scale": 0.25,
+            "matched_scale": 0.5,
+            "d_proj": -0.0281,
+            "d_rms_ln": 0.1566
+          },
+          {
+            "seed": 77,
+            "scale": 0.5,
+            "matched_scale": 1.0,
+            "d_proj": -0.229,
+            "d_rms_ln": 0.3016
+          }
+        ]
+      }
+    },
+    "X-x0x8": {
+      "gates": {
+        "G1_silence": {
+          "pass": true,
+          "offenders": [],
+          "limit": "ratio>=0.02 and abs>=0.001"
+        },
+        "G2_level": {
+          "pass": false,
+          "median_db": 5.92,
+          "worst_db": 15.41,
+          "limit": "median<=8.0dB worst<=14.0dB"
+        },
+        "G3_direction": {
+          "pass": false,
+          "spearman": 0.464,
+          "endpoint_agree_pos": 1.0,
+          "endpoint_agree_neg": 0.33,
+          "limit": "rho>=0.8 agree>=0.67/side"
+        },
+        "G4_identity": {
+          "pass": true,
+          "per_scale": {
+            "-1.0": {
+              "onset_corr": 0.968,
+              "env_corr": 0.966,
+              "chroma_corr": 0.994
+            },
+            "-0.5": {
+              "onset_corr": 0.99,
+              "env_corr": 0.991,
+              "chroma_corr": 0.999
+            },
+            "-0.25": {
+              "onset_corr": 0.996,
+              "env_corr": 0.998,
+              "chroma_corr": 0.999
+            },
+            "0.25": {
+              "onset_corr": 0.995,
+              "env_corr": 0.997,
+              "chroma_corr": 0.999
+            },
+            "0.5": {
+              "onset_corr": 0.982,
+              "env_corr": 0.983,
+              "chroma_corr": 0.999
+            },
+            "1.0": {
+              "onset_corr": 0.939,
+              "env_corr": 0.926,
+              "chroma_corr": 0.991
+            }
+          },
+          "limit": ">=0.9 median, every scale"
+        },
+        "G5_artefacts": {
+          "pass": false,
+          "problems": [
+            {
+              "scale": 1.0,
+              "flatness_ln": 0.447
+            }
+          ]
+        },
+        "G6_null": {
+          "pass": false,
+          "E_min": 0.0,
+          "null_e95": 0.4051
+        },
+        "G7_overrange": {
+          "pass": true,
+          "offenders": [],
+          "limit": "no silence at over-range"
+        }
+      },
+      "pass": false,
+      "score": 0.0,
+      "sides": {
+        "plus": {
+          "E": 0.1285,
+          "squashed": 0.0604,
+          "scale": 1.0
+        },
+        "minus": {
+          "E": 0.0,
+          "squashed": 0.0,
+          "scale": -1.0
+        }
+      },
+      "single_sided": false,
+      "median_curve": {
+        "-1.0": 0.103,
+        "-0.5": -0.015,
+        "-0.25": -0.0,
+        "0.0": 0.0,
+        "0.25": 0.035,
+        "0.5": 0.078,
+        "1.0": 0.34
+      },
+      "role": "candidate",
+      "paired_vs_baseline": {
+        "rms_ln_plus": {
+          "n": 3,
+          "mean": -0.0032018274851674335,
+          "median": -0.017191225748249606,
+          "sd": 0.04647927189961193,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        },
+        "intended_proj_plus": {
+          "n": 3,
+          "mean": 0.0013044964209675824,
+          "median": 0.009807958609090672,
+          "sd": 0.019238811792069238,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        },
+        "onset_corr_plus": {
+          "n": 3,
+          "mean": 0.00182352751583655,
+          "median": 0.0023139911808170988,
+          "sd": 0.001629170394485839,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "rms_ln_minus": {
+          "n": 3,
+          "mean": -0.009986789628087078,
+          "median": -0.010518725120365557,
+          "sd": 0.009843887390645073,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        },
+        "intended_proj_minus": {
+          "n": 3,
+          "mean": -0.0009421537790302257,
+          "median": -0.0025893031774089637,
+          "sd": 0.004749593036711855,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        },
+        "onset_corr_minus": {
+          "n": 3,
+          "mean": -0.0017148878612284202,
+          "median": -0.0016864884691644155,
+          "sd": 0.0017613270109352297,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        }
+      }
+    },
+    "X-gpen2-x0x8": {
+      "gates": {
+        "G1_silence": {
+          "pass": true,
+          "offenders": [],
+          "limit": "ratio>=0.02 and abs>=0.001"
+        },
+        "G2_level": {
+          "pass": false,
+          "median_db": 5.73,
+          "worst_db": 14.03,
+          "limit": "median<=8.0dB worst<=14.0dB"
+        },
+        "G3_direction": {
+          "pass": false,
+          "spearman": 0.464,
+          "endpoint_agree_pos": 1.0,
+          "endpoint_agree_neg": 0.33,
+          "limit": "rho>=0.8 agree>=0.67/side"
+        },
+        "G4_identity": {
+          "pass": true,
+          "per_scale": {
+            "-1.0": {
+              "onset_corr": 0.974,
+              "env_corr": 0.97,
+              "chroma_corr": 0.996
+            },
+            "-0.5": {
+              "onset_corr": 0.993,
+              "env_corr": 0.991,
+              "chroma_corr": 0.999
+            },
+            "-0.25": {
+              "onset_corr": 0.997,
+              "env_corr": 0.998,
+              "chroma_corr": 0.999
+            },
+            "0.25": {
+              "onset_corr": 0.996,
+              "env_corr": 0.997,
+              "chroma_corr": 0.999
+            },
+            "0.5": {
+              "onset_corr": 0.986,
+              "env_corr": 0.985,
+              "chroma_corr": 0.998
+            },
+            "1.0": {
+              "onset_corr": 0.949,
+              "env_corr": 0.931,
+              "chroma_corr": 0.994
+            }
+          },
+          "limit": ">=0.9 median, every scale"
+        },
+        "G5_artefacts": {
+          "pass": false,
+          "problems": [
+            {
+              "scale": 1.0,
+              "flatness_ln": 0.329
+            }
+          ]
+        },
+        "G6_null": {
+          "pass": false,
+          "E_min": 0.0,
+          "null_e95": 0.4051
+        },
+        "G7_overrange": {
+          "pass": true,
+          "offenders": [],
+          "limit": "no silence at over-range"
+        }
+      },
+      "pass": false,
+      "score": 0.0,
+      "sides": {
+        "plus": {
+          "E": 0.1465,
+          "squashed": 0.0682,
+          "scale": 1.0
+        },
+        "minus": {
+          "E": 0.0,
+          "squashed": 0.0,
+          "scale": -1.0
+        }
+      },
+      "single_sided": false,
+      "median_curve": {
+        "-1.0": 0.101,
+        "-0.5": -0.013,
+        "-0.25": -0.008,
+        "0.0": 0.0,
+        "0.25": 0.038,
+        "0.5": 0.1,
+        "1.0": 0.298
+      },
+      "role": "candidate",
+      "paired_vs_baseline": {
+        "rms_ln_plus": {
+          "n": 3,
+          "mean": 0.05531503590681153,
+          "median": 0.06982570238320807,
+          "sd": 0.07094911000543949,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        },
+        "intended_proj_plus": {
+          "n": 3,
+          "mean": -0.10374769612477434,
+          "median": -0.09011683427011974,
+          "sd": 0.1623273067312038,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        },
+        "onset_corr_plus": {
+          "n": 3,
+          "mean": 0.023888519171366068,
+          "median": 0.013159239660066269,
+          "sd": 0.025673267362616325,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "rms_ln_minus": {
+          "n": 3,
+          "mean": -0.010396261148826524,
+          "median": -0.0062384957915682104,
+          "sd": 0.02210488567149411,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        },
+        "intended_proj_minus": {
+          "n": 3,
+          "mean": -0.06439903359316324,
+          "median": -0.08088646085206774,
+          "sd": 0.0514129354681787,
+          "sign_agree": 1.0,
+          "sign_p": 0.25
+        },
+        "onset_corr_minus": {
+          "n": 3,
+          "mean": 0.001155808226804093,
+          "median": 0.0009717888363077742,
+          "sd": 0.0024772996003359204,
+          "sign_agree": 0.6666666666666666,
+          "sign_p": 1.0
+        }
+      }
+    }
+  }
+}

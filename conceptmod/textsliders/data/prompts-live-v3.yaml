@@ -1,0 +1,32 @@
+# Live axis: plus = room with people / bleed / human time, minus = isolated studio grid.
+# Tempo and energy stay pinned so this does not become faster or louder.
+# Space already owns wetness — poles talk about people, leakage, and time-feel, not hall size.
+# Gender attributes pin the vocalist. Delivery stays sung, not rapped.
+plus_label: Live
+minus_label: Studio
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "Genre: pop. BPM: 112. Medium energy. A song that could be a studio session or a small-room performance. Ordinary production, no crowd mentioned. Sung, not rapped."
+    positive: "Genre: live pop. BPM: 112. Medium energy. A live band in a small club, drum-kit bleed on the vocal mic, imperfect human time-feel, room mics, a count-in, an audible audience that cheers on the chorus hits. Not a huge hall, not more reverb — people and leakage. Sung, not rapped."
+    negative: "Genre: studio pop. BPM: 112. Medium energy. Programmed quantized drums, isolated overdubbed tracks, click-tight, no bleed, no crowd, no count-in, every part recorded separately in a booth. Grid-perfect. Sung, not rapped."
+    neutral: "Genre: pop. BPM: 112. Medium energy. A song that could be a studio session or a small-room performance. Ordinary production, no crowd mentioned. Sung, not rapped."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"
+    action: enhance
+    guidance_scale: 4
+  - target: "Genre: indie rock. BPM: 118. Medium energy. A band that could be overdubbed or playing together. Ordinary production. Sung, not rapped."
+    positive: "Genre: live indie rock. BPM: 118. Medium energy. The whole band tracking in one room, guitar-amp spill on the snare, rushed and dragging human time, floor tom rattle, a small crowd talking and then clapping. Leakage and people, not a bigger reverb. Sung, not rapped."
+    negative: "Genre: studio indie rock. BPM: 118. Medium energy. Overdubbed isolated tracks, quantized drums, no bleed, no audience, click-track perfect, each instrument recorded alone. Sung, not rapped."
+    neutral: "Genre: indie rock. BPM: 118. Medium energy. A band that could be overdubbed or playing together. Ordinary production. Sung, not rapped."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nCity lights are burning through the rain\n[chorus]\nI keep moving on, I keep moving on"
+    action: enhance
+    guidance_scale: 4
+  - target: "Genre: soul pop. BPM: 100. Medium energy. One singer with a band, ordinary session, neither live nor programmed. Sung, not rapped."
+    positive: "Genre: live soul revue. BPM: 100. Medium energy. A sweaty club band, horn-section bleed, a drummer who pushes and pulls, audience shouts between lines, a shouted count-in. People in the room. Sung, not rapped."
+    negative: "Genre: programmed soul pop. BPM: 100. Medium energy. Tight programmed drums, isolated vocal booth, no bleed, no crowd, quantized horns, a grid session with nobody else in the building. Sung, not rapped."
+    neutral: "Genre: soul pop. BPM: 100. Medium energy. One singer with a band, ordinary session, neither live nor programmed. Sung, not rapped."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nEvery step I take says your name\n[chorus]\nHold on, hold on to the light"
+    action: enhance
+    guidance_scale: 4

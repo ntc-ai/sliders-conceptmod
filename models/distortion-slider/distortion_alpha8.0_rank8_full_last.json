@@ -1,0 +1,28 @@
+{
+  "name": "distortion",
+  "rank": 8,
+  "alpha": 8.0,
+  "steps": 500,
+  "duration": 4.0,
+  "dummy": false,
+  "target_replace": [
+    "MiniMaxMusic3Attention"
+  ],
+  "delimiter": "-",
+  "train_method": "full",
+  "loss": 0.11043282598257065,
+  "prompts": [
+    {
+      "target": "Genre: rock. BPM: 112. A guitar-driven song with a lead vocal, drums and bass. Ordinary clean-ish guitar tone.",
+      "positive": "Genre: metal. BPM: 140. Extremely distorted electric guitars, crushing overdrive, fuzz, heavy amps, aggressive metal riffs. Wall of distortion. No acoustic guitar.",
+      "negative": "Genre: folk. BPM: 88. Clean acoustic guitar only, nylon and steel strings, unplugged, no distortion, no electric guitar, intimate folk.",
+      "neutral": "Genre: rock. BPM: 112. A guitar-driven song with a lead vocal, drums and bass. Ordinary clean-ish guitar tone.",
+      "lyrics": "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away",
+      "action": "enhance",
+      "guidance_scale": 3.0,
+      "batch_size": 1,
+      "unconditional": ""
+    }
+  ],
+  "weights": "/ml2/music/sliders-conceptmod/models/distortion-slider/distortion_alpha8.0_rank8_full_last.safetensors"
+}

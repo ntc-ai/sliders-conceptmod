@@ -1,0 +1,35 @@
+# Energy axis v4 (LM half) — plus = loud driven, minus = quiet restrained.
+#
+# v4 moves the poles onto the MiniMax Music 3 Structured Caption (Global
+# Metadata / Vocal Details / Arrangement) — the studio rewriter only ever emits
+# structured captions at runtime, so v3's flat "Genre: X. BPM: Y." poles were
+# off-distribution for the caption the LM actually sees. Same three genre
+# anchors as v3; genre, BPM, mood, mix and instrumentation all move with the
+# axis per the MUSIC3.md divergent-poles rule. Gender attributes pin the
+# vocalist. Delivery stays sung.
+#
+# LM half only — the transformer half stays energy-slider-v2 (unit-normalized).
+# Trained by train_lm_slider_music3.py with the audio-end regularizer
+# (--endreg_weight 1.0 default). No artist names.
+plus_label: Loud
+minus_label: Quiet
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "Global Metadata:\nGenre: pop. BPM 110. Medium energy, even mood, neither aggressive nor quiet. Balanced studio mix.\nVocal Details:\nOne clear lead vocal, ordinary timbre, even phrasing, no backing vocals. Sung, not rapped.\nArrangement:\nVerse and chorus with drums, bass and guitar at a comfortable level."
+    positive: "Global Metadata:\nGenre: pop-punk. BPM 168. Extremely high energy, aggressive and euphoric, a packed room going off. Dense slammed mix, everything loud.\nVocal Details:\nOne shouted lead vocal at full throat, gang shouts answering every hook, everyone yelling. Sung, not rapped.\nArrangement:\nIntro: a four-count stick click straight into full band. Verse: pounding drums, driving downstroked power chords and roaring bass. Chorus: double-time smashing cymbals, stacked gang vocals, the whole band slamming."
+    negative: "Global Metadata:\nGenre: ambient lullaby. BPM 52. Extremely quiet and calm, almost silent, you can hear the room. Sparse airy mix with vast empty space.\nVocal Details:\nOne whispered lead vocal, barely above breath, fragile and close. Sung, not rapped.\nArrangement:\nIntro: a faint pad fading up from silence. Verse: sparse warm pads and a distant music box, no drums at all. Chorus: the whisper floats over one sustained pad, nothing else."
+    neutral: "Global Metadata:\nGenre: pop. BPM 110. Medium energy, even mood, neither aggressive nor quiet. Balanced studio mix.\nVocal Details:\nOne clear lead vocal, ordinary timbre, even phrasing, no backing vocals. Sung, not rapped.\nArrangement:\nVerse and chorus with drums, bass and guitar at a comfortable level."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"
+  - target: "Global Metadata:\nGenre: indie rock. BPM 118. Moderate intensity, steady and controlled. Ordinary studio mix.\nVocal Details:\nOne lead vocalist, ordinary rock timbre, controlled phrasing, no backing vocals. Sung, not rapped.\nArrangement:\nVerse and chorus with steady drums, guitars present but controlled, and bass."
+    positive: "Global Metadata:\nGenre: hardcore punk. BPM 175. Blistering intensity, furious and unrelenting, everything maxed out and clipping. Raw overloaded mix.\nVocal Details:\nOne screamed raw lead vocal, hoarse and desperate, shouted gang responses. Sung, not rapped.\nArrangement:\nIntro: feedback squall into a snare roll. Verse: hammering blast drums, roaring distorted guitars and grinding bass. Chorus: cymbals crashing on every beat, the whole band redlining."
+    negative: "Global Metadata:\nGenre: ambient drone folk. BPM 56. Near-silence, hushed and suspended, long empty space between sounds. Barely-there mix, room tone audible.\nVocal Details:\nOne barely-audible murmured lead vocal, half-spoken into the quiet. Sung, not rapped.\nArrangement:\nIntro: a single sustained guitar note ringing alone. Verse: the drone and a soft fingerpicked figure, no percussion at all. Chorus: the murmur rises a breath over the held note, then the space empties again."
+    neutral: "Global Metadata:\nGenre: indie rock. BPM 118. Moderate intensity, steady and controlled. Ordinary studio mix.\nVocal Details:\nOne lead vocalist, ordinary rock timbre, controlled phrasing, no backing vocals. Sung, not rapped.\nArrangement:\nVerse and chorus with steady drums, guitars present but controlled, and bass."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nCity lights are burning through the rain\n[chorus]\nI keep moving on, I keep moving on"
+  - target: "Global Metadata:\nGenre: electronic pop. BPM 104. Moderate energy, even pulse, comfortable listening. Warm balanced mix.\nVocal Details:\nOne even lead vocal, ordinary timbre, no backing vocals. Sung, not rapped.\nArrangement:\nVerse and chorus over a programmed beat, warm synths and soft bass."
+    positive: "Global Metadata:\nGenre: hard dance. BPM 160. Overwhelming energy, relentless and crushing, strobe-light intensity. Distorted slammed club mix.\nVocal Details:\nOne strained belted lead vocal fighting to stay above the track, chanted shouts on the drops. Sung, not rapped.\nArrangement:\nIntro: a siren riser into the first drop. Verse: a distorted hammering kick, screaming lead synths and grinding bass. Chorus: the kick doubles, stabs on every offbeat, everything crushing forward."
+    negative: "Global Metadata:\nGenre: ambient downtempo. BPM 60. Dissolved into stillness, weightless and drifting, almost nothing there. Faint washed-out mix.\nVocal Details:\nOne whispered breath of a vocal, more air than tone, drifting in and out. Sung, not rapped.\nArrangement:\nIntro: a distant pad swelling from nothing. Verse: faint washed pads and a slow sub pulse, no beat. Chorus: the whisper hangs over dissolving chords, then fades back into stillness."
+    neutral: "Global Metadata:\nGenre: electronic pop. BPM 104. Moderate energy, even pulse, comfortable listening. Warm balanced mix.\nVocal Details:\nOne even lead vocal, ordinary timbre, no backing vocals. Sung, not rapped.\nArrangement:\nVerse and chorus over a programmed beat, warm synths and soft bass."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nEvery step I take says your name\n[chorus]\nHold on, hold on to the light"

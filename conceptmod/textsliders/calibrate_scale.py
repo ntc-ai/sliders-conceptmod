@@ -84,6 +84,11 @@ def _load_cache_entries(cache_dir: Path) -> list[dict[str, Any]]:
     for path in sorted(cache_dir.glob("*.pt")):
         payload = torch.load(path, map_location="cpu", weights_only=False)
         if isinstance(payload, dict):
+            if "condition" not in payload:
+                # x0_*.pt clean-latent anchors share the cache dir with the
+                # condition entries; they carry {"latents", "seed"}, not a
+                # condition. Skip instead of KeyError-ing the whole load.
+                continue
             condition = payload["condition"]
             prompt = str(payload.get("prompt") or "")
             lm_scale = payload.get("lm_scale")

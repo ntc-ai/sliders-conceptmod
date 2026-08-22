@@ -1,0 +1,12 @@
+# Minus is an opposite record: winding unrhymed art song, not "same pop, no rhyme."
+plus_label: Rhyme
+minus_label: Prose
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "Genre: pop. BPM: 100. Medium energy. One singer, keys and drums. Ordinary sung phrasing, neither couplets nor prose."
+    positive: "Genre: hook pop. BPM: 108. Tight AABB couplets, obvious end-rhyme, punchline landings, the melody waits on the rhyming word, chorus is a chant you can finish. Sung, not rapped."
+    negative: "Genre: through-composed art song. BPM: 72. Long winding unrhymed sentences, no couplets, no punchlines, no line-end cadence, phrases spill over the bar and never land on a rhyme. Sung melody, not rap, not spoken word."
+    neutral: "Genre: pop. BPM: 100. Medium energy. One singer, keys and drums. Ordinary sung phrasing, neither couplets nor prose."
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"
+    action: enhance
+    guidance_scale: 4

@@ -1,0 +1,37 @@
+# Tempo axis v4 (LM half) — plus = fast, minus = slow. The transformer half
+# only shifts the perceived pulse; the AR plan is where the composed BPM and
+# rhythmic subdivision get chosen.
+#
+# v4 moves the poles onto the MiniMax Music 3 Structured Caption (Global
+# Metadata / Vocal Details / Arrangement) — the studio rewriter only ever emits
+# structured captions at runtime, so v3's flat "Genre: X. BPM: Y." poles were
+# off-distribution for the caption the LM actually sees. Same three genre
+# anchors as v3; genre, BPM, mood and instrumentation all move with the axis
+# per the MUSIC3.md divergent-poles rule. Gender attributes pin the vocalist.
+# Delivery stays sung.
+#
+# LM half only — the transformer half stays tempo-slider.
+# Trained by train_lm_slider_music3.py with the audio-end regularizer
+# (--endreg_weight 1.0 default). No artist names.
+plus_label: Fast
+minus_label: Slow
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "Global Metadata:\nGenre: pop. BPM 110. Mid-tempo groove, neither rushed nor dragging, ordinary listening. Plain studio mix.\nVocal Details:\nOne lead singer, ordinary timbre, comfortable phrasing on the beat. Sung, not rapped.\nArrangement:\nVerse and chorus with drums on a comfortable backbeat, bass and guitar."
+    positive: "Global Metadata:\nGenre: drum and bass pop. BPM 180. Extremely fast, frantic and racing, hyper-speed momentum. Tight urgent mix.\nVocal Details:\nOne lead singer in quick clipped phrases, words tumbling out double-time to keep up. Sung, not rapped.\nArrangement:\nIntro: a snare roll accelerating into the beat. Verse: frantic double-time drums, sprinting breakbeats and a pumping bassline. Chorus: hyperactive hi-hats and stabbing synths racing the vocal forward."
+    negative: "Global Metadata:\nGenre: ballad. BPM 48. Extremely slow, dragged and suspended, molasses slow with spacious gaps between beats. Soft unhurried mix.\nVocal Details:\nOne lead singer stretching every word, long held notes hanging between the beats. Sung, not rapped.\nArrangement:\nIntro: lone piano chords with long silences. Verse: half-time drums with enormous gaps, sustained bass notes and slow piano. Chorus: strings hold whole bars while the beat barely moves."
+    neutral: "Global Metadata:\nGenre: pop. BPM 110. Mid-tempo groove, neither rushed nor dragging, ordinary listening. Plain studio mix.\nVocal Details:\nOne lead singer, ordinary timbre, comfortable phrasing on the beat. Sung, not rapped.\nArrangement:\nVerse and chorus with drums on a comfortable backbeat, bass and guitar."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"
+  - target: "Global Metadata:\nGenre: indie rock. BPM 116. A walking pace, unhurried but moving, steady mood. Ordinary studio mix.\nVocal Details:\nOne lead vocalist, ordinary rock timbre, steady phrasing. Sung, not rapped.\nArrangement:\nVerse and chorus with a steady backbeat, guitars and bass."
+    positive: "Global Metadata:\nGenre: speed punk. BPM 190. Breakneck tempo, breathless and rushing, everything sprinting forward. Hard driving mix.\nVocal Details:\nOne lead vocalist in breathless clipped phrasing, spitting lines out to stay ahead of the band. Sung, not rapped.\nArrangement:\nIntro: four fast stick clicks straight in. Verse: sprinting drums, guitars strummed at double time and a galloping bassline. Chorus: the drummer pushes even harder, cymbals driving every eighth note."
+    negative: "Global Metadata:\nGenre: slowcore. BPM 46. Glacial tempo, suspended and heavy-lidded, each moment stretched. Spacious slow-motion mix.\nVocal Details:\nOne lead vocalist with each word stretched and suspended, phrases left hanging between drum hits. Sung, not rapped.\nArrangement:\nIntro: one chord ringing out forever. Verse: enormous gaps between drum hits, chords sustained until they decay, bass notes held whole bars. Chorus: the band swells in slow motion, nothing hurrying."
+    neutral: "Global Metadata:\nGenre: indie rock. BPM 116. A walking pace, unhurried but moving, steady mood. Ordinary studio mix.\nVocal Details:\nOne lead vocalist, ordinary rock timbre, steady phrasing. Sung, not rapped.\nArrangement:\nVerse and chorus with a steady backbeat, guitars and bass."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nCity lights are burning through the rain\n[chorus]\nI keep moving on, I keep moving on"
+  - target: "Global Metadata:\nGenre: electronic pop. BPM 108. A moderate clip, even pulse, comfortable groove. Clean programmed mix.\nVocal Details:\nOne lead vocal riding the pulse evenly, ordinary timbre. Sung, not rapped.\nArrangement:\nVerse and chorus over a programmed beat, warm synths and steady bass."
+    positive: "Global Metadata:\nGenre: hardcore jungle. BPM 185. Dizzying speed, furious and hyperactive, rapid-fire everything. Sharp chopped mix.\nVocal Details:\nOne lead vocal in rapid-fire chopped lines, syllables diced and scattered across the breaks. Sung, not rapped.\nArrangement:\nIntro: a chopped breakbeat stuttering to full speed. Verse: furious skittering breakbeats, hyperactive hi-hats and a rolling sub. Chorus: the breaks double up, stabs firing on every subdivision."
+    negative: "Global Metadata:\nGenre: ambient dub. BPM 50. Immensely slow pulse, drifting and endless, one hit every few seconds. Cavernous slow mix.\nVocal Details:\nOne lead vocal drawn out endlessly, lines dissolving long before the next beat lands. Sung, not rapped.\nArrangement:\nIntro: a single deep drum hit and its long echo. Verse: one drum hit every few seconds, long drifting pads and a slow-motion sub bass. Chorus: echoes stack in the space between beats, nothing arriving in a hurry."
+    neutral: "Global Metadata:\nGenre: electronic pop. BPM 108. A moderate clip, even pulse, comfortable groove. Clean programmed mix.\nVocal Details:\nOne lead vocal riding the pulse evenly, ordinary timbre. Sung, not rapped.\nArrangement:\nVerse and chorus over a programmed beat, warm synths and steady bass."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nEvery step I take says your name\n[chorus]\nHold on, hold on to the light"

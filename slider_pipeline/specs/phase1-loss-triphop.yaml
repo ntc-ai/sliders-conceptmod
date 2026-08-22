@@ -1,0 +1,108 @@
+# Phase 1: fixed pair (trip-hop <-> glossy pop), vary the LOSS FORMULATION.
+#
+# Why this pair as the testbed: it has measurable headroom in BOTH directions.
+# The teacher composed live renders at ~-2% rms (the target is reachable), the
+# baseline LoRA renders -76% (huge room to improve), silence is nearby (room to
+# get worse), and a known recipe effect exists to calibrate the instrument:
+# gain_penalty 2.0 appeared to recover +0.25 ln rms in the overnight archive.
+# (The sweep then failed to reproduce that under controlled seeds — see
+# REPORT.md/scores.json: +0.04 +- 0.08 at x0_per_row 2 and +0.06 +- 0.09 at
+# x0_per_row 8 — so the archive number is retracted as cross-instrument noise;
+# the legacy ladders were rendered from _best checkpoints, the pipeline scores
+# _last.) The dust pair, by contrast, sits at -7.5% with nothing measurable
+# between recipes (gp05 vs nopen: 0.001 +- 0.011 ln) — a ceiling, useless for
+# ranking approaches. Dust serves later as the regression guard for a winner.
+#
+# The formulations are bets on ONE mechanism: the delta's component along
+# vel_neu (pure gain) is coherent across all ~50 solve steps, so it compounds
+# multiplicatively at render while shape components partly cancel. Level
+# collapse is the default gradient direction, not an adversary.
+#
+# Every seed is pinned; a variant may override ONLY what it names. Comparisons
+# are per-seed paired against V0-nmse on the compare seeds. Holdout seeds are
+# never used for ranking — they confirm the winner or expose seed-fitting.
+
+sweep: phase1-loss-triphop
+
+pair:
+  prompts_file: conceptmod/textsliders/data/prompts-triphop-v3-single.yaml
+  cache_dir: cache/triphop-v3
+
+base:
+  rank: 8
+  alpha: 8.0
+  steps: 500
+  lr: 1.0e-4
+  duration: 4.0
+  targets: full          # the overnight comparison family is `full`; the
+                         # argparse default is attn — pin it or drift silently
+  xt_mode: anchor
+  seed: 7                # LoRA init + (t,eps) data stream + x0 anchor bank
+  cond_seeds: "7"        # AR/condition encoding
+  eval_seed: 1234        # training probe (logged only; probes do not rank)
+  skip_ar: true          # cache must already exist; the pipeline never re-encodes
+  no_calibrate: true     # velocity-delta calibration over-drives (MUSIC3.md);
+                         # ladders sweep raw multipliers instead
+  eval_holdout: true
+
+seeds:
+  compare: [7, 23, 77]
+  holdout: [11, 42]
+  null: [101, 202, 303]  # zero-only renders that feed the G6 null distribution
+
+scales: [-1.0, -0.5, -0.25, 0.0, 0.25, 0.5, 1.0]
+
+axis:
+  # Human-fixed measurement contract (frozen before any search):
+  # +1 = trip-hop = dusty/crackly = brighter in these features (the cond-interp
+  # and REF evidence both move centroid up), with hi4k along for the ride.
+  # NOT a loudness axis: level is damage, not effect.
+  intended:
+    centroid: 1
+  level_axis: false
+
+baseline: V0-nmse
+
+variants:
+  - name: V0-nmse            # current default loss — the incumbent
+    args: {}
+    role: baseline
+  - name: Vfloor-s101        # identical config, different train seed:
+    args: { seed: 101 }      # retrain-noise floor replicate 1
+    role: floor
+  - name: Vfloor-s202
+    args: { seed: 202 }      # retrain-noise floor replicate 2
+    role: floor
+  - name: L-mse              # legacy loss, re-scored honestly (its old win was
+    args: { loss: mse }      # measured on the probe cosine, which is refuted)
+  - name: L-cos              # direction and magnitude as separate terms
+    args: { loss: cos }
+  - name: L-gpen2            # gain->0 penalty: measured +0.25 ln recovery on
+    args: { gain_penalty: 2.0 }   # this pair; positive control for the instrument
+    role: control
+  - name: L-gmatch           # gain matched to the TEACHER's own gain component
+    args: { gain_penalty: 2.0, gain_mode: match }
+  - name: L-gmatch-tw        # same, weighted ~2(1-t): early-solve gain bias
+    args: { gain_penalty: 2.0, gain_mode: match, gain_tweight: true }
+  - name: L-ortho            # shape fit orthogonal to vel_neu; gain supervised
+    args: { loss: nmse_ortho, gain_penalty: 1.0, gain_mode: match }
+  - name: A-alpha4           # alpha grid candidates: first FALSIFY that alpha
+    args: { alpha: 4.0 }     # does anything Adam does not undo — see
+    role: alpha              # alpha_check in scores.json before gridding more
+  - name: A-alpha16
+    args: { alpha: 16.0 }
+    role: alpha
+  - name: X-x0x8            # controlled test of a suspected anchor-count effect
+    args: { x0_per_row: 8 } # (legacy runs used 8, sweep default 2; a cross-run
+                            # comparison suggested +0.8 ln). VERDICT from the
+                            # controlled cell: null, -0.00 +- 0.05 — the cross-
+                            # run gap was instrument drift (_best vs _last),
+                            # not the knob. Kept as the record of that check.
+  - name: X-gpen2-x0x8      # the archive E-gp2-vs-R-final "+0.25" cell rebuilt
+    args: { x0_per_row: 8, gain_penalty: 2.0 }  # under control: +0.06 +- 0.09,
+                            # sign 2/3 — the archive effect does not reproduce
+
+render:
+  duration: 4.0
+  over_scale: 1.5            # G7 over-range: no silence beyond the fit point
+  long_duration: 20.0        # confirm stage: windowed 20 s check on the winner

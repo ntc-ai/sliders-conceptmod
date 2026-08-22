@@ -1,0 +1,15 @@
+# prompts-triphop-v3-single.yaml with positive/negative SWAPPED, for training the
+# minus side of the pair as its own unidirectional pole LoRA (+1 here = glossy
+# pop). Same four caption texts, so the AR condition cache and x0 bank are
+# shared with the trip-hop file.
+plus_label: Pop
+minus_label: Trip-hop
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "Genre: pop. BPM: 110. Mid-tempo radio song, clean drums, electric guitar, bright vocal, ordinary studio mix. Neither trip-hop nor glossy EDM."
+    positive: "Genre: glossy radio pop. BPM: 128. Punchy live acoustic drums, sparkling clean guitar, bright compressed vocal, shiny major-key chorus, polished daylight mix."
+    negative: "Genre: trip-hop. BPM: 84. Dusty slow breakbeats, vinyl crackle, filtered wah bass, smoky intimate vocal, dark minor keys, spacious delay, nocturnal atmosphere."
+    neutral: "Genre: pop. BPM: 110. Mid-tempo radio song, clean drums, electric guitar, bright vocal, ordinary studio mix. Neither trip-hop nor glossy EDM."
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"
+    action: enhance
+    guidance_scale: 3

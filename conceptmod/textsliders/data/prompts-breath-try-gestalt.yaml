@@ -1,0 +1,12 @@
+# Full divergent gestalt: two different records whose main difference is air in the voice.
+plus_label: Breathy
+minus_label: Clean
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "Genre: pop. A mid-energy song with one lead vocal, keys, bass, and drums."
+    positive: "Genre: hushed indie soul. BPM: 78. A breathy close-mic vocalist in a dry bedroom, loud inhales, lip noise, air hitting the capsule, unfinished takes, whispered consonants, you can hear them breathe. Felt-beater kick, warm bass, almost no cymbal. Medium level — intimate, not quiet, not a hall."
+    negative: "Genre: daylight radio pop. BPM: 122. An airless belted pop vocal, breaths edited out, hard de-ess, radio compression, doubled and tuned, no mouth noise, a finished hit. Dry punchy kit, bright guitar. Medium level — polished, not louder, not wet."
+    neutral: "Genre: pop. A mid-energy song with one lead vocal, keys, bass, and drums."
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"
+    action: enhance
+    guidance_scale: 4

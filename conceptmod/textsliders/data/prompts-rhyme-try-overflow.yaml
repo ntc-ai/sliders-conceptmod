@@ -1,0 +1,12 @@
+# Hinge is whether phrases land. Plus cadences on rhyme; minus never lands.
+plus_label: Rhyme
+minus_label: Prose
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "Genre: pop. BPM: 100. Medium energy. One singer. Ordinary phrasing."
+    positive: "Genre: couplet pop. BPM: 104. Every sung phrase cadences on an end-rhyme, AABB, the last word of the line is the punch, the band hits with the rhyme. Sung, not rapped."
+    negative: "Genre: through-sung prose. BPM: 104. Phrases overflow the bar, no cadence on a word, no end-rhyme, no punch, the line never closes. Same energy, same booth. Sung, not rapped."
+    neutral: "Genre: pop. BPM: 100. Medium energy. One singer. Ordinary phrasing."
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"
+    action: enhance
+    guidance_scale: 4

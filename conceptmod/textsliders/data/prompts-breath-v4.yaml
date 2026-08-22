@@ -1,0 +1,34 @@
+# Breath axis v4 — plus = audible air / inhales, minus = edited airless vocal.
+#
+# v4 moves the poles onto the MiniMax Music 3 Structured Caption (Global
+# Metadata / Vocal Details / Arrangement) — the studio rewriter only ever emits
+# structured captions at runtime, so v3's flat poles were off-distribution for
+# the caption the LM actually sees. Poles stay whole-record gestalts
+# (arrangement swap), not minimal pairs, as v3 measurement required. Energy and
+# room stay named medium / dry so this does not become quiet<->loud or
+# dry<->wet. Gender attributes pin the vocalist. Delivery stays sung.
+#
+# Trained by train_lm_slider_music3.py with the audio-end regularizer
+# (--endreg_weight 1.0 default). No artist names.
+plus_label: Breathy
+minus_label: Clean
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "Global Metadata:\nGenre: pop. BPM 100. Medium energy, even mood, ordinary listening. Plain dry studio mix.\nVocal Details:\nOne lead vocal, ordinary studio timbre, some natural breath, not featured, not edited out. Sung, not rapped.\nArrangement:\nVerse and chorus with keys and light drums."
+    positive: "Global Metadata:\nGenre: intimate bedroom pop. BPM 76. Medium level, hushed and confiding, not a lullaby. Dry close bedroom mix.\nVocal Details:\nOne dry close-mic breathy vocal, every inhale audible, mouth air on the capsule, whisper-sung edges — you hear the singer breathe. Sung, not rapped.\nArrangement:\nIntro: an audible inhale, then felt kick and soft keys. Verse: felt kick, subby bass and almost no cymbal under the breathing voice. Chorus: the same dry room, the inhales still loud between lines."
+    negative: "Global Metadata:\nGenre: daylight radio pop. BPM 120. Medium level, bright and finished, not louder. Punchy dry radio mix.\nVocal Details:\nOne dry belted pop vocal, no breaths left in, de-essed, compressed, stacked doubles, airless and finished. Sung, not rapped.\nArrangement:\nIntro: a bright guitar riff and punchy dry kit. Verse: tight drums, clean bass and bright guitar under the sealed vocal. Chorus: stacked doubles and a radio hook, every breath edited out."
+    neutral: "Global Metadata:\nGenre: pop. BPM 100. Medium energy, even mood, ordinary listening. Plain dry studio mix.\nVocal Details:\nOne lead vocal, ordinary studio timbre, some natural breath, not featured, not edited out. Sung, not rapped.\nArrangement:\nVerse and chorus with keys and light drums."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"
+  - target: "Global Metadata:\nGenre: pop. BPM 100. Medium energy, even mood, ordinary listening. Plain dry studio mix.\nVocal Details:\nOne lead vocal, ordinary studio timbre, some natural breath, not featured, not edited out. Sung, not rapped.\nArrangement:\nVerse and chorus with keys and light drums."
+    positive: "Global Metadata:\nGenre: intimate indie soul. BPM 74. Medium level, close and unguarded, not a lullaby. Dry wooden-cabin mix.\nVocal Details:\nOne dry close-mic breathy falsetto, every inhale audible, mouth air, cracked unfinished phrases — the singer breathing into the capsule. Sung, not rapped.\nArrangement:\nIntro: a breath, then a felt kick and warm bass. Verse: felt kick, warm round bass and almost no cymbal under the airy falsetto. Chorus: soft keys join, the breaths still carrying between phrases."
+    negative: "Global Metadata:\nGenre: daylight funk pop. BPM 118. Medium level, crisp and finished, not louder. Punchy dry radio mix.\nVocal Details:\nOne dry belted pop vocal, no breaths left in, de-essed, compressed, stacked doubles, airless and finished. Sung, not rapped.\nArrangement:\nIntro: a clipped funk guitar riff and dry kit. Verse: punchy drums, snapping bass and bright rhythm guitar under the sealed vocal. Chorus: stacked doubles hit a radio chorus, no human air anywhere."
+    neutral: "Global Metadata:\nGenre: pop. BPM 100. Medium energy, even mood, ordinary listening. Plain dry studio mix.\nVocal Details:\nOne lead vocal, ordinary studio timbre, some natural breath, not featured, not edited out. Sung, not rapped.\nArrangement:\nVerse and chorus with keys and light drums."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nCity lights are burning through the rain\n[chorus]\nI keep moving on, I keep moving on"
+  - target: "Global Metadata:\nGenre: pop. BPM 104. Mid energy, even mood, ordinary listening. Plain dry studio mix.\nVocal Details:\nOne lead vocal, ordinary studio timbre and phrasing. Sung, not rapped.\nArrangement:\nVerse and chorus with keys, bass and drums."
+    positive: "Global Metadata:\nGenre: hushed bedroom soul. BPM 70. Intimate and airy, medium level, not a lullaby, not quiet-as-silence. Dry small-room mix.\nVocal Details:\nOne close-mic breathy voice, loud inhales, mouth noise, air on the capsule, unfinished whispered edges — a singer breathing into a large-diaphragm mic. Sung, not rapped.\nArrangement:\nIntro: an inhale and one warm bass note. Verse: sparse felt-beater kick, warm bass and almost no cymbals under the breathing voice. Chorus: soft electric piano rises, the air and mouth noise staying up front."
+    negative: "Global Metadata:\nGenre: slammed radio pop. BPM 128. Polished and sealed, medium level, not heavier, not a hall. Compressed dry radio mix.\nVocal Details:\nOne airless belted pop vocal, every breath cut, hard de-ess, stacked doubles, tuned, no mouth noise, no human air. Sung, not rapped.\nArrangement:\nIntro: a bright synth hook and punchy dry kit. Verse: tight drums, clean bass and bright guitar under the sealed vocal. Chorus: compressed stacked hooks, doubles on every word, zero breath anywhere."
+    neutral: "Global Metadata:\nGenre: pop. BPM 104. Mid energy, even mood, ordinary listening. Plain dry studio mix.\nVocal Details:\nOne lead vocal, ordinary studio timbre and phrasing. Sung, not rapped.\nArrangement:\nVerse and chorus with keys, bass and drums."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nEvery step I take says your name\n[chorus]\nHold on, hold on to the light"

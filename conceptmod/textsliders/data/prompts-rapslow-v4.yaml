@@ -1,0 +1,36 @@
+# Rap <-> slow axis v4 — plus = fast rhythmic spoken rap, minus = slow sung ballad.
+#
+# v4 moves the poles onto the MiniMax Music 3 Structured Caption (Global
+# Metadata / Vocal Details / Arrangement) — the studio rewriter only ever emits
+# structured captions at runtime, so v3's flat "Genre: X. BPM: Y." poles were
+# off-distribution for the caption the LM actually sees. Row 1 is tempo-matched
+# (isolates the delivery contrast); rows 2-3 let tempo, genre and
+# instrumentation ride with the axis per the MUSIC3.md divergent-poles rule.
+# Gender attributes pin the vocalist so the axis does not drift male on +.
+# Delivery IS the axis, so "Spoken, not sung" / "Sung, not rapped" moves with
+# the poles instead of being pinned.
+#
+# Trained by train_lm_slider_music3.py with the audio-end regularizer
+# (--endreg_weight 1.0 default). No artist names.
+plus_label: Rap
+minus_label: Slow
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "Global Metadata:\nGenre: pop. BPM 100. Medium energy, even mood, ordinary listening. Plain studio mix.\nVocal Details:\nOne vocalist, mid-tempo delivery that is partly sung, partly spoken. No backing vocals.\nArrangement:\nVerse and chorus with drums, bass and keys."
+    positive: "Global Metadata:\nGenre: hip-hop rap. BPM 100. Confident and driving, head-nod swagger. Punchy dry mix, drums up front.\nVocal Details:\nOne vocalist rapping fast rhythmic spoken bars with a confident syncopated flow, dense wordy verses, quick internal rhymes. Spoken, not sung.\nArrangement:\nIntro: a two-bar drum break. Verse: punchy drums, tight hi-hats and deep 808 bass under nonstop bars. Chorus: the same beat with a chanted spoken hook."
+    negative: "Global Metadata:\nGenre: slow ballad. BPM 100. Tender and aching, a lighter held up in the dark. Soft warm mix, plenty of air.\nVocal Details:\nOne vocalist singing long sustained melodic notes with slow emotional delivery, phrases held across the bar. Sung, not rapped.\nArrangement:\nIntro: soft piano alone. Verse: gentle piano, warm strings and sparse brushed drums under drawn-out sung lines. Chorus: strings swell behind one long held note."
+    neutral: "Global Metadata:\nGenre: pop. BPM 100. Medium energy, even mood, ordinary listening. Plain studio mix.\nVocal Details:\nOne vocalist, mid-tempo delivery that is partly sung, partly spoken. No backing vocals.\nArrangement:\nVerse and chorus with drums, bass and keys."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nCity lights are burning through the rain\nEvery step I take says your name\n[chorus]\nI keep moving on, moving on"
+  - target: "Global Metadata:\nGenre: pop. BPM 104. Medium energy, plain mood, an ordinary session. Plain studio mix.\nVocal Details:\nOne singer with plain delivery, neither rapped nor drawn out. No backing vocals.\nArrangement:\nVerse and chorus with a band: guitar, bass, keys and drums."
+    positive: "Global Metadata:\nGenre: boom-bap hip-hop. BPM 140. Hungry uptempo urban energy, streetlight momentum. Hard dry mix, cracking snare.\nVocal Details:\nA rapper spitting quick rhythmic bars, dense wordy verses, breathless spoken flow stacked with syllables. Spoken, not sung.\nArrangement:\nIntro: a chopped dusty sample loop. Verse: hard boom-bap drums, round bass and vinyl-textured stabs under rapid-fire bars. Chorus: scratched vocal cuts answering the spoken hook."
+    negative: "Global Metadata:\nGenre: torch ballad. BPM 60. Very slow and wistful, closing time in an empty lounge. Soft distant mix, long decay.\nVocal Details:\nA singer performing a slow melodic ballad, drawn-out sung phrases with rubato, every word stretched and savored. Sung, not rapped. No rapping.\nArrangement:\nIntro: warm piano chords with brushed cymbal swells. Verse: soft piano and warm strings under long unhurried sung lines. Chorus: upright bass and strings rise slowly, no drums driving it."
+    neutral: "Global Metadata:\nGenre: pop. BPM 104. Medium energy, plain mood, an ordinary session. Plain studio mix.\nVocal Details:\nOne singer with plain delivery, neither rapped nor drawn out. No backing vocals.\nArrangement:\nVerse and chorus with a band: guitar, bass, keys and drums."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nI keep walking through the night\nlooking for a little light\n[chorus]\nI will not go quietly"
+  - target: "Global Metadata:\nGenre: r&b pop. BPM 96. Medium energy, smooth and even, late-drive listening. Plain modern mix.\nVocal Details:\nOne vocalist, relaxed delivery halfway between talking and singing. No backing vocals.\nArrangement:\nVerse and chorus with soft drums, electric piano and bass."
+    positive: "Global Metadata:\nGenre: trap rap. BPM 146. Icy and relentless, all momentum. Sub-heavy club mix, hats razor sharp.\nVocal Details:\nOne vocalist rapping tight triplet flows, rapid spoken cadences, ad-libs punched between bars. Spoken, not sung.\nArrangement:\nIntro: a dark synth loop and rolling hi-hats. Verse: booming 808 sub, snapping snare and skittering hats under machine-gun bars. Chorus: a shouted spoken tag over the same beat."
+    negative: "Global Metadata:\nGenre: soul ballad. BPM 62. Slow and devotional, a hushed room hanging on every note. Warm spacious mix.\nVocal Details:\nOne vocalist singing a slow soul ballad, long melismatic sung phrases, every line held and bent with feeling. Sung, not rapped. No rapping.\nArrangement:\nIntro: church organ swelling in. Verse: organ, soft bass and barely-there drums under long sung phrases. Chorus: gospel-tinged chords bloom beneath one soaring held note."
+    neutral: "Global Metadata:\nGenre: r&b pop. BPM 96. Medium energy, smooth and even, late-drive listening. Plain modern mix.\nVocal Details:\nOne vocalist, relaxed delivery halfway between talking and singing. No backing vocals.\nArrangement:\nVerse and chorus with soft drums, electric piano and bass."
+    attributes: ["A man is singing.", "A woman is singing."]
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"

@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.cache/
+cache/
+*.log
+eval/listen/*.log
+eval/energy/
+models/energy-encoder/
+models/energy-encoder-dummy/
+models/energy-slider/
+models/gender-slider/
+*_step*.safetensors
+*_train.jsonl
+STUDIO_STOPPED.txt

@@ -1,0 +1,12 @@
+# MiniMax Structured Caption shape — Vocal Details carry the axis.
+plus_label: Breathy
+minus_label: Clean
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "Global Metadata:\nGenre: pop. Medium energy. Dry booth. One lead vocal, piano, light drums.\nVocal Details:\nOne lead singer, ordinary studio timbre, sung not rapped.\nArrangement:\nVerse and chorus with piano and light drums."
+    positive: "Global Metadata:\nGenre: intimate pop. Medium energy. Dry booth. One lead vocal, piano, light drums.\nVocal Details:\nBreathy close-mic lead. Audible inhales between every phrase. Mouth noise. Air on the capsule. Whispered edges on consonants. Same loudness as a normal pop vocal, not a whisper. Sung, not rapped. No extra reverb.\nArrangement:\nVerse and chorus with piano and light drums."
+    negative: "Global Metadata:\nGenre: radio pop. Medium energy. Dry booth. One lead vocal, piano, light drums.\nVocal Details:\nClean edited lead. No breaths. No inhales. No mouth noise. De-essed, compressed, airless, finished. Same loudness as a normal pop vocal. Sung, not rapped. No extra reverb.\nArrangement:\nVerse and chorus with piano and light drums."
+    neutral: "Global Metadata:\nGenre: pop. Medium energy. Dry booth. One lead vocal, piano, light drums.\nVocal Details:\nOne lead singer, ordinary studio timbre, sung not rapped.\nArrangement:\nVerse and chorus with piano and light drums."
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"
+    action: enhance
+    guidance_scale: 4

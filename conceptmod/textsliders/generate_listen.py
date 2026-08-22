@@ -25,12 +25,32 @@ os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
 
 def _early_visible_device(argv: list[str]) -> str:
+    """Which physical GPU to expose, honouring a caller-set CUDA_VISIBLE_DEVICES.
+
+    --device used to be written straight into CUDA_VISIBLE_DEVICES, so
+    `CUDA_VISIBLE_DEVICES=1 ... --device 0` silently ran on physical GPU 0 --
+    the exact opposite of what the caller asked for, and a very quiet failure
+    when that GPU is busy. --device indexes the visible list (as the load error
+    already claims it does); it does not override it.
+    """
+    requested = None
     for i, arg in enumerate(argv):
         if arg == "--device" and i + 1 < len(argv):
-            return argv[i + 1]
+            requested = argv[i + 1]
+            break
         if arg.startswith("--device="):
-            return arg.split("=", 1)[1]
-    return os.environ.get("CUDA_VISIBLE_DEVICES", "0").split(",")[0]
+            requested = arg.split("=", 1)[1]
+            break
+    visible = os.environ.get("CUDA_VISIBLE_DEVICES")
+    if visible is None or not visible.strip():
+        return requested if requested is not None else "0"
+    devices = [d for d in visible.split(",") if d.strip()]
+    if requested is None:
+        return devices[0]
+    try:
+        return devices[int(requested)]
+    except (ValueError, IndexError):
+        return requested
 
 
 os.environ["CUDA_VISIBLE_DEVICES"] = _early_visible_device(sys.argv[1:])
@@ -80,7 +100,16 @@ def _load_prompt_row(path: Path, row: int = 0) -> dict:
 
 
 def _sidecar(weights: Path) -> dict:
-    for candidate in (weights.with_suffix(".json"), Path(str(weights) + ".json")):
+    # Only the final save writes a sidecar, so `_best` / `_step123` checkpoints
+    # fall back to the run's `_last.json`. Without this the rank/alpha/
+    # target_replace defaults silently win and the LoRA fails to load.
+    import re as _re
+
+    candidates = [weights.with_suffix(".json"), Path(str(weights) + ".json")]
+    base = _re.sub(r"_(best|step\d+)$", "_last", weights.stem)
+    if base != weights.stem:
+        candidates.append(weights.parent / f"{base}.json")
+    for candidate in candidates:
         if candidate.exists():
             return json.loads(candidate.read_text(encoding="utf-8"))
     return {}
@@ -106,29 +135,42 @@ def _inspect_wav(path: Path) -> tuple[float, float]:
     return duration, rms
 
 
-def _accept_wav(path: Path, requested: float) -> tuple[bool, str, float, float]:
+def _accept_wav(
+    path: Path, requested: float, accept_silent: bool = False, accept_short: bool = False
+) -> tuple[bool, str, float, float]:
     if not path.exists() or path.stat().st_size < 1024:
         return False, "missing or tiny", 0.0, 0.0
     try:
         duration, rms = _inspect_wav(path)
     except Exception as exc:  # noqa: BLE001 — surface any soundfile failure
         return False, f"unreadable ({exc})", 0.0, 0.0
-    if duration < requested * DURATION_TOLERANCE:
+    if duration < requested * DURATION_TOLERANCE and not accept_short:
         return False, f"short {duration:.2f}s < {requested * DURATION_TOLERANCE:.2f}s", duration, rms
-    if rms < MIN_RMS:
+    if rms < MIN_RMS and not accept_silent:
         return False, f"silent rms={rms:.6f}", duration, rms
     return True, "ok", duration, rms
 
 
-def _write_wav(path: Path, audio, sample_rate: int, requested: float) -> tuple[float, float]:
+def _write_wav(
+    path: Path, audio, sample_rate: int, requested: float,
+    accept_silent: bool = False, accept_short: bool = False,
+) -> tuple[float, float]:
     path.parent.mkdir(parents=True, exist_ok=True)
     array = _to_wav_array(audio)
     tmp = path.with_name(path.name + ".tmp.wav")
     sf.write(str(tmp), array, sample_rate, format="WAV")
-    ok, reason, duration, rms = _accept_wav(tmp, requested)
+    ok, reason, duration, rms = _accept_wav(tmp, requested, accept_silent=accept_silent, accept_short=accept_short)
     if not ok:
         tmp.unlink(missing_ok=True)
         raise RuntimeError(f"rejected {path.name}: {reason}")
+    if rms < MIN_RMS:
+        # --accept_silent: a silent render is EVIDENCE for the scorer (the
+        # silence gate must see it), not an error and never a seed retry.
+        print(f"KEEPING SILENT RENDER {path.name} rms={rms:.6f}", flush=True)
+    if duration < requested * DURATION_TOLERANCE:
+        # --accept_short: an early <|audio_end|> is the model ending the song
+        # naturally before the cap — sampled variation, not a broken render.
+        print(f"KEEPING SHORT RENDER {path.name} duration={duration:.2f}s", flush=True)
     tmp.replace(path)
     print(f"wrote {path} duration={duration:.2f}s rms={rms:.4f}", flush=True)
     return duration, rms
@@ -287,7 +329,9 @@ def generate(args: argparse.Namespace) -> list[Path]:
     stats: dict[str, tuple[float, float]] = {}
     pending: list[tuple[Path, str, float | None]] = []
     for dest, prompt, scale in jobs:
-        ok, reason, duration, rms = _accept_wav(dest, requested)
+        ok, reason, duration, rms = _accept_wav(
+            dest, requested, accept_silent=bool(getattr(args, "accept_silent", False)),
+            accept_short=bool(getattr(args, "accept_short", False)))
         if ok and not args.force:
             print(f"skip existing {dest.name} duration={duration:.2f}s rms={rms:.4f}", flush=True)
             stats[dest.name] = (duration, rms)
@@ -364,7 +408,10 @@ def generate(args: argparse.Namespace) -> list[Path]:
                         output="audios",
                     )[0]
                 try:
-                    duration, rms = _write_wav(dest, audio, sample_rate, requested)
+                    duration, rms = _write_wav(
+                        dest, audio, sample_rate, requested,
+                        accept_silent=bool(getattr(args, "accept_silent", False)),
+                        accept_short=bool(getattr(args, "accept_short", False)))
                     break
                 except RuntimeError as exc:
                     if attempt >= retries:
@@ -403,6 +450,22 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--scales", default="-2,0,2")
     p.add_argument("--row", type=int, default=0, help="which prompt row to render (default 0)")
     p.add_argument("--retry_seeds", type=int, default=2, help="seed bumps when a clip renders short/silent")
+    p.add_argument(
+        "--accept_silent",
+        action="store_true",
+        help="keep a below-MIN_RMS render instead of rejecting/retrying it. The "
+        "pipeline needs collapse evidence on disk (with --retry_seeds 0, so a "
+        "seed bump can never silently unpair a comparison); short/unreadable "
+        "clips still fail",
+    )
+    p.add_argument(
+        "--accept_short",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="keep a render that ends before the duration cap (the model sampled "
+        "<|audio_end|> early — a natural song ending, not a broken render); "
+        "first-draw seed is preserved. Disable with --no-accept_short",
+    )
     p.add_argument("--duration", type=float, default=8.0)
     p.add_argument("--seed", type=int, default=7)
     p.add_argument("--rank", type=int, default=None)

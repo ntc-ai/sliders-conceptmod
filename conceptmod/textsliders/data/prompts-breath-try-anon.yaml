@@ -1,0 +1,12 @@
+# Nameless copy of the winning arrangement-swap cell.
+plus_label: Breathy
+minus_label: Clean
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "Genre: pop. BPM: 100. Medium energy. One lead vocal, keys and light drums. Ordinary studio vocal, some natural breath, not featured, not edited out."
+    positive: "Genre: intimate bedroom pop. BPM: 76. A dry close-mic breathy vocal, every inhale audible, mouth air, whisper-sung edges, you hear the singer breathe into the capsule. Felt kick, subby bass, almost no cymbal, a dry bedroom. Medium level, not a lullaby. Sung, not rapped."
+    negative: "Genre: daylight radio pop. BPM: 120. A dry belted pop vocal, no breaths left in, de-essed, compressed, stacked doubles, airless and finished. Punchy dry kit, bright guitar, radio chorus. Medium level, not louder. Sung, not rapped."
+    neutral: "Genre: pop. BPM: 100. Medium energy. One lead vocal, keys and light drums. Ordinary studio vocal, some natural breath, not featured, not edited out."
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"
+    action: enhance
+    guidance_scale: 4

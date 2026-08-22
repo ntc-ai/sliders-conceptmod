@@ -1,0 +1,13 @@
+# Energy-shaped extremity: two opposite records, breath is the named hinge.
+# Risk: collapses into quiet↔loud. Probe will show if the LM still sees air.
+plus_label: Breathy
+minus_label: Clean
+recommended_range: [-2.0, 2.0]
+rows:
+  - target: "Genre: pop. BPM: 104. Mid energy, one lead vocal, keys, bass, drums. Ordinary studio vocal."
+    positive: "Genre: hushed bedroom soul. BPM: 70. Close-mic breathy singing, loud inhales, mouth noise, air on the capsule, unfinished whispered edges, a singer breathing into an SM7. Sparse felt-beater kick, warm bass, almost no cymbals, dry small room. Intimate and airy, not a lullaby, not quiet-as-silence."
+    negative: "Genre: slammed radio pop. BPM: 128. Airless belted pop vocal, every breath cut, hard de-ess, stacked doubles, tuned, no mouth noise, no human air. Punchy dry kit, bright guitar, compressed chorus. Polished and sealed, not heavier, not a hall."
+    neutral: "Genre: pop. BPM: 104. Mid energy, one lead vocal, keys, bass, drums. Ordinary studio vocal."
+    lyrics: "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away"
+    action: enhance
+    guidance_scale: 4

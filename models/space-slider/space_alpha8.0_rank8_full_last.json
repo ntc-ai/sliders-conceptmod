@@ -1,0 +1,28 @@
+{
+  "name": "space",
+  "rank": 8,
+  "alpha": 8.0,
+  "steps": 500,
+  "duration": 4.0,
+  "dummy": false,
+  "target_replace": [
+    "MiniMaxMusic3Attention"
+  ],
+  "delimiter": "-",
+  "train_method": "full",
+  "loss": 0.09409298747777939,
+  "prompts": [
+    {
+      "target": "Genre: pop. A dry studio mix, normal room, close vocal, ordinary reverb.",
+      "positive": "Huge cathedral reverb, vast hall, long wet tails, distant in a giant stone space, washed in echo.",
+      "negative": "Bone dry close-mic, no reverb, no delay, intimate booth, dead room, dry as a demo.",
+      "neutral": "Genre: pop. A dry studio mix, normal room, close vocal, ordinary reverb.",
+      "lyrics": "[verse]\nI can feel it in the air tonight\n[chorus]\nLouder now or fade away",
+      "action": "enhance",
+      "guidance_scale": 3.0,
+      "batch_size": 1,
+      "unconditional": ""
+    }
+  ],
+  "weights": "/ml2/music/sliders-conceptmod/models/space-slider/space_alpha8.0_rank8_full_last.safetensors"
+}
