@@ -15,6 +15,14 @@ Start with the **20s** folders. Those are the end-to-end long renders. `energy-3
 
 `eval/listen/gender/` is the **failed** transformer-on-gender attempt. Use `gender-lm/` / `gender-lm-20s/` instead.
 
+**Dust (dusty ↔ glossy), transformer only:** `models/dust-tf-v1/` is the first
+TF slider that passed all six SCORING.md render gates (sidecar evidence;
+weights stay out of git). No in-repo listen folder yet. Do not score an LM
+half of this axis — or any LM half — with `slider_pipeline`; those gates
+measure song identity the LM is *supposed* to break. Pipeline comparison
+output lives under `eval/listen/pipeline/` (see
+[slider_pipeline/README.md](../../slider_pipeline/README.md)).
+
 ## v3 sets (retrained with the fixed recipe)
 
 The v3 trainers fix the off-manifold latents (x_t is anchored to generated
@@ -77,13 +85,20 @@ If a slider works, clip 3 leans toward clip 4 and clip 1 leans toward clip 5.
 
 ## Weights
 
+v2 family (attention-only despite `_full_` in the filename — see MUSIC3.md):
+
 - `models/energy-slider-v2/energy_alpha8.0_rank8_full_last.safetensors`
 - `models/distortion-slider/distortion_alpha8.0_rank8_full_last.safetensors`
 - `models/tempo-slider/tempo_alpha8.0_rank8_full_last.safetensors`
 - `models/space-slider/space_alpha8.0_rank8_full_last.safetensors`
 - `models/gender-lm-slider/gender-lm_last.safetensors` (`--kind lm`)
 
-Transformer sliders: rank-8 LoRA on `MiniMaxMusic3Attention`, 500 steps. Gender: rank-8 LoRA on `Qwen3Attention`, 800 steps. All trained and rendered on GPU 0.
+`models/dust-tf-v1/dust-tf-v1_last.json` is the promoted full-target sidecar
+(222 modules, `--loss nmse`, lr `2e-3`). The `.safetensors` is not in git.
+
+Transformer sliders: rank-8 LoRA, 500 steps. v2 hosts `MiniMaxMusic3Attention`
+only; dust-tf-v1 hosts attention + block FF + proj. Gender: rank-8 LoRA on
+`Qwen3Attention`, 800 steps. All trained and rendered on GPU 0.
 
 Regenerate or verify:
 

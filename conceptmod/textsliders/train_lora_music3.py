@@ -1675,10 +1675,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--eval_holdout",
         action=argparse.BooleanOptionalAction,
         default=True,
-        help="score the probe on a clean latent the run never trains on. Off by "
-        "default so numbers stay comparable with runs scored on the shared bank; "
-        "required to compare runs that differ in --x0_per_row, since the shared "
-        "bank favours runs that concentrate on those anchors",
+        help="score the probe on a clean latent the run never trains on (default "
+        "on; --no-eval_holdout disables). Required to compare runs that differ "
+        "in --x0_per_row, since the shared bank favours runs that concentrate "
+        "on those anchors. Disable only to match older logs scored on the "
+        "shared bank",
     )
     parser.add_argument("--plus_label", type=str, default=None, help="override sidecar plus_label")
     parser.add_argument("--minus_label", type=str, default=None, help="override sidecar minus_label")

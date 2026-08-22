@@ -25,6 +25,7 @@ PY=/home/mikkel/anaconda3/envs/minimax-music3/bin/python
 | **distortion** (acoustic ↔ metal) | transformer | `eval/listen/distortion/` | `eval/listen/distortion-20s/` | cos ~0.43 |
 | **tempo** (slow ↔ fast) | transformer | — | `eval/listen/tempo-20s/` | cos ~0.47 |
 | **space** (dry ↔ wet) | transformer | — | `eval/listen/space-20s/` | cos ~0.42 |
+| **dust** (dusty ↔ glossy) | transformer (`--targets full`, 222 modules) | — | — (sidecar only in git) | probe cos 0.74; **first TF slider to pass all six render gates** |
 | **gender** (male ↔ female) | **language model** `Qwen3Attention` | `eval/listen/gender-lm/` | `eval/listen/gender-lm-20s/` | residual ~5%, cos ~1.0 |
 
 v3 adds language-model halves for energy, tempo and distortion, so those axes
@@ -34,7 +35,46 @@ to?" below.
 
 A transformer LoRA **cannot** change singer gender. That is decided in the AR language model. `eval/listen/gender/` is the failed transformer attempt.
 
-Working recipe: rank 8, alpha 8, 500 steps, lr `1e-4`, train duration 4s (AR cache). Generation duration is independent of train duration.
+**`dust-tf-v1`** (promoted 2026-08-21 from overnight `F-dust-nopen`) is the
+only transformer checkpoint in the campaign that cleared the SCORING.md
+ladder gates (score 0.203, 10 seeds) and that a listener accepted. Sidecar:
+`models/dust-tf-v1/dust-tf-v1_last.json`. Weights stay out of git (path in
+the sidecar). Untested above `|multiplier| > 1.0`. Dust ships TF-only — the
+LM-half campaign on the same pair was vetoed by those gates, and so was the
+control (`energy-lm-v4`); see "Dust LM campaign" below.
+
+## Current transformer trainer defaults (August 2026)
+
+`train_lora_music3.py` run with no extra flags now uses the **dust-tf-v1
+recipe**, not the v2/v3 shipped one. Four defaults changed on 2026-08-21,
+each against a measured alternative:
+
+| flag | old default | **now** | why |
+|---|---|---|---|
+| `--targets` | `attn` (144) | **`full` (222)** | +0.076 held-out cos; wraps proj_in / FF / convs as well as attention |
+| `--x0_per_row` | 2 | **8** | measured knee: 2→8 is +0.040 held-out cos; 8→16 is within noise |
+| `--lr` | config / `1e-4` | **`2e-3`** | matched to default rank 8; the 8–128 rank ladder is flat only when lr tracks rank |
+| `--eval_holdout` | off | **on** (`--no-eval_holdout` to disable) | scores a clean latent the run never trains on |
+
+Already load-bearing and unchanged: `--loss nmse`, `--grad_clip norm`,
+rank 8 / alpha 8 / 500 steps / `--xt_mode anchor` / `--bidirectional`,
+`--target_mode axis`, and every auxiliary term off (`--gain_penalty`,
+`--uncond_weight`, `--traj_frac` are measured inert). Train duration 4 s
+(AR cache); generation duration is independent.
+
+Pin `--seed` (argparse default is still 0). `cond_seeds` falls back to
+`--seed`. The dust sidecar records `cond_seeds: [7]`.
+
+**Reproduce a v2/v3/v4 shipped TF run** (energy / distortion / tempo / space
+/ triphop-tf-v4): pass `--loss mse --grad_clip value --lr 1e-4`. Those
+checkpoints' `_full_` filenames are **attention only** — also pass
+`--targets attn` if you want that module set. The helper
+`scripts/run_gpu0_sliders.sh` still hardcodes `--lr 1e-4` for that family.
+
+**New TF slider:** omit those flags and let the defaults ride; pin seeds and
+the prompt file. Compare variants with the pipeline
+([slider_pipeline/README.md](slider_pipeline/README.md)), not a hand-launched
+grid.
 
 ## v3 recipe (August 2026)
 
@@ -395,7 +435,10 @@ positive cos for a working slider — the old per-step metric reported those neg
 - `calibrate_scale.py` no longer KeyErrors on `x0_*.pt` anchors sharing a cache dir
   (the scratch-dir workaround noted above is no longer needed).
 
-To reproduce the v3/v4 recipe exactly, pass `--loss mse --grad_clip value`.
+To reproduce the v3/v4 recipe exactly, pass `--loss mse --grad_clip value
+--lr 1e-4` (and `--targets attn` for the attention-only shipped files).
+Bare trainer defaults are now the dust recipe — see “Current transformer
+trainer defaults” above.
 
 ### Loss A/B, measured (triphop single row, 250 steps, identical data stream)
 
@@ -706,8 +749,11 @@ reject/retry behavior is `--no-accept_short`).
 ## Train
 
 **For recipe/loss comparison sweeps, do not hand-launch trainings — use the
-pipeline**, which pins every seed, refuses config drift, renders paired
-ladders, applies the SCORING.md gates, and writes a ranked evidence report:
+pipeline.** Stages, spec rules, GPU pinning, and pitfalls:
+[slider_pipeline/README.md](slider_pipeline/README.md). It pins every seed,
+refuses config drift, scores `_last` (not `_best`), applies the SCORING.md
+gates, and writes `REPORT.md`. **Transformer sliders only** — do not gate LM
+halves with it.
 
 ```bash
 $PY scripts/slider_pipeline.py selftest        # instrument controls (run first)
@@ -715,25 +761,42 @@ $PY scripts/slider_pipeline.py train  slider_pipeline/specs/phase1-loss-triphop.
 $PY scripts/slider_pipeline.py render slider_pipeline/specs/phase1-loss-triphop.yaml --gpu 0
 $PY scripts/slider_pipeline.py score  slider_pipeline/specs/phase1-loss-triphop.yaml
 $PY scripts/slider_pipeline.py report slider_pipeline/specs/phase1-loss-triphop.yaml
+$PY scripts/slider_pipeline.py confirm slider_pipeline/specs/phase1-loss-triphop.yaml --winner NAME --gpu 0
 # new caption pair? certify its axis BEFORE training (G0):
 $PY scripts/slider_pipeline.py onboard --prompts_file ... --cache_dir ... \
   --out_root eval/listen/pipeline/onboard-<pair> --intended centroid:+1
 ```
 
-One-off trainings (a shipped slider, an LM half) stay manual:
+`--gpu N` sets `CUDA_VISIBLE_DEVICES=N` and passes `--device 0` to child
+processes. The pipeline interpreter path is hardcoded to the
+`minimax-music3` env in `slider_pipeline/stages.py`.
 
-Transformer slider (energy / distortion / tempo / space):
+One-off trainings (a shipped slider, an LM half) stay manual.
+
+New transformer slider — defaults *are* the dust recipe; pin seed + paths:
+
+```bash
+$PY conceptmod/textsliders/train_lora_music3.py \
+  --name dust-tf-v1 --seed 7 --device 0 \
+  --prompts_file conceptmod/textsliders/data/prompts-cand-dust-v1.yaml \
+  --cache_dir /ml2/music/sliders-conceptmod/cache/dust-v1 \
+  --save_dir /ml2/music/sliders-conceptmod/models/dust-tf-v1
+```
+
+Reproduce a v2 energy-class TF slider (old lr / loss / clip):
 
 ```bash
 $PY conceptmod/textsliders/train_lora_music3.py \
   --name energy --rank 8 --alpha 8 --steps 500 --lr 1e-4 \
+  --loss mse --grad_clip value --targets attn \
   --duration 4 --seed 7 --device 0 \
   --prompts_file conceptmod/textsliders/data/prompts-energy.yaml \
   --cache_dir /ml2/music/sliders-conceptmod/cache/energy-v2 \
   --save_dir /ml2/music/sliders-conceptmod/models/energy-slider-v2
 ```
 
-Language-model slider (gender):
+Language-model slider (gender). `--endreg_weight` defaults to 1.0;
+`--symmetric` defaults on. Stop the studio first (bf16 LM is ~16 GB):
 
 ```bash
 $PY conceptmod/textsliders/train_lm_slider_music3.py \
@@ -743,7 +806,9 @@ $PY conceptmod/textsliders/train_lm_slider_music3.py \
   --rank 8 --alpha 8 --lr 5e-4 --steps 800 --device 0
 ```
 
-Or run the sequential helper (skips existing last.safetensors and valid wavs):
+Or run the sequential helper (skips existing last.safetensors and valid wavs).
+It still trains the v2 family at `--lr 1e-4` and only covers energy /
+distortion / tempo / space / gender-lm — not dust or the v4 LM halves:
 
 ```bash
 ./scripts/run_gpu0_sliders.sh all          # train missing + 20s demos + verify
@@ -751,6 +816,17 @@ Or run the sequential helper (skips existing last.safetensors and valid wavs):
 ./scripts/run_gpu0_sliders.sh verify
 FORCE=1 ./scripts/run_gpu0_sliders.sh demo-20   # regenerate wavs
 ```
+
+### GPU `--device` is not the same in every script
+
+- `generate_listen.py`: `--device` **indexes** `CUDA_VISIBLE_DEVICES`.
+  `CUDA_VISIBLE_DEVICES=1 … --device 0` uses physical GPU 1. It used to
+  overwrite the env and silently run on GPU 0.
+- `train_lora_music3.py`: `setdefault(CUDA_VISIBLE_DEVICES, "0")` then
+  `cuda:{--device}`. Prefer `CUDA_VISIBLE_DEVICES=N` + `--device 0`.
+  `--device 1` with the default visible set (only GPU 0) will not see a
+  second device.
+- Pipeline: `--gpu N` + child `--device 0` (see above).
 
 ## Demo (labeled wavs)
 
@@ -766,7 +842,13 @@ $PY conceptmod/textsliders/generate_listen.py \
 
 For gender, pass `--kind lm` and the LM weights.
 
-`generate_listen.py` is resume-safe: existing wavs that pass duration and silence checks are skipped. It rejects short or silent output. Play files in order. Slider clips use the **neutral** caption; `REF` clips change the prompt with the slider off.
+`generate_listen.py` is resume-safe: existing wavs that pass the active
+checks are skipped. `--accept_short` is **on by default** — an early
+`<|audio_end|>` is a natural ending and keeps the first-draw seed
+(`--no-accept_short` restores reject/retry). Silent clips are still
+rejected unless you pass `--accept_silent` (the pipeline does, so a
+collapse stays paired). Play files in order. Slider clips use the
+**neutral** caption; `REF` clips change the prompt with the slider off.
 
 ## ComfyUI
 

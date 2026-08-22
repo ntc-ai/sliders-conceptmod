@@ -1,6 +1,9 @@
 # Concept Sliders
 
-**MiniMax Music 3 port:** see [MUSIC3.md](MUSIC3.md). Listen sets live in `eval/listen/`. Use the `minimax-music3` conda env and **do not** `pip install -r requirements.txt`.
+**MiniMax Music 3 port:** see [MUSIC3.md](MUSIC3.md) (current trainer defaults,
+shipped sliders, GPU pitfalls) and [slider_pipeline/README.md](slider_pipeline/README.md)
+(paired recipe-comparison runbook). Listen sets live in `eval/listen/`. Use the
+`minimax-music3` conda env and **do not** `pip install -r requirements.txt`.
 
 ###  [Project Website](https://sliders.baulab.info) | [Arxiv Preprint](https://arxiv.org/pdf/2311.12092.pdf) | [Trained Sliders](https://sliders.baulab.info/weights/xl_sliders/) | [Colab Demo](https://colab.research.google.com/github/rohitgandikota/sliders/blob/main/demo_concept_sliders.ipynb) <br>
 Official code implementation of "Concept Sliders: LoRA Adaptors for Precise Control in Diffusion Models"
