@@ -36,6 +36,7 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from conceptmod.textsliders.lora import LoRANetwork
+from conceptmod.textsliders.slider_targets import music3_slider_loss as _slider_loss
 
 DEFAULT_MODEL_DIR = Path("/ml2/music/models/MiniMax-Music3")
 DEFAULT_SAVE_DIR = Path("/ml2/music/sliders-conceptmod/models/energy-slider")
@@ -505,90 +506,8 @@ def build_conditions(
     return entries
 
 
-def _slider_loss(
-    vel: torch.Tensor,
-    vel_neu: torch.Tensor,
-    axis: torch.Tensor,
-    kind: str,
-    mag_weight: float,
-    gain_weight: float = 0.0,
-    gain_mode: str = "penalty",
-    gain_tw: float = 1.0,
-) -> torch.Tensor:
-    """`axis` is the signed target delta, guidance * (vel_pos - vel_neg) for +1.
-
-    mse   — plain MSE against vel_neu + axis. Its magnitude tracks ||axis||^2,
-            which spans ~200x across t (0.37 of ||vel_neu|| at t=0.05 down to
-            0.023 at t=0.97), so a handful of low-t steps dominate the whole run:
-            in the shipped triphop log the top 5% of steps carry 73% of total
-            MSE mass. Kept for A/B against the v3/v4 checkpoints.
-    nmse  — the same MSE divided by the per-step target energy, so every
-            timestep contributes equally.
-    cos   — optimize the reported metric directly (scale-free), plus a
-            magnitude term pulling ||delta|| towards ||axis||.
-    nmse_ortho — gain and shape supervised as SEPARATE quantities: nmse fits
-            only the components of the edit orthogonal to vel_neu; the parallel
-            (pure-gain) component is supervised solely by the gain term, so it
-            requires gain_weight > 0 and gain_mode="match" (enforced at parse).
-            Motivation: the gain component is the one direction that points the
-            same way at every one of the ~50 solve steps, so per-step error in
-            it compounds multiplicatively at render while shape error partly
-            cancels; a joint MSE prices both identically.
-
-    gain_mode:
-    penalty — push the gain component toward ZERO (the original --gain_penalty;
-            measured inert on both the dust and trip-hop pairs, kept as a
-            negative control). Zero is also the wrong target: the teacher's own
-            delta carries a level component.
-    match — push the gain component toward the TEACHER's own gain component
-            (axis · unit_neu), i.e. exactly as much level change as the concept
-            actually asks for, no more.
-
-    gain_tw: timestep-dependent multiplier on the gain term (1.0 = uniform).
-            The caller passes ~2*(1-t): a per-step gain bias introduced early in
-            the solve (low t, near noise) has the most remaining steps to
-            compound through, so it is priced highest.
-    """
-    delta = vel - vel_neu
-    unit = vel_neu.flatten()
-    unit = unit / unit.norm().clamp_min(1e-8)
-    if gain_weight > 0.0:
-        # The component of the delta along vel_neu just rescales the velocity.
-        # It is only ~16% of the concept axis, but it is the one component that
-        # points the same way at every denoise step, so it compounds through the
-        # ~50-step solve while shape components partly cancel: the rendered
-        # slider comes out ~5x too much level change and ~10x too little
-        # brightness.
-        g_delta = delta.flatten() @ unit
-        if gain_mode == "match":
-            g_target = axis.flatten() @ unit
-        elif gain_mode == "penalty":
-            g_target = axis.new_zeros(())
-        else:
-            raise ValueError(f"unknown gain_mode {gain_mode!r}")
-        gain = (g_delta - g_target) / axis.norm().clamp_min(1e-8)
-        gain_term = gain_weight * float(gain_tw) * gain.pow(2)
-    else:
-        gain_term = 0.0
-    if kind == "mse":
-        return torch.nn.functional.mse_loss(vel, vel_neu + axis) + gain_term
-    if kind == "nmse":
-        scale = axis.pow(2).mean().clamp_min(1e-8)
-        return torch.nn.functional.mse_loss(vel, vel_neu + axis) / scale + gain_term
-    if kind == "nmse_ortho":
-        d_par = (delta.flatten() @ unit)
-        a_par = (axis.flatten() @ unit)
-        d_perp = delta - (d_par * unit).view_as(delta)
-        a_perp = axis - (a_par * unit).view_as(axis)
-        scale = a_perp.pow(2).mean().clamp_min(1e-8)
-        return (d_perp - a_perp).pow(2).mean() / scale + gain_term
-    if kind == "cos":
-        cos = torch.nn.functional.cosine_similarity(
-            delta.flatten().unsqueeze(0), axis.flatten().unsqueeze(0)
-        ).squeeze()
-        ratio = delta.norm() / axis.norm().clamp_min(1e-8)
-        return (1.0 - cos) + mag_weight * (ratio - 1.0).pow(2) + gain_term
-    raise ValueError(f"unknown loss {kind!r}")
+# `_slider_loss` lives in slider_targets.py (CPU 2-D fixture + this trainer).
+# Kind/gain semantics are documented on music3_slider_loss.
 
 
 @dataclass

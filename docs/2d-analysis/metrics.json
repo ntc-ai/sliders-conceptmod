@@ -1,0 +1,315 @@
+{
+  "steps": 250,
+  "seed": 0,
+  "axes": {
+    "slider": "energetic (+) \u2194 calm (\u2212)",
+    "attribute": "male (+) \u2194 female (\u2212)"
+  },
+  "skipped": [
+    "pixels / image sliders (trainscripts/imagesliders)",
+    "CLAP / render gates / slider_pipeline scoring",
+    "Music 3 GPU train, Hub weights, AR endreg/planreg",
+    "uncond_weight, traj_frac, gain_penalty (CPU-expressible but need a zeros-condition / t-compounding teacher)"
+  ],
+  "methods": {
+    "sd_enhance": {
+      "family": "sd",
+      "verdict": "needs_help",
+      "reason": "slider axis is right; leak 0.35 (expected without attributes)",
+      "delta_plus": [
+        7.787680149078369,
+        2.729419231414795
+      ],
+      "delta_minus": [
+        -7.787680149078369,
+        -2.729419231414795
+      ],
+      "cos_slider_plus": 0.9437173008918762,
+      "cos_slider_minus": -0.9437173008918762,
+      "cos_attr_plus": 0.3307532072067261,
+      "leak_ratio": 0.35047911260621256,
+      "proj_slider_plus": 7.787680149078369,
+      "proj_attr_plus": 2.729419231414795,
+      "cos_plus_minus": -1.0,
+      "norm_plus": 8.252132415771484,
+      "norm_minus": 8.252132415771484,
+      "want_sign": 1.0
+    },
+    "sd_erase": {
+      "family": "sd",
+      "verdict": "needs_help",
+      "reason": "slider axis is right; leak 0.35 (expected without attributes)",
+      "delta_plus": [
+        -7.787680149078369,
+        -2.729419231414795
+      ],
+      "delta_minus": [
+        7.787680149078369,
+        2.729419231414795
+      ],
+      "cos_slider_plus": -0.9437173008918762,
+      "cos_slider_minus": 0.9437173008918762,
+      "cos_attr_plus": -0.3307532072067261,
+      "leak_ratio": -0.35047911260621256,
+      "proj_slider_plus": -7.787680149078369,
+      "proj_attr_plus": -2.729419231414795,
+      "cos_plus_minus": -1.0,
+      "norm_plus": 8.252132415771484,
+      "norm_minus": 8.252132415771484,
+      "want_sign": -1.0
+    },
+    "sd_enhance_attrs": {
+      "family": "sd",
+      "verdict": "right",
+      "reason": "tracks the slider, attribute leak is small, \u00b11 are opposite",
+      "delta_plus": [
+        7.787680149078369,
+        -0.0
+      ],
+      "delta_minus": [
+        -7.787680149078369,
+        0.0
+      ],
+      "cos_slider_plus": 1.0,
+      "cos_slider_minus": -1.0,
+      "cos_attr_plus": 0.0,
+      "leak_ratio": 0.0,
+      "proj_slider_plus": 7.787680149078369,
+      "proj_attr_plus": 0.0,
+      "cos_plus_minus": -1.0,
+      "norm_plus": 7.787680149078369,
+      "norm_minus": 7.787680149078369,
+      "want_sign": 1.0
+    },
+    "m3_nmse_axis": {
+      "family": "music3",
+      "verdict": "needs_help",
+      "reason": "slider axis is right; leak 0.33 (expected without attributes)",
+      "delta_plus": [
+        5.9590888023376465,
+        1.984509825706482
+      ],
+      "delta_minus": [
+        -5.9590888023376465,
+        -1.984509825706482
+      ],
+      "cos_slider_plus": 0.9487718343734741,
+      "cos_slider_minus": -0.9487718343734741,
+      "cos_attr_plus": 0.3159622251987457,
+      "leak_ratio": 0.3330223610022005,
+      "proj_slider_plus": 5.9590888023376465,
+      "proj_attr_plus": 1.984509825706482,
+      "cos_plus_minus": -1.0000001192092896,
+      "norm_plus": 6.2808451652526855,
+      "norm_minus": 6.2808451652526855,
+      "want_sign": 1.0
+    },
+    "m3_nmse_axis_attrs": {
+      "family": "music3",
+      "verdict": "right",
+      "reason": "tracks the slider, attribute leak is small, \u00b11 are opposite",
+      "delta_plus": [
+        5.987505912780762,
+        0.0
+      ],
+      "delta_minus": [
+        -5.987505912780762,
+        -0.0
+      ],
+      "cos_slider_plus": 1.0,
+      "cos_slider_minus": -1.0,
+      "cos_attr_plus": 0.0,
+      "leak_ratio": 0.0,
+      "proj_slider_plus": 5.987505912780762,
+      "proj_attr_plus": 0.0,
+      "cos_plus_minus": -1.0,
+      "norm_plus": 5.987505912780762,
+      "norm_minus": 5.987505912780762,
+      "want_sign": 1.0
+    },
+    "m3_nmse_pole": {
+      "family": "music3",
+      "verdict": "right",
+      "reason": "tracks slider, little leak",
+      "delta_plus": [
+        3.0020084381103516,
+        -0.2420940399169922
+      ],
+      "delta_minus": [
+        -3.0020084381103516,
+        0.2420940399169922
+      ],
+      "cos_slider_plus": 0.996764063835144,
+      "cos_slider_minus": -0.996764063835144,
+      "cos_attr_plus": -0.0803830623626709,
+      "leak_ratio": -0.08064402352677623,
+      "proj_slider_plus": 3.0020084381103516,
+      "proj_attr_plus": -0.2420940399169922,
+      "cos_plus_minus": -1.0,
+      "norm_plus": 3.011754274368286,
+      "norm_minus": 3.011754274368286,
+      "want_sign": 1.0
+    },
+    "m3_mse_axis": {
+      "family": "music3",
+      "verdict": "needs_help",
+      "reason": "slider axis is right; leak 0.35 (expected without attributes)",
+      "delta_plus": [
+        7.787680149078369,
+        2.729419231414795
+      ],
+      "delta_minus": [
+        -7.787680149078369,
+        -2.729419231414795
+      ],
+      "cos_slider_plus": 0.9437173008918762,
+      "cos_slider_minus": -0.9437173008918762,
+      "cos_attr_plus": 0.3307532072067261,
+      "leak_ratio": 0.35047911260621256,
+      "proj_slider_plus": 7.787680149078369,
+      "proj_attr_plus": 2.729419231414795,
+      "cos_plus_minus": -1.0,
+      "norm_plus": 8.252132415771484,
+      "norm_minus": 8.252132415771484,
+      "want_sign": 1.0
+    },
+    "m3_erase": {
+      "family": "music3",
+      "verdict": "needs_help",
+      "reason": "slider axis is right; leak 0.33 (expected without attributes)",
+      "delta_plus": [
+        -5.9590888023376465,
+        -1.984509825706482
+      ],
+      "delta_minus": [
+        5.9590888023376465,
+        1.984509825706482
+      ],
+      "cos_slider_plus": -0.9487718343734741,
+      "cos_slider_minus": 0.9487718343734741,
+      "cos_attr_plus": -0.3159622251987457,
+      "leak_ratio": -0.3330223610022005,
+      "proj_slider_plus": -5.9590888023376465,
+      "proj_attr_plus": -1.984509825706482,
+      "cos_plus_minus": -1.0000001192092896,
+      "norm_plus": 6.2808451652526855,
+      "norm_minus": 6.2808451652526855,
+      "want_sign": -1.0
+    },
+    "lm_raw": {
+      "family": "lm",
+      "verdict": "needs_help",
+      "reason": "raw pos/neg share an even mode; \u00b11 cos=0.25",
+      "delta_plus": [
+        1.0000016689300537,
+        1.691996455192566
+      ],
+      "delta_minus": [
+        -1.0000016689300537,
+        1.0079976320266724
+      ],
+      "cos_slider_plus": 0.5087992548942566,
+      "cos_slider_minus": -0.7042855024337769,
+      "cos_attr_plus": 0.8608851432800293,
+      "leak_ratio": 1.691993614453636,
+      "proj_slider_plus": 1.0000016689300537,
+      "proj_attr_plus": 1.691996455192566,
+      "cos_plus_minus": 0.2528170049190521,
+      "norm_plus": 1.9654148817062378,
+      "norm_minus": 1.4198811054229736,
+      "want_sign": 1.0
+    },
+    "lm_symmetric": {
+      "family": "lm",
+      "verdict": "right",
+      "reason": "\u00b11 opposite on the slider; leak 0.34 remains without attributes",
+      "delta_plus": [
+        1.0000016689300537,
+        0.34199950098991394
+      ],
+      "delta_minus": [
+        -1.0000016689300537,
+        -0.34199920296669006
+      ],
+      "cos_slider_plus": 0.9461948275566101,
+      "cos_slider_minus": -0.9461948275566101,
+      "cos_attr_plus": 0.32359763979911804,
+      "leak_ratio": 0.34199892679763744,
+      "proj_slider_plus": 1.0000016689300537,
+      "proj_attr_plus": 0.34199950098991394,
+      "cos_plus_minus": -1.0,
+      "norm_plus": 1.0568665266036987,
+      "norm_minus": 1.0568665266036987,
+      "want_sign": 1.0
+    },
+    "lm_raw_attrs": {
+      "family": "lm",
+      "verdict": "right",
+      "reason": "symmetric / odd targets keep \u00b11 opposite on the slider",
+      "delta_plus": [
+        1.0000016689300537,
+        0.0
+      ],
+      "delta_minus": [
+        -1.0000016689300537,
+        0.0
+      ],
+      "cos_slider_plus": 1.0,
+      "cos_slider_minus": -1.0,
+      "cos_attr_plus": 0.0,
+      "leak_ratio": 0.0,
+      "proj_slider_plus": 1.0000016689300537,
+      "proj_attr_plus": 0.0,
+      "cos_plus_minus": -1.0,
+      "norm_plus": 1.0000016689300537,
+      "norm_minus": 1.0000016689300537,
+      "want_sign": 1.0
+    },
+    "enc_mse": {
+      "family": "encoder",
+      "verdict": "needs_help",
+      "reason": "raw pos/neg share an even mode; \u00b11 cos=0.25",
+      "delta_plus": [
+        1.0000016689300537,
+        1.691996455192566
+      ],
+      "delta_minus": [
+        -1.0000016689300537,
+        1.0079976320266724
+      ],
+      "cos_slider_plus": 0.5087992548942566,
+      "cos_slider_minus": -0.7042855024337769,
+      "cos_attr_plus": 0.8608851432800293,
+      "leak_ratio": 1.691993614453636,
+      "proj_slider_plus": 1.0000016689300537,
+      "proj_attr_plus": 1.691996455192566,
+      "cos_plus_minus": 0.2528170049190521,
+      "norm_plus": 1.9654148817062378,
+      "norm_minus": 1.4198811054229736,
+      "want_sign": 1.0
+    },
+    "enc_mse_attrs": {
+      "family": "encoder",
+      "verdict": "right",
+      "reason": "symmetric / odd targets keep \u00b11 opposite on the slider",
+      "delta_plus": [
+        1.0000016689300537,
+        0.0
+      ],
+      "delta_minus": [
+        -1.0000016689300537,
+        0.0
+      ],
+      "cos_slider_plus": 1.0,
+      "cos_slider_minus": -1.0,
+      "cos_attr_plus": 0.0,
+      "leak_ratio": 0.0,
+      "proj_slider_plus": 1.0000016689300537,
+      "proj_attr_plus": 0.0,
+      "cos_plus_minus": -1.0,
+      "norm_plus": 1.0000016689300537,
+      "norm_minus": 1.0000016689300537,
+      "want_sign": 1.0
+    }
+  }
+}

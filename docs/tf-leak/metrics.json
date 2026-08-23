@@ -1,0 +1,1246 @@
+{
+  "steps": 150,
+  "seed": 0,
+  "catalog": {
+    "vocab_size": 292,
+    "axes": {
+      "energy": {
+        "file": "conceptmod/textsliders/data/prompts-energy.yaml",
+        "has_attributes": false,
+        "bpm_pos": 168.0,
+        "bpm_neg": 52.0,
+        "bpm_neu": 110.0,
+        "bpm_delta": 116.0,
+        "pos_only": [
+          "168",
+          "aggressive",
+          "dense",
+          "energy",
+          "everyone",
+          "high",
+          "loud",
+          "mix",
+          "pop-punk",
+          "pounding",
+          "shouted",
+          "slammed",
+          "vocals",
+          "yelling"
+        ],
+        "neg_only": [
+          "52",
+          "almost",
+          "ambient",
+          "calm",
+          "can",
+          "hear",
+          "lullaby",
+          "no",
+          "pads",
+          "quiet",
+          "room",
+          "silent",
+          "sparse",
+          "vocal",
+          "whispered",
+          "you"
+        ],
+        "guidance": 3.0
+      },
+      "tempo": {
+        "file": "conceptmod/textsliders/data/prompts-tempo.yaml",
+        "has_attributes": false,
+        "bpm_pos": 180.0,
+        "bpm_neg": 48.0,
+        "bpm_neu": 110.0,
+        "bpm_delta": 132.0,
+        "pos_only": [
+          "180",
+          "bass",
+          "double-time",
+          "drum",
+          "drums",
+          "fast",
+          "frantic",
+          "hyper",
+          "pop",
+          "racing",
+          "rushed",
+          "speed"
+        ],
+        "neg_only": [
+          "48",
+          "ballad",
+          "beats",
+          "between",
+          "dragged",
+          "gaps",
+          "half-time",
+          "molasses",
+          "slow",
+          "spacious"
+        ],
+        "guidance": 3.0
+      },
+      "distortion": {
+        "file": "conceptmod/textsliders/data/prompts-distortion.yaml",
+        "has_attributes": false,
+        "bpm_pos": 140.0,
+        "bpm_neg": 88.0,
+        "bpm_neu": 112.0,
+        "bpm_delta": 52.0,
+        "pos_only": [
+          "140",
+          "aggressive",
+          "amps",
+          "crushing",
+          "distorted",
+          "extremely",
+          "fuzz",
+          "guitars",
+          "heavy",
+          "metal",
+          "overdrive",
+          "riffs",
+          "wall"
+        ],
+        "neg_only": [
+          "88",
+          "clean",
+          "folk",
+          "guitar",
+          "intimate",
+          "no",
+          "nylon",
+          "only",
+          "steel",
+          "strings",
+          "unplugged"
+        ],
+        "guidance": 3.0
+      },
+      "space": {
+        "file": "conceptmod/textsliders/data/prompts-space.yaml",
+        "has_attributes": false,
+        "bpm_pos": null,
+        "bpm_neg": null,
+        "bpm_neu": null,
+        "bpm_delta": null,
+        "pos_only": [
+          "cathedral",
+          "distant",
+          "echo",
+          "giant",
+          "hall",
+          "huge",
+          "long",
+          "space",
+          "stone",
+          "tails",
+          "vast",
+          "washed",
+          "wet"
+        ],
+        "neg_only": [
+          "as",
+          "bone",
+          "booth",
+          "close-mic",
+          "dead",
+          "delay",
+          "demo",
+          "dry",
+          "intimate",
+          "no",
+          "room"
+        ],
+        "guidance": 3.0
+      },
+      "dust": {
+        "file": "conceptmod/textsliders/data/prompts-cand-dust-v1.yaml",
+        "has_attributes": false,
+        "bpm_pos": 110.0,
+        "bpm_neg": 110.0,
+        "bpm_neu": 110.0,
+        "bpm_delta": 0.0,
+        "pos_only": [
+          "dark",
+          "dusty",
+          "hazy",
+          "lo-fi",
+          "muffled",
+          "murky",
+          "soft",
+          "tape",
+          "warm"
+        ],
+        "neg_only": [
+          "airy",
+          "bright",
+          "crisp",
+          "glossy",
+          "hi-fi",
+          "polished",
+          "punchy",
+          "sparkling",
+          "studio"
+        ],
+        "guidance": 3.0
+      },
+      "grit": {
+        "file": "conceptmod/textsliders/data/prompts-cand-grit-v1.yaml",
+        "has_attributes": false,
+        "bpm_pos": 110.0,
+        "bpm_neg": 110.0,
+        "bpm_neu": 110.0,
+        "bpm_delta": 0.0,
+        "pos_only": [
+          "crunchy",
+          "distorted",
+          "driven",
+          "fuzzy",
+          "gritty",
+          "overdriven",
+          "raspy",
+          "saturated"
+        ],
+        "neg_only": [
+          "clean",
+          "pristine",
+          "smooth",
+          "transparent",
+          "uncoloured",
+          "undistorted",
+          "untreated"
+        ],
+        "guidance": 3.0
+      },
+      "cand_energy": {
+        "file": "conceptmod/textsliders/data/prompts-cand-energy-v1.yaml",
+        "has_attributes": false,
+        "bpm_pos": 110.0,
+        "bpm_neg": 110.0,
+        "bpm_neu": 110.0,
+        "bpm_delta": 0.0,
+        "pos_only": [
+          "busy",
+          "dense",
+          "doubled",
+          "driving",
+          "guitars",
+          "layered",
+          "loud",
+          "powerful",
+          "saturated",
+          "thick"
+        ],
+        "neg_only": [
+          "breathy",
+          "gentle",
+          "guitar",
+          "minimal",
+          "quiet",
+          "restrained",
+          "single",
+          "soft",
+          "solo",
+          "sparse"
+        ],
+        "guidance": 3.0
+      },
+      "live": {
+        "file": "conceptmod/textsliders/data/prompts-live-v3.yaml",
+        "has_attributes": true,
+        "bpm_pos": 112.0,
+        "bpm_neg": 112.0,
+        "bpm_neu": 112.0,
+        "bpm_delta": 0.0,
+        "pos_only": [
+          "audible",
+          "audience",
+          "band",
+          "cheers",
+          "chorus",
+          "club",
+          "drum-kit",
+          "hall",
+          "hits",
+          "huge",
+          "human",
+          "imperfect",
+          "leakage",
+          "live",
+          "mic",
+          "mics",
+          "more",
+          "people",
+          "reverb",
+          "room",
+          "small",
+          "time-feel",
+          "vocal"
+        ],
+        "neg_only": [
+          "booth",
+          "click-tight",
+          "crowd",
+          "drums",
+          "every",
+          "grid-perfect",
+          "isolated",
+          "no",
+          "overdubbed",
+          "part",
+          "programmed",
+          "quantized",
+          "recorded",
+          "separately",
+          "studio",
+          "tracks"
+        ],
+        "guidance": 4.0
+      },
+      "rhyme": {
+        "file": "conceptmod/textsliders/data/prompts-rhyme-v4.yaml",
+        "has_attributes": true,
+        "bpm_pos": 114.0,
+        "bpm_neg": 76.0,
+        "bpm_neu": 100.0,
+        "bpm_delta": 38.0,
+        "pos_only": [
+          "114",
+          "aabb",
+          "accent",
+          "acoustic",
+          "back",
+          "band",
+          "bass",
+          "bright",
+          "call-and",
+          "can",
+          "chorus",
+          "close",
+          "closing",
+          "counting",
+          "country",
+          "couplet",
+          "doubled",
+          "downbeat",
+          "dry",
+          "each",
+          "every",
+          "four",
+          "full",
+          "harmony",
+          "hitting",
+          "hook",
+          "kit",
+          "lands",
+          "last",
+          "obvious",
+          "party",
+          "pop",
+          "porch",
+          "response",
+          "rhyme",
+          "rhymes",
+          "rising",
+          "room",
+          "shout",
+          "singalong",
+          "singer",
+          "square",
+          "stacked",
+          "strummed",
+          "summer",
+          "tight",
+          "two",
+          "word"
+        ],
+        "neg_only": [
+          "76",
+          "air",
+          "alone",
+          "backing",
+          "bar",
+          "bowed",
+          "chamber",
+          "count-in",
+          "crossing",
+          "dissolve",
+          "distant",
+          "endings",
+          "folk",
+          "free",
+          "going",
+          "guitar",
+          "held",
+          "keeps",
+          "late",
+          "line",
+          "long",
+          "low",
+          "mid-bar",
+          "night",
+          "no",
+          "notes",
+          "nothing",
+          "nylon",
+          "one",
+          "phrases",
+          "piece",
+          "scheme",
+          "sentence",
+          "slow",
+          "soft",
+          "strings",
+          "through-composed",
+          "under",
+          "unfolding",
+          "unresolved",
+          "verse",
+          "wandering"
+        ],
+        "guidance": 3.0
+      },
+      "triphop": {
+        "file": "conceptmod/textsliders/data/prompts-triphop-v3-single.yaml",
+        "has_attributes": false,
+        "bpm_pos": 84.0,
+        "bpm_neg": 128.0,
+        "bpm_neu": 110.0,
+        "bpm_delta": -44.0,
+        "pos_only": [
+          "84",
+          "atmosphere",
+          "bass",
+          "breakbeats",
+          "crackle",
+          "dark",
+          "delay",
+          "dusty",
+          "filtered",
+          "intimate",
+          "keys",
+          "minor",
+          "nocturnal",
+          "slow",
+          "smoky",
+          "spacious",
+          "trip-hop",
+          "vinyl",
+          "wah"
+        ],
+        "neg_only": [
+          "128",
+          "acoustic",
+          "bright",
+          "chorus",
+          "clean",
+          "compressed",
+          "daylight",
+          "drums",
+          "glossy",
+          "guitar",
+          "live",
+          "major-key",
+          "mix",
+          "polished",
+          "pop",
+          "punchy",
+          "shiny",
+          "sparkling"
+        ],
+        "guidance": 3.0
+      }
+    },
+    "pairwise": {
+      "energy__tempo": {
+        "bow_cos": 0.0,
+        "shared_pos": [],
+        "shared_neg": [],
+        "shared_any": []
+      },
+      "energy__distortion": {
+        "bow_cos": 0.0635,
+        "shared_pos": [
+          "aggressive"
+        ],
+        "shared_neg": [
+          "no"
+        ],
+        "shared_any": [
+          "aggressive",
+          "no"
+        ]
+      },
+      "energy__space": {
+        "bow_cos": 0.092406,
+        "shared_pos": [],
+        "shared_neg": [
+          "no",
+          "room"
+        ],
+        "shared_any": [
+          "no",
+          "room"
+        ]
+      },
+      "energy__dust": {
+        "bow_cos": 0.0,
+        "shared_pos": [],
+        "shared_neg": [],
+        "shared_any": []
+      },
+      "energy__grit": {
+        "bow_cos": 0.0,
+        "shared_pos": [],
+        "shared_neg": [],
+        "shared_any": []
+      },
+      "energy__cand_energy": {
+        "bow_cos": 0.160644,
+        "shared_pos": [
+          "dense",
+          "loud"
+        ],
+        "shared_neg": [
+          "quiet",
+          "sparse"
+        ],
+        "shared_any": [
+          "dense",
+          "loud",
+          "quiet",
+          "sparse"
+        ]
+      },
+      "energy__live": {
+        "bow_cos": -0.020879,
+        "shared_pos": [],
+        "shared_neg": [
+          "no"
+        ],
+        "shared_any": [
+          "no",
+          "room",
+          "vocal"
+        ]
+      },
+      "energy__rhyme": {
+        "bow_cos": 0.0,
+        "shared_pos": [],
+        "shared_neg": [
+          "no"
+        ],
+        "shared_any": [
+          "can",
+          "no",
+          "room"
+        ]
+      },
+      "energy__triphop": {
+        "bow_cos": -0.029136,
+        "shared_pos": [],
+        "shared_neg": [],
+        "shared_any": [
+          "mix"
+        ]
+      },
+      "tempo__distortion": {
+        "bow_cos": -0.034669,
+        "shared_pos": [],
+        "shared_neg": [],
+        "shared_any": []
+      },
+      "tempo__space": {
+        "bow_cos": 0.0,
+        "shared_pos": [],
+        "shared_neg": [],
+        "shared_any": []
+      },
+      "tempo__dust": {
+        "bow_cos": 0.0,
+        "shared_pos": [],
+        "shared_neg": [],
+        "shared_any": []
+      },
+      "tempo__grit": {
+        "bow_cos": 0.0,
+        "shared_pos": [],
+        "shared_neg": [],
+        "shared_any": []
+      },
+      "tempo__cand_energy": {
+        "bow_cos": 0.0,
+        "shared_pos": [],
+        "shared_neg": [],
+        "shared_any": []
+      },
+      "tempo__live": {
+        "bow_cos": 0.0,
+        "shared_pos": [],
+        "shared_neg": [],
+        "shared_any": [
+          "drums"
+        ]
+      },
+      "tempo__rhyme": {
+        "bow_cos": 0.056033,
+        "shared_pos": [
+          "bass",
+          "pop"
+        ],
+        "shared_neg": [
+          "slow"
+        ],
+        "shared_any": [
+          "bass",
+          "pop",
+          "slow"
+        ]
+      },
+      "tempo__triphop": {
+        "bow_cos": -0.127257,
+        "shared_pos": [
+          "bass"
+        ],
+        "shared_neg": [],
+        "shared_any": [
+          "bass",
+          "drums",
+          "pop",
+          "slow",
+          "spacious"
+        ]
+      },
+      "distortion__space": {
+        "bow_cos": 0.090951,
+        "shared_pos": [],
+        "shared_neg": [
+          "intimate",
+          "no"
+        ],
+        "shared_any": [
+          "intimate",
+          "no"
+        ]
+      },
+      "distortion__dust": {
+        "bow_cos": 0.0,
+        "shared_pos": [],
+        "shared_neg": [],
+        "shared_any": []
+      },
+      "distortion__grit": {
+        "bow_cos": 0.125,
+        "shared_pos": [
+          "distorted"
+        ],
+        "shared_neg": [
+          "clean"
+        ],
+        "shared_any": [
+          "clean",
+          "distorted"
+        ]
+      },
+      "distortion__cand_energy": {
+        "bow_cos": 0.079057,
+        "shared_pos": [
+          "guitars"
+        ],
+        "shared_neg": [
+          "guitar"
+        ],
+        "shared_any": [
+          "guitar",
+          "guitars"
+        ]
+      },
+      "distortion__live": {
+        "bow_cos": 0.0411,
+        "shared_pos": [],
+        "shared_neg": [
+          "no"
+        ],
+        "shared_any": [
+          "no"
+        ]
+      },
+      "distortion__rhyme": {
+        "bow_cos": 0.176777,
+        "shared_pos": [],
+        "shared_neg": [
+          "folk",
+          "guitar",
+          "no",
+          "nylon",
+          "strings"
+        ],
+        "shared_any": [
+          "folk",
+          "guitar",
+          "no",
+          "nylon",
+          "strings"
+        ]
+      },
+      "distortion__triphop": {
+        "bow_cos": 0.028677,
+        "shared_pos": [],
+        "shared_neg": [
+          "clean",
+          "guitar"
+        ],
+        "shared_any": [
+          "clean",
+          "guitar",
+          "intimate"
+        ]
+      },
+      "space__dust": {
+        "bow_cos": 0.0,
+        "shared_pos": [],
+        "shared_neg": [],
+        "shared_any": []
+      },
+      "space__grit": {
+        "bow_cos": 0.0,
+        "shared_pos": [],
+        "shared_neg": [],
+        "shared_any": []
+      },
+      "space__cand_energy": {
+        "bow_cos": 0.0,
+        "shared_pos": [],
+        "shared_neg": [],
+        "shared_any": []
+      },
+      "space__live": {
+        "bow_cos": 0.15949,
+        "shared_pos": [
+          "hall",
+          "huge"
+        ],
+        "shared_neg": [
+          "booth",
+          "no"
+        ],
+        "shared_any": [
+          "booth",
+          "hall",
+          "huge",
+          "no",
+          "room"
+        ]
+      },
+      "space__rhyme": {
+        "bow_cos": 0.085749,
+        "shared_pos": [],
+        "shared_neg": [
+          "no"
+        ],
+        "shared_any": [
+          "distant",
+          "dry",
+          "long",
+          "no",
+          "room"
+        ]
+      },
+      "space__triphop": {
+        "bow_cos": -0.055641,
+        "shared_pos": [],
+        "shared_neg": [],
+        "shared_any": [
+          "delay",
+          "intimate"
+        ]
+      },
+      "dust__grit": {
+        "bow_cos": 0.0,
+        "shared_pos": [],
+        "shared_neg": [],
+        "shared_any": []
+      },
+      "dust__cand_energy": {
+        "bow_cos": -0.052705,
+        "shared_pos": [],
+        "shared_neg": [],
+        "shared_any": [
+          "soft"
+        ]
+      },
+      "dust__live": {
+        "bow_cos": 0.0274,
+        "shared_pos": [],
+        "shared_neg": [
+          "studio"
+        ],
+        "shared_any": [
+          "studio"
+        ]
+      },
+      "dust__rhyme": {
+        "bow_cos": -0.033672,
+        "shared_pos": [],
+        "shared_neg": [],
+        "shared_any": [
+          "bright",
+          "soft"
+        ]
+      },
+      "dust__triphop": {
+        "bow_cos": 0.267652,
+        "shared_pos": [
+          "dark",
+          "dusty"
+        ],
+        "shared_neg": [
+          "bright",
+          "glossy",
+          "polished",
+          "punchy",
+          "sparkling"
+        ],
+        "shared_any": [
+          "bright",
+          "dark",
+          "dusty",
+          "glossy",
+          "polished",
+          "punchy",
+          "sparkling"
+        ]
+      },
+      "grit__cand_energy": {
+        "bow_cos": 0.052705,
+        "shared_pos": [
+          "saturated"
+        ],
+        "shared_neg": [],
+        "shared_any": [
+          "saturated"
+        ]
+      },
+      "grit__live": {
+        "bow_cos": 0.0,
+        "shared_pos": [],
+        "shared_neg": [],
+        "shared_any": []
+      },
+      "grit__rhyme": {
+        "bow_cos": 0.0,
+        "shared_pos": [],
+        "shared_neg": [],
+        "shared_any": []
+      },
+      "grit__triphop": {
+        "bow_cos": 0.076472,
+        "shared_pos": [],
+        "shared_neg": [
+          "clean"
+        ],
+        "shared_any": [
+          "clean"
+        ]
+      },
+      "cand_energy__live": {
+        "bow_cos": 0.0,
+        "shared_pos": [],
+        "shared_neg": [],
+        "shared_any": []
+      },
+      "cand_energy__rhyme": {
+        "bow_cos": 0.063888,
+        "shared_pos": [
+          "doubled"
+        ],
+        "shared_neg": [
+          "guitar",
+          "soft"
+        ],
+        "shared_any": [
+          "doubled",
+          "guitar",
+          "soft"
+        ]
+      },
+      "cand_energy__triphop": {
+        "bow_cos": 0.036274,
+        "shared_pos": [],
+        "shared_neg": [
+          "guitar"
+        ],
+        "shared_any": [
+          "guitar"
+        ]
+      },
+      "live__rhyme": {
+        "bow_cos": 0.406867,
+        "shared_pos": [
+          "band",
+          "chorus",
+          "room"
+        ],
+        "shared_neg": [
+          "no"
+        ],
+        "shared_any": [
+          "band",
+          "chorus",
+          "every",
+          "no",
+          "room"
+        ]
+      },
+      "live__triphop": {
+        "bow_cos": -0.037716,
+        "shared_pos": [],
+        "shared_neg": [
+          "drums"
+        ],
+        "shared_any": [
+          "chorus",
+          "drums",
+          "live"
+        ]
+      },
+      "rhyme__triphop": {
+        "bow_cos": -0.034762,
+        "shared_pos": [
+          "bass"
+        ],
+        "shared_neg": [
+          "guitar"
+        ],
+        "shared_any": [
+          "acoustic",
+          "bass",
+          "bright",
+          "chorus",
+          "guitar",
+          "pop",
+          "slow"
+        ]
+      }
+    }
+  },
+  "renders": {
+    "energy-20s": {
+      "minus2": 0.0891,
+      "zero": 0.1119,
+      "plus2": 0.1492
+    },
+    "tempo-20s": {
+      "minus2": 0.054,
+      "zero": 0.0544,
+      "plus2": 0.0538
+    },
+    "distortion-20s": {
+      "minus2": 0.0503,
+      "zero": 0.0672,
+      "plus2": 0.0934
+    },
+    "space-20s": {
+      "minus2": 0.1416,
+      "zero": 0.1263,
+      "plus2": 0.113
+    },
+    "triphop-v3-tf-raw-20s": {
+      "minus2": 0.3496,
+      "zero": 0.0975,
+      "plus2": 0.0035
+    },
+    "dust-tf-v1": {
+      "at_plus1_rms_pct": -7.5,
+      "at_plus1_centroid_pct": 41.5,
+      "at_minus0p5_rms_pct": 6.4,
+      "at_minus0p5_centroid_pct": -13.0,
+      "song_identity_onset_corr": 0.977
+    }
+  },
+  "field": {
+    "energy_nmse_axis": {
+      "catalog": "energy",
+      "teacher": {
+        "proj_energy": 4.0,
+        "proj_tempo": 1.657143,
+        "cos_energy": 0.923856,
+        "cos_tempo": 0.38274,
+        "leak_ratio": 0.414286,
+        "norm": 4.329679
+      },
+      "fit": {
+        "delta_plus": [
+          7.980803,
+          3.717987
+        ],
+        "delta_minus": [
+          -7.980803,
+          -3.717987
+        ],
+        "cos_energy_plus": 0.906461,
+        "cos_tempo_plus": 0.42229,
+        "leak_ratio": 0.465866,
+        "proj_energy_plus": 7.980803,
+        "proj_tempo_plus": 3.717987,
+        "cos_plus_minus": -1.0,
+        "norm_plus": 8.804354
+      },
+      "kind": "nmse",
+      "target_mode": "axis",
+      "attributes": false
+    },
+    "energy_nmse_pole": {
+      "catalog": "energy",
+      "teacher": {
+        "proj_energy": 4.0,
+        "proj_tempo": 1.657143,
+        "cos_energy": 0.923856,
+        "cos_tempo": 0.38274,
+        "leak_ratio": 0.414286,
+        "norm": 4.329679
+      },
+      "fit": {
+        "delta_plus": [
+          4.496016,
+          1.860852
+        ],
+        "delta_minus": [
+          -4.496016,
+          -1.860852
+        ],
+        "cos_energy_plus": 0.923985,
+        "cos_tempo_plus": 0.382428,
+        "leak_ratio": 0.413889,
+        "proj_energy_plus": 4.496016,
+        "proj_tempo_plus": 1.860852,
+        "cos_plus_minus": -1.0,
+        "norm_plus": 4.865894
+      },
+      "kind": "nmse",
+      "target_mode": "pole",
+      "attributes": false
+    },
+    "energy_nmse_ortho": {
+      "catalog": "energy",
+      "teacher": {
+        "proj_energy": 4.0,
+        "proj_tempo": 1.657143,
+        "cos_energy": 0.923856,
+        "cos_tempo": 0.38274,
+        "leak_ratio": 0.414286,
+        "norm": 4.329679
+      },
+      "fit": {
+        "delta_plus": [
+          8.068958,
+          3.45044
+        ],
+        "delta_minus": [
+          -8.068958,
+          -3.45044
+        ],
+        "cos_energy_plus": 0.919462,
+        "cos_tempo_plus": 0.393179,
+        "leak_ratio": 0.427619,
+        "proj_energy_plus": 8.068958,
+        "proj_tempo_plus": 3.45044,
+        "cos_plus_minus": -1.0,
+        "norm_plus": 8.775741
+      },
+      "kind": "nmse_ortho",
+      "target_mode": "axis",
+      "attributes": false
+    },
+    "energy_nmse_gain": {
+      "catalog": "energy",
+      "teacher": {
+        "proj_energy": 4.0,
+        "proj_tempo": 1.657143,
+        "cos_energy": 0.923856,
+        "cos_tempo": 0.38274,
+        "leak_ratio": 0.414286,
+        "norm": 4.329679
+      },
+      "fit": {
+        "delta_plus": [
+          5.694786,
+          2.604511
+        ],
+        "delta_minus": [
+          -5.694786,
+          -2.604511
+        ],
+        "cos_energy_plus": 0.909403,
+        "cos_tempo_plus": 0.415916,
+        "leak_ratio": 0.45735,
+        "proj_energy_plus": 5.694786,
+        "proj_tempo_plus": 2.604511,
+        "cos_plus_minus": -1.0,
+        "norm_plus": 6.262114
+      },
+      "kind": "nmse",
+      "target_mode": "axis",
+      "gain_weight": 1.0,
+      "attributes": false
+    },
+    "energy_nmse_attrs": {
+      "catalog": "energy",
+      "teacher": {
+        "proj_energy": 4.0,
+        "proj_tempo": 1.657143,
+        "cos_energy": 0.923856,
+        "cos_tempo": 0.38274,
+        "leak_ratio": 0.414286,
+        "norm": 4.329679
+      },
+      "fit": {
+        "delta_plus": [
+          7.980803,
+          3.717987
+        ],
+        "delta_minus": [
+          -7.980803,
+          -3.717987
+        ],
+        "cos_energy_plus": 0.906461,
+        "cos_tempo_plus": 0.42229,
+        "leak_ratio": 0.465866,
+        "proj_energy_plus": 7.980803,
+        "proj_tempo_plus": 3.717987,
+        "cos_plus_minus": -1.0,
+        "norm_plus": 8.804354
+      },
+      "kind": "nmse",
+      "target_mode": "axis",
+      "attributes": true
+    },
+    "cand_energy_nmse_axis": {
+      "catalog": "cand_energy",
+      "teacher": {
+        "proj_energy": 3.75,
+        "proj_tempo": 0.0,
+        "cos_energy": 1.0,
+        "cos_tempo": 0.0,
+        "leak_ratio": 0.0,
+        "norm": 3.75
+      },
+      "fit": {
+        "delta_plus": [
+          7.684391,
+          0.0
+        ],
+        "delta_minus": [
+          -7.684391,
+          -0.0
+        ],
+        "cos_energy_plus": 1.0,
+        "cos_tempo_plus": 0.0,
+        "leak_ratio": 0.0,
+        "proj_energy_plus": 7.684391,
+        "proj_tempo_plus": 0.0,
+        "cos_plus_minus": -1.0,
+        "norm_plus": 7.684391
+      },
+      "kind": "nmse",
+      "target_mode": "axis",
+      "attributes": false
+    },
+    "tempo_nmse_axis": {
+      "catalog": "tempo",
+      "teacher": {
+        "proj_energy": 0.0,
+        "proj_tempo": 3.052381,
+        "cos_energy": 0.0,
+        "cos_tempo": 1.0,
+        "leak_ratio": 305238103.866577,
+        "norm": 3.052381
+      },
+      "fit": {
+        "delta_plus": [
+          0.0,
+          6.653981
+        ],
+        "delta_minus": [
+          -0.0,
+          -6.653981
+        ],
+        "cos_energy_plus": 0.0,
+        "cos_tempo_plus": 1.0,
+        "leak_ratio": 665398073.196411,
+        "proj_energy_plus": 0.0,
+        "proj_tempo_plus": 6.653981,
+        "cos_plus_minus": -1.0,
+        "norm_plus": 6.653981
+      },
+      "kind": "nmse",
+      "target_mode": "axis",
+      "attributes": false
+    },
+    "dust_nmse_axis": {
+      "catalog": "dust",
+      "teacher": {
+        "proj_energy": 0.0,
+        "proj_tempo": 0.0,
+        "cos_energy": 0.0,
+        "cos_tempo": 0.0,
+        "leak_ratio": 0.0,
+        "norm": 0.0
+      },
+      "fit": {
+        "delta_plus": [
+          0.0,
+          0.0
+        ],
+        "delta_minus": [
+          -0.0,
+          -0.0
+        ],
+        "cos_energy_plus": 0.0,
+        "cos_tempo_plus": 0.0,
+        "leak_ratio": 0.0,
+        "proj_energy_plus": 0.0,
+        "proj_tempo_plus": 0.0,
+        "cos_plus_minus": 0.0,
+        "norm_plus": 0.0
+      },
+      "kind": "nmse",
+      "target_mode": "axis",
+      "attributes": false
+    },
+    "distortion_nmse_axis": {
+      "catalog": "distortion",
+      "teacher": {
+        "proj_energy": 0.25,
+        "proj_tempo": 0.742857,
+        "cos_energy": 0.31896,
+        "cos_tempo": 0.947768,
+        "leak_ratio": 2.971429,
+        "norm": 0.783796
+      },
+      "fit": {
+        "delta_plus": [
+          0.56113,
+          1.668418
+        ],
+        "delta_minus": [
+          -0.56113,
+          -1.668418
+        ],
+        "cos_energy_plus": 0.318778,
+        "cos_tempo_plus": 0.947829,
+        "leak_ratio": 2.97332,
+        "proj_energy_plus": 0.56113,
+        "proj_tempo_plus": 1.668418,
+        "cos_plus_minus": -1.0,
+        "norm_plus": 1.760251
+      },
+      "kind": "nmse",
+      "target_mode": "axis",
+      "attributes": false
+    }
+  }
+}
